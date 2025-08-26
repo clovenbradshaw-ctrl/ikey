@@ -859,91 +859,18 @@ body.rtl .info-icon {
     }
   }
 
-        /* Permanence toggles */
-        .with-toggle {
+        /* Critical info helpers */
+        .field-info {
             display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .with-toggle label {
-            flex: 1;
-        }
-        .permanence-toggle {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-        }
-        .permanence-toggle input {
-            display: none;
-        }
-        .toggle-slider {
-            width: 40px;
-            height: 20px;
-            background: #ccc;
-            border-radius: 20px;
-            position: relative;
-            transition: background 0.3s;
-        }
-        .toggle-slider::after {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background: #fff;
-            border-radius: 50%;
-            top: 1px;
-            left: 1px;
-            transition: transform 0.3s;
-        }
-        .permanence-toggle input:checked + .toggle-slider {
-            background: #27ae60;
-        }
-        .permanence-toggle input:checked + .toggle-slider::after {
-            transform: translateX(20px);
-        }
-        .toggle-label {
-            font-size: 12px;
-            color: #555;
-        }
-        .permanence-indicator.locked {
-            font-size: 12px;
-            color: #777;
-            margin-top: 5px;
-        }
-        .qr-impact-display {
-            margin-top: 20px;
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        .config-summary {
-            display: flex;
-            gap: 20px;
             justify-content: space-between;
-        }
-        .config-summary ul {
-            padding-left: 20px;
-        }
-        .complexity-bar {
-            width: 100%;
-            height: 6px;
-            background: #ddd;
-            border-radius: 3px;
-            margin-top: 10px;
-        }
-        .complexity-fill {
-            height: 100%;
-            width: 0%;
-            background: #27ae60;
-            border-radius: 3px;
-            transition: width 0.3s;
-        }
-        .complexity-label {
             font-size: 12px;
-            margin-top: 5px;
-            display: block;
-            text-align: center;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .critical-section {
+            border: 2px solid #ff4757;
+            background: #fff5f5;
         }
     </style>
 </head>
@@ -1140,7 +1067,7 @@ body.rtl .info-icon {
         // State
         let currentGUID = null;
         let currentKey = null;
-        let currentData = null; // minimal {guid, editable, auth}
+        let currentData = null; // {id, data, auth}
         let currentBlob = null; // decrypted full data
         let currentMode = null;
         let currentCreated = null;
@@ -1149,21 +1076,21 @@ body.rtl .info-icon {
         let ownerPassword = null;
 
         // Parse URL and handle QR data
-        async function parseUrlParameters() {
+        function parseUrlParameters() {
+            const hash = window.location.hash.substring(1);
+            const [guid, key, name, criticalInfo] = hash.split('|').map(decodeURIComponent);
+            return { guid, key, name, criticalInfo: criticalInfo || null };
+        }
+
+        async function initializeApp() {
             const hash = window.location.hash.substring(1);
             if (!hash) {
                 currentMode = 'create';
                 showCreationForm();
                 return;
             }
-            const parts = hash.split('|');
-            if (parts.length === 3) {
-                const [guid, key, dataStr] = parts;
-                await loadEmergencyInfo(guid, key, dataStr);
-            } else {
-                currentMode = 'create';
-                showCreationForm();
-            }
+            const { guid, key, name, criticalInfo } = parseUrlParameters();
+            await loadEmergencyInfo(guid, key, name, criticalInfo);
         }
 
         // Initialize on page load
@@ -1184,45 +1111,30 @@ body.rtl .info-icon {
                 'en';
             setLanguage(savedLang);
 
-            await parseUrlParameters();
+            await initializeApp();
         });
 
-        async function loadEmergencyInfo(guid, key, permanentDataStr) {
+        async function loadEmergencyInfo(guid, key, name, criticalInfo) {
             currentGUID = guid;
             currentKey = key;
 
-            const permanentData = JSON.parse(atob(permanentDataStr));
-            const displayData = {
-                name: permanentData.n,
-                bloodType: permanentData.b,
-                allergies: permanentData.a,
-                contact: (permanentData.cn || permanentData.cp)
-                    ? { name: permanentData.cn || '', phone: permanentData.cp || '' }
-                    : null
-            };
-
-            currentBlob = { publicInfo: displayData };
+            currentBlob = { name, criticalInfo, publicInfo: {} };
             await displayEmergencyInfo(currentBlob);
 
             try {
                 const response = await fetch(`${ARCHIVE_BASE}${guid}.json`);
                 if (response.ok) {
                     const archiveData = await response.json();
-                    const decrypted = await decrypt(archiveData.editable, key);
-                    const editableFields = JSON.parse(decrypted);
+                    const decrypted = await decrypt(archiveData.data, key);
+                    const onlineData = JSON.parse(decrypted);
 
-                    if (editableFields.bloodType) displayData.bloodType = displayData.bloodType || editableFields.bloodType;
-                    if (editableFields.allergies) displayData.allergies = displayData.allergies || editableFields.allergies;
-                    if (editableFields.contactName || editableFields.contactPhone) {
-                        displayData.contact = displayData.contact || {};
-                        if (editableFields.contactName) displayData.contact.name = editableFields.contactName;
-                        if (editableFields.contactPhone) displayData.contact.phone = editableFields.contactPhone;
-                    }
-                    currentBlob.publicInfo = displayData;
+                    currentBlob.publicInfo = onlineData.publicInfo || {};
+                    currentBlob.privateInfo = onlineData.privateInfo || null;
+                    currentBlob.passwordHint = onlineData.passwordHint;
                     await displayEmergencyInfo(currentBlob);
                 }
             } catch (e) {
-                console.log('Could not load editable fields', e);
+                console.log('Could not load online data', e);
             }
         }
 
@@ -1284,7 +1196,7 @@ body.rtl .info-icon {
                 currentCreated = created;
                 currentName = name;
                 showLoadingScreen(name);
-                await loadAndDisplayEmergencyInfo(guid, key, name, created);
+                await loadEmergencyInfo(guid, key, name, null);
             } else {
                 currentMode = 'create';
                 showCreationForm();
@@ -1298,14 +1210,8 @@ body.rtl .info-icon {
             const data = await response.json();
             const decrypted = await decrypt(data.data, key);
             const fullData = JSON.parse(decrypted);
-            let passwordHint = null;
-            if (fullData.passwordHint) {
-                try {
-                    passwordHint = await decrypt(fullData.passwordHint, key);
-                } catch {}
-            }
             currentData = data;
-            currentBlob = { ...fullData, passwordHint };
+            currentBlob = fullData;
             return currentBlob;
         }
         
@@ -1321,107 +1227,6 @@ body.rtl .info-icon {
         }
         
         // Load and display emergency info
-        async function loadAndDisplayEmergencyInfo(guid, key, urlName, created) {
-            currentGUID = guid;
-            currentKey = key;
-
-            console.log('Loading emergency info for:', guid);
-            console.log('Created timestamp:', created);
-
-            const createdTime = created ? new Date(decodeURIComponent(created)) : null;
-            let banner = null;
-            let data;
-            let fetchSuccess = false;
-
-            // Calculate age of QR code
-            if (createdTime) {
-                const ageMinutes = (Date.now() - createdTime.getTime()) / 60000;
-                console.log('QR code age in minutes:', ageMinutes);
-
-                if (ageMinutes < 5) {
-                    banner = '⏳ Data still uploading to backup servers (usually takes 5-30 minutes). QR code works locally in the meantime.';
-                } else if (ageMinutes < 30) {
-                    banner = '⏳ Data may still be uploading to backup servers. If not loading, please wait a few more minutes.';
-                }
-            }
-
-            try {
-                // Try to fetch from Archive.org
-                const archiveUrl = `${ARCHIVE_BASE}${guid}.json`;
-                console.log('Fetching from Archive.org:', archiveUrl);
-
-                const response = await fetch(archiveUrl, { mode: 'cors' });
-                console.log('Archive.org response status:', response.status);
-
-                if (response.ok) {
-                    data = await response.json();
-                    fetchSuccess = true;
-                    console.log('Successfully loaded from Archive.org');
-                } else {
-                    throw new Error('Not found on Archive.org');
-                }
-            } catch (error) {
-                console.log('Archive fetch failed:', error.message);
-
-                // Check local storage fallback
-                const localData = localStorage.getItem('pending_' + guid);
-                if (localData) {
-                    console.log('Found local fallback data');
-                    const parsed = JSON.parse(localData);
-                    data = { local: true, full: parsed };
-                }
-            }
-
-            if (!fetchSuccess && createdTime) {
-                const ageMinutes = (Date.now() - createdTime.getTime()) / 60000;
-                if (ageMinutes < 5) {
-                    banner = '⏳ Data uploading to Archive.org - this usually takes 5-30 minutes. Your QR works locally for now!';
-                } else if (ageMinutes < 30) {
-                    banner = '⏳ Data may still be uploading - Archive.org backup can take up to 30 minutes to complete';
-                } else {
-                    banner = '⚠️ Data not found on Archive.org - backup may have failed. Try re-uploading.';
-                }
-            }
-
-            if (!data) {
-                await displayEmergencyInfo({ publicInfo: { name: urlName || 'Unknown' } }, { overrideName: urlName, banner });
-                return;
-            }
-
-            try {
-                let fullData;
-                if (data.local) {
-                    fullData = data.full;
-                } else {
-                    const decrypted = await decrypt(data.data, key);
-                    fullData = JSON.parse(decrypted);
-                }
-
-                // Validate beacon
-                if (fullData.beacon !== BEACON_TEXT) {
-                    throw new Error('Invalid QR code');
-                }
-
-                // Decrypt password hint if it exists
-                let passwordHint = null;
-                if (fullData.passwordHint) {
-                    try {
-                        passwordHint = await decrypt(fullData.passwordHint, key);
-                    } catch (e) {
-                        console.log('Could not decrypt password hint');
-                    }
-                }
-
-                currentData = data;
-                currentBlob = { ...fullData, passwordHint };
-
-                await displayEmergencyInfo(fullData, { overrideName: urlName, banner });
-            } catch (error) {
-                console.error('Error loading data:', error);
-                showError('Unable to load emergency information. Please check the QR code.');
-            }
-        }
-
         // Display emergency information
         async function displayEmergencyInfo(fullData, options = {}) {
             const container = document.getElementById('main-content');
@@ -1473,7 +1278,21 @@ body.rtl .info-icon {
             }
             
             html += `</div>`;
-            
+
+            if (fullData.criticalInfo) {
+                html += `
+                        <div class="info-section critical-section">
+                            <div class="info-item">
+                                <span class="info-icon">⚠️</span>
+                                <div class="info-content">
+                                    <div class="info-label">Critical Information</div>
+                                    <div class="info-value">${fullData.criticalInfo}</div>
+                                </div>
+                            </div>
+                        </div>
+                `;
+            }
+
             if (publicInfo.contact) {
                 html += `
                         <div class="info-section">
@@ -1600,6 +1419,9 @@ body.rtl .info-icon {
 
                 document.getElementById('name').value = currentBlob.name || publicInfo.name || '';
                 document.getElementById('name').disabled = true;
+                document.getElementById('critical-info').value = currentBlob.criticalInfo || '';
+                document.getElementById('critical-info').disabled = true;
+                document.getElementById('critical-counter').textContent = `${(currentBlob.criticalInfo || '').length}/240`;
                 document.getElementById('blood-type').value = publicInfo.bloodType || '';
                 document.getElementById('allergies').value = publicInfo.allergies || '';
                 document.getElementById('contact-name').value = publicInfo.contact?.name || '';
@@ -1636,7 +1458,6 @@ body.rtl .info-icon {
             try {
                 // Collect updated form data
                 const publicInfo = {
-                    name: currentBlob.name,
                     bloodType: document.getElementById('blood-type').value,
                     allergies: document.getElementById('allergies').value,
                     contact: {
@@ -1647,24 +1468,19 @@ body.rtl .info-icon {
 
                 const newHint = document.getElementById('password-hint').value;
 
-                const privateInfo = password ? {
+                const privateInfo = {
                     ssn: document.getElementById('ssn').value,
                     notes: document.getElementById('medical-notes').value,
                     encryptedWith: await sha256Hash(currentKey + password)
-                } : null;
-
-                const fullData = {
-                    version: currentBlob.version,
-                    created: currentBlob.created,
-                    name: currentBlob.name,
-                    updated: new Date().toISOString(),
-                    beacon: BEACON_TEXT,
-                    publicInfo,
-                    passwordHint: newHint ? await encrypt(newHint, currentKey) : null,
-                    privateInfo
                 };
 
-                const encryptedBlob = await encrypt(JSON.stringify(fullData), currentKey);
+                const onlineData = {
+                    publicInfo,
+                    privateInfo,
+                    passwordHint: newHint || null
+                };
+
+                const encryptedBlob = await encrypt(JSON.stringify(onlineData), currentKey);
                 const auth = await sha256Hash(updateToken);
                 const updatedData = {
                     id: currentGUID,
@@ -1689,12 +1505,14 @@ body.rtl .info-icon {
 
                 if (response.ok && result.success) {
                     currentData = updatedData;
-                    currentBlob = { ...fullData, passwordHint: newHint };
+                    currentBlob.publicInfo = { name: currentBlob.name, ...publicInfo };
+                    currentBlob.privateInfo = privateInfo;
+                    currentBlob.passwordHint = newHint || null;
                     showStatus('✅ Successfully updated!', 'success');
                     stopSecurityAnimation(true);
 
                     // Show the updated QR view
-                    await loadAndDisplayEmergencyInfo(currentGUID, currentKey, currentBlob.name, currentBlob.created);
+                    await loadEmergencyInfo(currentGUID, currentKey, currentBlob.name, currentBlob.criticalInfo || null);
                 } else {
                     throw new Error(result.error || 'Update failed');
                 }
@@ -1722,19 +1540,26 @@ body.rtl .info-icon {
                 <div class="content">
                       <form id="create-form">
                           <div class="section-title">Emergency Information</div>
-                          <div class="permanence-notice">
-                              ⚠️ Permanent fields cannot be changed after QR creation
-                          </div>
 
                           <div class="form-group">
                               <label for="name"><span data-i18n="name">Name</span> *</label>
                               <input type="text" id="name" required placeholder="John Doe">
-                              <div class="permanence-indicator locked">
-                                  🔒 Always Permanent (embedded in QR)
+                          </div>
+
+                          <div class="form-group">
+                              <label for="critical-info">Critical Information</label>
+                              <textarea 
+                                  id="critical-info" 
+                                  maxlength="240"
+                                  rows="3"
+                                  placeholder="Vital info to always have available: severe conditions, medications, doctor contact, etc."></textarea>
+                              <div class="field-info">
+                                  <span class="char-counter" id="critical-counter">0/240</span>
+                                  <span class="info-note">Embedded in QR • Works offline forever</span>
                               </div>
                           </div>
 
-                          <div class="form-group with-toggle">
+                          <div class="form-group">
                               <label for="blood-type" data-i18n="bloodType">Blood Type</label>
                               <select id="blood-type">
                                   <option value="">Unknown</option>
@@ -1747,89 +1572,33 @@ body.rtl .info-icon {
                                   <option value="O+">O+</option>
                                   <option value="O-">O-</option>
                               </select>
-                              <label class="permanence-toggle">
-                                  <input type="checkbox" name="permanent-blood" checked>
-                                  <span class="toggle-slider"></span>
-                                  <span class="toggle-label">Permanent</span>
-                              </label>
                           </div>
 
-                          <div class="form-group with-toggle">
+                          <div class="form-group">
                               <label for="allergies" data-i18n="allergies">Allergies</label>
                               <textarea id="allergies" placeholder="Penicillin, peanuts, etc."></textarea>
-                              <label class="permanence-toggle">
-                                  <input type="checkbox" name="permanent-allergies">
-                                  <span class="toggle-slider"></span>
-                                  <span class="toggle-label">Editable</span>
-                              </label>
                           </div>
 
-                          <div class="form-group with-toggle">
+                          <div class="form-group">
                               <label for="contact-name">Emergency Contact Name *</label>
                               <input type="text" id="contact-name" required placeholder="Jane Doe">
-                              <label class="permanence-toggle">
-                                  <input type="checkbox" name="permanent-contactName">
-                                  <span class="toggle-slider"></span>
-                                  <span class="toggle-label">Editable</span>
-                              </label>
                           </div>
 
-                          <div class="form-group with-toggle">
+                          <div class="form-group">
                               <label for="contact-phone">Emergency Contact Phone *</label>
                               <input type="tel" id="contact-phone" required placeholder="(555) 123-4567">
-                              <label class="permanence-toggle">
-                                  <input type="checkbox" name="permanent-contactPhone">
-                                  <span class="toggle-slider"></span>
-                                  <span class="toggle-label">Editable</span>
-                              </label>
-                          </div>
-
-                          <div class="qr-impact-display">
-                              <h4>Your QR Configuration:</h4>
-                              <div class="config-summary">
-                                  <div class="permanent-fields">
-                                      <strong>🔒 Permanent (in QR):</strong>
-                                      <ul id="permanent-list">
-                                          <li>Name</li>
-                                          <li>Blood Type</li>
-                                      </ul>
-                                  </div>
-                                  <div class="editable-fields">
-                                      <strong>✏️ Editable (online):</strong>
-                                      <ul id="editable-list">
-                                          <li>Allergies</li>
-                                          <li>Emergency Contact</li>
-                                      </ul>
-                                  </div>
-                              </div>
-                              <div class="qr-complexity-meter">
-                                  <div class="complexity-bar">
-                                      <div class="complexity-fill" style="width: 30%"></div>
-                                  </div>
-                                  <span class="complexity-label">QR Complexity: Low</span>
-                              </div>
                           </div>
 
                           <div class="section-title">Password Protected</div>
 
-                          <div class="form-group with-toggle">
+                          <div class="form-group">
                               <label for="ssn">Social Security Number</label>
                               <input type="text" id="ssn" placeholder="XXX-XX-XXXX">
-                              <label class="permanence-toggle">
-                                  <input type="checkbox" name="permanent-ssn">
-                                  <span class="toggle-slider"></span>
-                                  <span class="toggle-label">Editable</span>
-                              </label>
                           </div>
 
-                          <div class="form-group with-toggle">
+                          <div class="form-group">
                               <label for="medical-notes">Medical Notes</label>
                               <textarea id="medical-notes" placeholder="Medications, conditions, etc."></textarea>
-                              <label class="permanence-toggle">
-                                  <input type="checkbox" name="permanent-notes">
-                                  <span class="toggle-slider"></span>
-                                  <span class="toggle-label">Editable</span>
-                              </label>
                           </div>
                         
                         <div class="form-group">
@@ -1890,91 +1659,49 @@ body.rtl .info-icon {
                 strengthEl.textContent = isStrongPassword(pwd) ? '✅ Meets requirements' : '❌ Does not meet requirements';
             });
 
-             // Permanence toggles
-             document.querySelectorAll('.permanence-toggle input').forEach(cb => cb.addEventListener('change', updatePermanenceUI));
-             updatePermanenceUI();
-         }
+            document.getElementById('critical-info').addEventListener('input', (e) => {
+                const count = e.target.value.length;
+                document.getElementById('critical-counter').textContent = `${count}/240`;
+            });
+        }
 
-         function updatePermanenceUI() {
-             const permanentList = document.getElementById('permanent-list');
-             const editableList = document.getElementById('editable-list');
-             const complexityBar = document.querySelector('.complexity-fill');
+        async function generateQR(formData, password) {
+            const guid = generateGUID();
+            const key = generateKey();
+            const qrEmbedded = {
+                v: "6",
+                n: formData.name,
+                c: formData.criticalInfo || null,
+                created: new Date().toISOString()
+            };
 
-             let permanentSize = 100; // base
-             let permanentItems = ['Name'];
-             let editableItems = [];
+            const qrUrl = `${VIEWER_URL}#${guid}|${key}|${encodeURIComponent(formData.name)}|${encodeURIComponent(formData.criticalInfo || '')}`;
 
-             const fieldLabels = {
-                 blood: 'Blood Type',
-                 allergies: 'Allergies',
-                 contactName: 'Emergency Contact Name',
-                 contactPhone: 'Emergency Contact Phone',
-                 ssn: 'SSN',
-                 notes: 'Medical Notes'
-             };
+            const onlineData = {
+                publicInfo: {
+                    bloodType: formData.bloodType,
+                    allergies: formData.allergies,
+                    contact: {
+                        name: formData.contactName,
+                        phone: formData.contactPhone
+                    }
+                },
+                privateInfo: {
+                    ssn: formData.ssn,
+                    notes: formData.medicalNotes,
+                    encryptedWith: await sha256Hash(key + password)
+                },
+                passwordHint: formData.passwordHint || null
+            };
 
-             const fieldSizes = {
-                 blood: 10,
-                 allergies: 100,
-                 contactName: 80,
-                 contactPhone: 80,
-                 ssn: 40,
-                 notes: 120
-             };
+            const archiveData = {
+                id: guid,
+                data: await encrypt(JSON.stringify(onlineData), key),
+                auth: await sha256Hash(await generateUpdateToken(password, guid))
+            };
 
-             document.querySelectorAll('.permanence-toggle input').forEach(toggle => {
-                 const fieldName = toggle.name.replace('permanent-', '');
-                 const label = fieldLabels[fieldName] || fieldName;
-                 if (toggle.checked) {
-                     permanentItems.push(label);
-                     permanentSize += fieldSizes[fieldName] || 50;
-                     toggle.nextElementSibling.nextElementSibling.textContent = 'Permanent';
-                 } else {
-                     editableItems.push(label);
-                     toggle.nextElementSibling.nextElementSibling.textContent = 'Editable';
-                 }
-             });
-
-             permanentList.innerHTML = permanentItems.map(i => `<li>${i}</li>`).join('');
-             editableList.innerHTML = editableItems.map(i => `<li>${i}</li>`).join('');
-
-             const complexity = Math.min((permanentSize / 1000) * 100, 100);
-             if (complexityBar) complexityBar.style.width = complexity + '%';
-             const labelEl = document.querySelector('.complexity-label');
-             if (complexity > 70) {
-                 if (complexityBar) complexityBar.style.background = '#ff4757';
-                 if (labelEl) labelEl.textContent = 'QR Complexity: High (may affect scanning)';
-             } else if (complexity > 40) {
-                 if (complexityBar) complexityBar.style.background = '#ffc107';
-                 if (labelEl) labelEl.textContent = 'QR Complexity: Medium';
-             } else {
-                 if (complexityBar) complexityBar.style.background = '#27ae60';
-                 if (labelEl) labelEl.textContent = 'QR Complexity: Low';
-             }
-         }
-
-         async function generateQRData(formData, permanentFields) {
-             const permanentData = { v: "5", n: formData.name };
-
-             if (permanentFields.blood && formData.bloodType) permanentData.b = formData.bloodType;
-             if (permanentFields.allergies && formData.allergies) permanentData.a = formData.allergies;
-             if (permanentFields.contactName && formData.contactName) permanentData.cn = formData.contactName;
-             if (permanentFields.contactPhone && formData.contactPhone) permanentData.cp = formData.contactPhone;
-             if (permanentFields.ssn && formData.ssn) permanentData.s = await encrypt(formData.ssn, currentKey);
-             if (permanentFields.notes && formData.notes) permanentData.m = await encrypt(formData.notes, currentKey);
-
-             const editableData = {};
-             if (!permanentFields.blood && formData.bloodType) editableData.bloodType = formData.bloodType;
-             if (!permanentFields.allergies && formData.allergies) editableData.allergies = formData.allergies;
-             if (!permanentFields.contactName && formData.contactName) editableData.contactName = formData.contactName;
-             if (!permanentFields.contactPhone && formData.contactPhone) editableData.contactPhone = formData.contactPhone;
-             if (!permanentFields.ssn && formData.ssn) editableData.ssn = formData.ssn;
-             if (!permanentFields.notes && formData.notes) editableData.notes = formData.notes;
-             if (formData.passwordHint) editableData.passwordHint = formData.passwordHint;
-
-             const qrUrl = `${VIEWER_URL}#${currentGUID}|${currentKey}|${btoa(JSON.stringify(permanentData))}`;
-             return { qrUrl, permanentData, editableData };
-         }
+            return { qrUrl, archiveData, guid, key, onlineData, qrEmbedded };
+        }
         
         // Handle form submission
         async function handleCreateForm(e) {
@@ -1998,41 +1725,34 @@ body.rtl .info-icon {
                     throw new Error('Passwords do not match');
                 }
                 
-                // Generate unique identifiers
-                currentGUID = generateGUID();
-                currentKey = generateKey();
+                // Collect form data
+                const formData = {
+                    name: document.getElementById('name').value,
+                    criticalInfo: document.getElementById('critical-info').value,
+                    bloodType: document.getElementById('blood-type').value,
+                    allergies: document.getElementById('allergies').value,
+                    contactName: document.getElementById('contact-name').value,
+                    contactPhone: document.getElementById('contact-phone').value,
+                    ssn: document.getElementById('ssn').value,
+                    medicalNotes: document.getElementById('medical-notes').value,
+                    passwordHint: document.getElementById('password-hint').value
+                };
 
-                 // Collect form data
-                 const formData = {
-                     name: document.getElementById('name').value,
-                     bloodType: document.getElementById('blood-type').value,
-                     allergies: document.getElementById('allergies').value,
-                     contactName: document.getElementById('contact-name').value,
-                     contactPhone: document.getElementById('contact-phone').value,
-                     ssn: document.getElementById('ssn').value,
-                     notes: document.getElementById('medical-notes').value,
-                     passwordHint: document.getElementById('password-hint').value
-                 };
+                const { qrUrl, archiveData, guid, key, onlineData, qrEmbedded } = await generateQR(formData, password);
 
-                 const permanentFields = {
-                     blood: document.querySelector('input[name="permanent-blood"]').checked,
-                     allergies: document.querySelector('input[name="permanent-allergies"]').checked,
-                     contactName: document.querySelector('input[name="permanent-contactName"]').checked,
-                     contactPhone: document.querySelector('input[name="permanent-contactPhone"]').checked,
-                     ssn: document.querySelector('input[name="permanent-ssn"]').checked,
-                     notes: document.querySelector('input[name="permanent-notes"]').checked
-                 };
+                currentGUID = guid;
+                currentKey = key;
+                currentData = archiveData;
 
-                 const { qrUrl, permanentData, editableData } = await generateQRData(formData, permanentFields);
-
-                 const encryptedEditable = await encrypt(JSON.stringify(editableData), currentKey);
-
-                 const created = new Date().toISOString();
-                 const updateToken = await generateUpdateToken(password, currentGUID);
-                 const auth = await sha256Hash(updateToken);
-
-                 currentData = { guid: currentGUID, editable: encryptedEditable, auth };
-                 currentBlob = { version: "5", created, permanent: permanentData, editable: editableData, publicInfo: { name: formData.name, bloodType: formData.bloodType, allergies: formData.allergies, contact: { name: formData.contactName, phone: formData.contactPhone } } };
+                const publicInfo = { name: formData.name, ...onlineData.publicInfo };
+                currentBlob = {
+                    version: "6",
+                    created: qrEmbedded.created,
+                    publicInfo,
+                    privateInfo: onlineData.privateInfo,
+                    passwordHint: onlineData.passwordHint,
+                    criticalInfo: formData.criticalInfo || null
+                };
 
                  const qrContainer = document.getElementById('qrcode');
                  qrContainer.innerHTML = '';
@@ -2050,9 +1770,10 @@ body.rtl .info-icon {
 
                  // Store fallback data locally for short-term access
                  const fallbackData = {
-                     version: "5",
-                     created,
+                     version: "6",
+                     created: qrEmbedded.created,
                      name: formData.name,
+                     criticalInfo: formData.criticalInfo || null,
                      beacon: BEACON_TEXT,
                      publicInfo: currentBlob.publicInfo
                  };
@@ -2241,7 +1962,7 @@ body.rtl .info-icon {
                                 <div class="arrow">↓ AES-256-GCM Encryption ↓</div>
                                 <div class="after">
                                     <label>After:</label>
-                                      <code>${currentData.editable.substring(0, 50)}...</code>
+                                      <code>${currentData.data.substring(0, 50)}...</code>
                                 </div>
                             </div>
                         </div>
@@ -2635,7 +2356,7 @@ body.rtl .info-icon {
             document.getElementById('dev-output').textContent = 'Loading...';
             
             try {
-                await loadAndDisplayEmergencyInfo(guid, key, null, null);
+                await loadEmergencyInfo(guid, key, null, null);
                 document.getElementById('dev-output').textContent = 'Successfully loaded QR data';
             } catch (error) {
                 document.getElementById('dev-output').textContent = 'Error: ' + error.message;
@@ -2691,7 +2412,7 @@ body.rtl .info-icon {
 
                 output.textContent = `QR detected: ${data}`;
                 const { guid, key } = parseQRData(data);
-                await loadAndDisplayEmergencyInfo(guid, key, null, null);
+                await loadEmergencyInfo(guid, key, null, null);
                 output.textContent += '\nLoaded QR data';
             } catch (error) {
                 output.textContent = 'Error: ' + error.message;
