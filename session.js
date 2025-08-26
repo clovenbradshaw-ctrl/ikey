@@ -11,7 +11,19 @@ class SessionManager {
         this.countdown = document.getElementById('session-countdown');
         this.buildUI();
         this.attachListeners();
-        this.reset();
+
+        const storedExpiration = parseInt(localStorage.getItem('sessionExpiration'), 10);
+        const storedDuration = parseInt(localStorage.getItem('sessionDuration'), 10);
+        if (storedExpiration && storedExpiration > Date.now()) {
+            this.duration = storedDuration || this.defaultDuration;
+            this.expiration = storedExpiration;
+            this.updateRing();
+            this.interval = setInterval(() => this.tick(), 1000);
+        } else if (storedExpiration) {
+            this.expire();
+        } else {
+            this.reset();
+        }
     }
 
     buildUI() {
@@ -83,6 +95,8 @@ class SessionManager {
 
     reset() {
         this.expiration = Date.now() + this.duration;
+        localStorage.setItem('sessionExpiration', this.expiration);
+        localStorage.setItem('sessionDuration', this.duration);
         this.warning5Shown = false;
         this.warning1Shown = false;
         this.hideBanner();
@@ -170,6 +184,8 @@ class SessionManager {
         this.expired.classList.add('active');
         clearInterval(this.interval);
         this.interval = null;
+        localStorage.removeItem('sessionExpiration');
+        localStorage.removeItem('sessionDuration');
     }
     hideExpired() {
         this.expired.classList.remove('active');
