@@ -1521,6 +1521,17 @@ body.rtl .info-icon {
             
             container.innerHTML = html;
             setLanguage(currentLanguage);
+
+            // Allow pressing Enter to unlock private information
+            const passwordInput = document.getElementById('vault-password');
+            if (passwordInput) {
+                passwordInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        unlockPrivateInfo();
+                    }
+                });
+            }
         }
         
         // Unlock private information
@@ -1676,6 +1687,7 @@ body.rtl .info-icon {
                 // Send PUT request to webhook
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'PUT',
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -1688,7 +1700,7 @@ body.rtl .info-icon {
 
                 const result = await response.json();
 
-                if (response.ok && result.success) {
+                if (response.ok && (result.success || result.status === 'success')) {
                     currentData = updatedData;
                     currentBlob = { ...currentBlob, publicInfo, privateInfo, passwordHint: newHint };
                     showStatus('✅ Successfully updated!', 'success');
@@ -1697,7 +1709,7 @@ body.rtl .info-icon {
                     // Show the updated QR view
                     await displayFullInfo(currentBlob);
                 } else {
-                    throw new Error(result.error || 'Update failed');
+                    throw new Error(result.error || result.message || 'Update failed');
                 }
 
             } catch (error) {
