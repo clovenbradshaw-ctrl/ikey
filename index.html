@@ -1865,7 +1865,7 @@ body.rtl .info-icon {
                                 <button class="btn" onclick="downloadQR()">💾 <span data-i18n="download">Download</span></button>
                                 <button class="btn" onclick="testQR()">🔍 <span data-i18n="test">Test</span></button>
                             </div>
-                            <button class="btn-secondary" onclick="uploadToArchive()">☁️ Save Online</button>
+                            <button class="btn-secondary" onclick="uploadToArchive()">☁️ <span data-i18n="saveOnline">Save Online</span></button>
                         </div>
                     </div>
                     
@@ -2360,7 +2360,7 @@ body.rtl .info-icon {
 
                 setTimeout(() => {
                     button.disabled = false;
-                    if (!success) button.innerHTML = '☁️ Save Online';
+                    if (!success) button.innerHTML = '☁️ ' + (translations[currentLanguage]?.saveOnline || translations.en.saveOnline);
                 }, 3000);
             });
         }
