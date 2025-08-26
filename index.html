@@ -25,8 +25,10 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh !important;
             display: flex !important;
+            flex-direction: column;
             align-items: center !important;
-            justify-content: center !important;
+            justify-content: flex-start !important;
+            padding-top: 60px;
         }
 
         .container {
@@ -728,105 +730,85 @@
             transition: width 0.5s ease;
         }
 
-        .language-selector {
+        /* Top navigation */
+        .top-bar {
             position: fixed;
-            top: 10px;
-            right: 10px;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: white;
-            padding: 8px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        .primary-languages {
+        .logo {
+            font-weight: bold;
             display: flex;
+            align-items: center;
             gap: 6px;
         }
 
-        .lang-btn {
+        .logo-text-short {
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .lang-select {
+            position: relative;
+        }
+
+        .lang-button {
             background: white;
-            border: 2px solid #e0e0e0;
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
-            padding: 8px 12px;
+            padding: 6px 10px;
             cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            min-width: 60px;
             font-size: 14px;
         }
 
-        .lang-btn:hover {
-            border-color: #667eea;
-            background: #f8f9fa;
+        .lang-dropdown {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-top: 4px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+            min-width: 160px;
+            z-index: 1000;
         }
 
-        .lang-btn.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .lang-native {
-            font-weight: 500;
+        .lang-option {
+            padding: 8px 12px;
+            cursor: pointer;
             white-space: nowrap;
         }
 
+        .lang-option:hover,
+        .lang-option.active {
+            background: #f0f0f0;
+        }
 
-        .more-languages-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .login-btn {
+            background: none;
             border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            transition: transform 0.3s;
-        }
-
-        .more-languages-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .globe-icon {
-            font-size: 20px;
-        }
-
-        .plus-icon {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: white;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            font-size: 12px;
             color: #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .secondary-languages {
-            position: absolute;
-            top: 60px;
-            right: 0;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            padding: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            min-width: 200px;
+            cursor: pointer;
+            font-size: 14px;
         }
 
         body.rtl {
@@ -834,9 +816,13 @@
             text-align: right;
         }
 
-        body.rtl .language-selector {
-            left: 10px;
+        body.rtl .top-bar {
+            flex-direction: row-reverse;
+        }
+
+        body.rtl .lang-dropdown {
             right: auto;
+            left: 0;
         }
 
 body.rtl .info-icon {
@@ -845,19 +831,23 @@ body.rtl .info-icon {
         }
 
         @media (max-width: 480px) {
-            .primary-languages {
-                flex-wrap: wrap;
-            }
-
-            .lang-btn .lang-native {
+            .lang-button {
+                padding: 4px 8px;
                 font-size: 12px;
             }
 
-  .secondary-languages {
-    grid-template-columns: 1fr;
-    width: calc(100vw - 20px);
-    }
-  }
+            .login-btn {
+                font-size: 12px;
+            }
+
+            .logo-text-full {
+                display: none;
+            }
+
+            .logo-text-short {
+                display: inline;
+            }
+        }
         /* Critical info helper */
         .field-info {
             display: flex;
@@ -869,15 +859,15 @@ body.rtl .info-icon {
     </style>
 </head>
 <body>
-    <div class="language-selector">
-        <div class="primary-languages"></div>
-
-        <button class="more-languages-btn" onclick="toggleMoreLanguages()">
-            <span class="globe-icon">🌍</span>
-            <span class="plus-icon">+</span>
-        </button>
-
-        <div class="secondary-languages" style="display: none;"></div>
+    <div class="top-bar">
+        <div class="logo">🚨 <span class="logo-text-full">Emergency QR</span><span class="logo-text-short">QR</span></div>
+        <div class="controls">
+            <div class="lang-select">
+                <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
+                <div class="lang-dropdown"></div>
+            </div>
+            <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
+        </div>
     </div>
     <div class="container">
         <div id="main-content">
@@ -968,34 +958,27 @@ body.rtl .info-icon {
         let currentLanguage = 'en';
 
         function createLangButton(code) {
-          const btn = document.createElement('button');
-          btn.className = 'lang-btn';
-          btn.dataset.lang = code;
-          const span = document.createElement('span');
-          span.className = 'lang-native';
-          span.textContent = LANGUAGE_NAMES[code] || code;
-          btn.appendChild(span);
-          btn.addEventListener('click', () => setLanguage(code));
-          return btn;
+          const item = document.createElement('div');
+          item.className = 'lang-option';
+          item.dataset.lang = code;
+          item.textContent = `${code.toUpperCase()} ${LANGUAGE_NAMES[code] || code}`;
+          item.addEventListener('click', () => {
+            setLanguage(code);
+            toggleLangDropdown(false);
+          });
+          return item;
         }
 
         function buildLanguageButtons() {
-          const primary = document.querySelector('.primary-languages');
-          const secondary = document.querySelector('.secondary-languages');
-          primary.innerHTML = '';
-          secondary.innerHTML = '';
-
-          PRIMARY_LANGS.forEach(code => {
+          const dropdown = document.querySelector('.lang-dropdown');
+          if (!dropdown) return;
+          dropdown.innerHTML = '';
+          const codes = [...PRIMARY_LANGS, ...Object.keys(translations).filter(c => !PRIMARY_LANGS.includes(c))];
+          codes.forEach(code => {
             if (translations[code]) {
-              primary.appendChild(createLangButton(code));
+              dropdown.appendChild(createLangButton(code));
             }
           });
-
-          Object.keys(translations)
-            .filter(code => !PRIMARY_LANGS.includes(code))
-            .forEach(code => {
-              secondary.appendChild(createLangButton(code));
-            });
         }
 
         function setLanguage(langCode) {
@@ -1014,19 +997,27 @@ body.rtl .info-icon {
 
           document.body.classList.toggle('rtl', RTL_LANGS.includes(langCode));
 
-          document.querySelectorAll('.lang-btn').forEach(btn => {
+          document.getElementById('current-language').textContent = langCode.toUpperCase();
+          document.querySelectorAll('.lang-option').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.lang === langCode);
           });
         }
 
-        function toggleMoreLanguages() {
-          const secondary = document.querySelector('.secondary-languages');
-          const isVisible = secondary.style.display === 'grid';
-          secondary.style.display = isVisible ? 'none' : 'grid';
-
-          const plusIcon = document.querySelector('.plus-icon');
-          plusIcon.textContent = isVisible ? '+' : '×';
+        function toggleLangDropdown(force) {
+          const dropdown = document.querySelector('.lang-dropdown');
+          if (!dropdown) return;
+          const shouldShow = force !== undefined ? force : dropdown.style.display !== 'block';
+          dropdown.style.display = shouldShow ? 'block' : 'none';
         }
+
+        document.addEventListener('click', function(e) {
+          const dropdown = document.querySelector('.lang-dropdown');
+          const button = document.querySelector('.lang-button');
+          if (!dropdown || !button) return;
+          if (!dropdown.contains(e.target) && !button.contains(e.target)) {
+            dropdown.style.display = 'none';
+          }
+        });
 
         // State
         let currentGUID = null;
@@ -1458,7 +1449,6 @@ body.rtl .info-icon {
             
             html += `
                         <div class="help-link">
-                            <button class="btn-outline" style="font-size:12px;padding:4px 8px;" onclick="ownerLogin()">Owner Login</button>
                             <a href="#" onclick="toggleHelp(); return false;">How It Works</a>
                             <div id="help-content" class="help-content"></div>
                         </div>
