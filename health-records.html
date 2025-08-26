@@ -172,7 +172,18 @@
             background: #dc2626;
             color: white;
         }
-        
+
+        .breadcrumbs {
+            margin: 10px 20px;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .breadcrumbs a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
         .nav-tabs {
             position: fixed;
             top: 56px;
@@ -926,6 +937,11 @@
         <div class="tab" data-section="emergency-plans">🆘 Emergency Plans</div>
     </div>
 
+    <nav class="breadcrumbs no-print">
+        <a href="index.html" onclick="goBackOrDashboard(event)">Dashboard</a> /
+        <span>Health Records</span>
+    </nav>
+
     <!-- Password Modal -->
     <div class="modal" id="passwordModal">
         <div class="modal-content">
@@ -1476,6 +1492,14 @@
 
     <script src="session.js"></script>
     <script>
+        function goBackOrDashboard(e) {
+            if (document.referrer !== '' && history.length > 1) {
+                history.back();
+            } else {
+                window.location.href = 'index.html';
+            }
+            if (e) e.preventDefault();
+        }
         // Application class to manage state and functionality
         class HealthVaultApp {
             constructor() {
