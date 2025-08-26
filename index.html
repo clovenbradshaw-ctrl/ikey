@@ -1096,7 +1096,7 @@ body.rtl .info-icon {
                                     <div class="info-value">${name || 'Unknown'}</div>
                                 </div>
                             </div>
-                            ${criticalInfo ? `<div class="info-item"><span class="info-icon">⚠️</span><div class="info-content"><div class="info-label">Critical Info</div><div class="info-value">${criticalInfo}</div></div></div>` : ''}
+                            ${criticalInfo ? `<div class="info-item"><span class="info-icon">⚠️</span><div class="info-content"><div class="info-label" data-i18n="criticalInfo">Critical Information</div><div class="info-value">${criticalInfo}</div></div></div>` : ''}
                         </div>
                         <div class="status-message status-info" id="loading-message">Loading additional information...</div>
                     </div>
@@ -1392,7 +1392,7 @@ body.rtl .info-icon {
                             <div class="info-item">
                                 <span class="info-icon">⚠️</span>
                                 <div class="info-content">
-                                    <div class="info-label">Critical Info</div>
+                                    <div class="info-label" data-i18n="criticalInfo">Critical Information</div>
                                     <div class="info-value">${fullData.criticalInfo}</div>
                                 </div>
                             </div>
