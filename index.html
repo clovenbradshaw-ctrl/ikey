@@ -2181,7 +2181,17 @@
                         </div>
                 `;
             }
-            
+
+            html += `
+                        <div class="emergency-card">
+                            <h3>🚨 Emergency Services</h3>
+                            <p style="margin-bottom:8px;">Double-click to open</p>
+                            <button class="access-911" ondblclick="confirmEmergencyAccess()" title="Double-click to activate">
+                                Access Emergency Services
+                            </button>
+                        </div>
+                `;
+
             html += `
                         <div class="help-link">
                             <a href="#" onclick="toggleHelp(); return false;">How It Works</a>
