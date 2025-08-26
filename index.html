@@ -1358,6 +1358,68 @@
         .session-expired.active {
             display: flex;
         }
+
+        .blood-type-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .blood-type-grid label {
+            border: 1px solid #cbd5e0;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .search-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+        .search-dropdown .medication-option {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .search-dropdown .medication-option:hover {
+            background: #f7fafc;
+        }
+        .med-name {
+            font-weight: 500;
+        }
+        .med-details {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+        .medication-list {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .medication-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+        .allergy-warnings .warning {
+            margin-top: 4px;
+            font-size: 0.875rem;
+        }
+        .allergy-warnings .high {
+            color: #c53030;
+        }
+        .allergy-warnings .medium {
+            color: #d69e2e;
+        }
     </style>
 </head>
 <body>
@@ -1425,6 +1487,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="app.js"></script>
+    <script src="medication.js"></script>
 
     <script>
         // Configuration
@@ -1740,6 +1803,7 @@
                 name: permanentData.n,
                 bloodType: permanentData.b,
                 allergies: permanentData.a,
+                medications: permanentData.m,
                 contact: (permanentData.cn || permanentData.cp)
                     ? { name: permanentData.cn || '', phone: permanentData.cp || '' }
                     : null
@@ -1754,13 +1818,25 @@
                     const archiveData = await response.json();
                     const decrypted = await decrypt(archiveData.editable, key);
                     const editableFields = JSON.parse(decrypted);
-
-                    if (editableFields.bloodType) displayData.bloodType = displayData.bloodType || editableFields.bloodType;
-                    if (editableFields.allergies) displayData.allergies = displayData.allergies || editableFields.allergies;
-                    if (editableFields.contactName || editableFields.contactPhone) {
-                        displayData.contact = displayData.contact || {};
-                        if (editableFields.contactName) displayData.contact.name = editableFields.contactName;
-                        if (editableFields.contactPhone) displayData.contact.phone = editableFields.contactPhone;
+                    if (editableFields.publicInfo) {
+                        const pub = editableFields.publicInfo;
+                        if (pub.bloodType) displayData.bloodType = displayData.bloodType || pub.bloodType;
+                        if (pub.allergies) displayData.allergies = displayData.allergies || pub.allergies;
+                        if (pub.medications) displayData.medications = displayData.medications || pub.medications;
+                        if (pub.contact) {
+                            displayData.contact = pub.contact;
+                        }
+                        if (pub.secondaryContact) {
+                            displayData.secondaryContact = pub.secondaryContact;
+                        }
+                    } else {
+                        if (editableFields.bloodType) displayData.bloodType = displayData.bloodType || editableFields.bloodType;
+                        if (editableFields.allergies) displayData.allergies = displayData.allergies || editableFields.allergies;
+                        if (editableFields.contactName || editableFields.contactPhone) {
+                            displayData.contact = displayData.contact || {};
+                            if (editableFields.contactName) displayData.contact.name = editableFields.contactName;
+                            if (editableFields.contactPhone) displayData.contact.phone = editableFields.contactPhone;
+                        }
                     }
                     currentBlob.publicInfo = displayData;
                     await displayEmergencyInfo(currentBlob);
@@ -2036,9 +2112,27 @@
                                 <div class="info-content">
                                     <div class="info-label" data-i18n="emergencyContact">Primary Contact</div>
                                     <div class="info-value">
-                                        ${publicInfo.contact.name}
+                                        ${publicInfo.contact.name}${publicInfo.contact.relationship ? ' (' + publicInfo.contact.relationship + ')' : ''}
                                         <a href="tel:${publicInfo.contact.phone}" class="phone-link">
                                             📱 ${publicInfo.contact.phone}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                `;
+            }
+            if (publicInfo.secondaryContact) {
+                html += `
+                        <div class="info-section">
+                            <div class="info-item">
+                                <span class="info-icon">📞</span>
+                                <div class="info-content">
+                                    <div class="info-label">Secondary Contact</div>
+                                    <div class="info-value">
+                                        ${publicInfo.secondaryContact.name}${publicInfo.secondaryContact.relationship ? ' (' + publicInfo.secondaryContact.relationship + ')' : ''}
+                                        <a href="tel:${publicInfo.secondaryContact.phone}" class="phone-link">
+                                            📱 ${publicInfo.secondaryContact.phone}
                                         </a>
                                     </div>
                                 </div>
@@ -2355,11 +2449,21 @@
                 document.getElementById('name').value = currentBlob.name || '';
                 document.getElementById('pronouns').value = currentBlob.pronouns || '';
                 document.getElementById('critical-info').value = currentBlob.criticalInfo || '';
-                document.getElementById('blood-type').value = publicInfo.bloodType || '';
+                if (publicInfo.bloodType) {
+                    const bt = document.querySelector(`input[name="blood-type"][value="${publicInfo.bloodType}"]`);
+                    if (bt) bt.checked = true;
+                }
                 document.getElementById('allergies').value = publicInfo.allergies || '';
                 document.getElementById('medications').value = publicInfo.medications || '';
                 document.getElementById('contact-name').value = publicInfo.contact?.name || '';
                 document.getElementById('contact-phone').value = publicInfo.contact?.phone || '';
+                document.getElementById('contact-relationship').value = publicInfo.contact?.relationship || '';
+                if (publicInfo.secondaryContact) {
+                    document.getElementById('add-secondary-contact').click();
+                    document.getElementById('secondary-contact-name').value = publicInfo.secondaryContact.name || '';
+                    document.getElementById('secondary-contact-phone').value = publicInfo.secondaryContact.phone || '';
+                    document.getElementById('secondary-contact-relationship').value = publicInfo.secondaryContact.relationship || '';
+                }
 
                 document.getElementById('password').parentElement.style.display = 'none';
                 document.getElementById('password').required = false;
@@ -2373,15 +2477,17 @@
                 form.appendChild(preview);
                 function updatePreview() {
                     preview.innerHTML = `
-                        <div class="info-item"><div class="info-label">Blood Type</div><div class="info-value">${document.getElementById('blood-type').value}</div></div>
+                        <div class="info-item"><div class="info-label">Blood Type</div><div class="info-value">${document.querySelector('input[name="blood-type"]:checked')?.value || ''}</div></div>
                         <div class="info-item"><div class="info-label">Allergies</div><div class="info-value">${document.getElementById('allergies').value}</div></div>
                         <div class="info-item"><div class="info-label">Medications</div><div class="info-value">${document.getElementById('medications').value}</div></div>
-                        <div class="info-item"><div class="info-label">Contact</div><div class="info-value">${document.getElementById('contact-name').value} ${document.getElementById('contact-phone').value}</div></div>
+                        <div class="info-item"><div class="info-label">Contacts</div><div class="info-value">${document.getElementById('contact-name').value} ${document.getElementById('contact-phone').value}${document.getElementById('secondary-contact-name').value ? '<br>' + document.getElementById('secondary-contact-name').value + ' ' + document.getElementById('secondary-contact-phone').value : ''}</div></div>
                     `;
                 }
-                ['blood-type','allergies','medications','contact-name','contact-phone'].forEach(id => {
-                    document.getElementById(id).addEventListener('input', updatePreview);
+                ['allergies','medications','contact-name','contact-phone','secondary-contact-name','secondary-contact-phone'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('input', updatePreview);
                 });
+                document.querySelectorAll('input[name="blood-type"]').forEach(r => r.addEventListener('change', updatePreview));
                 updatePreview();
 
                 if (currentBlob.privateInfo) {
@@ -2393,7 +2499,7 @@
                 document.getElementById('create-form').removeEventListener('submit', handleCreateForm);
                 document.getElementById('create-form').addEventListener('submit', (e) => handleUpdateForm(e, password));
 
-                document.querySelector('#create-form button[type="submit"]').innerHTML = '<span>Save to Archive</span>';
+                document.querySelector('#create-form button[type="submit"]').innerHTML = '<span>Save Emergency Info</span>';
                 startSessionTimer();
                 return true;
 
@@ -2412,22 +2518,35 @@
 
             const button = e.target.querySelector('button[type="submit"]');
             button.disabled = true;
-            button.innerHTML = '<span>Archiving...</span>';
+            button.innerHTML = '<span>Saving...</span>';
 
             try {
                 // Collect updated form data
                 const name = document.getElementById('name').value;
                 const pronouns = document.getElementById('pronouns').value;
                 const criticalInfo = document.getElementById('critical-info').value;
+                const bloodType = document.querySelector('input[name="blood-type"]:checked')?.value || '';
+                const contactRelationship = document.getElementById('contact-relationship').value;
+                const secondaryName = document.getElementById('secondary-contact-name').value;
+                const secondaryPhone = document.getElementById('secondary-contact-phone').value;
+                const secondaryRel = document.getElementById('secondary-contact-relationship').value;
                 const publicInfo = {
-                    bloodType: document.getElementById('blood-type').value,
+                    bloodType,
                     allergies: document.getElementById('allergies').value,
                     medications: document.getElementById('medications').value,
                     contact: {
                         name: document.getElementById('contact-name').value,
-                        phone: document.getElementById('contact-phone').value
+                        phone: document.getElementById('contact-phone').value,
+                        relationship: contactRelationship
                     }
                 };
+                if (secondaryName || secondaryPhone) {
+                    publicInfo.secondaryContact = {
+                        name: secondaryName,
+                        phone: secondaryPhone,
+                        relationship: secondaryRel
+                    };
+                }
 
                 const privateInfo = password ? {
                     ssn: document.getElementById('ssn').value,
@@ -2474,7 +2593,7 @@
                 showStatus('Error: ' + error.message, 'error');
             } finally {
                 button.disabled = false;
-                button.innerHTML = '<span>Save to Archive</span>';
+                button.innerHTML = '<span>Save Emergency Info</span>';
             }
         }
         
@@ -2519,18 +2638,18 @@
                           </div>
 
                           <div class="form-group">
-                              <label for="blood-type" data-i18n="bloodType">Blood Type</label>
-                              <select id="blood-type">
-                                  <option value="" data-i18n="unknown">Unknown</option>
-                                  <option value="A+">A+</option>
-                                  <option value="A-">A-</option>
-                                  <option value="B+">B+</option>
-                                  <option value="B-">B-</option>
-                                  <option value="AB+">AB+</option>
-                                  <option value="AB-">AB-</option>
-                                  <option value="O+">O+</option>
-                                  <option value="O-">O-</option>
-                              </select>
+                              <label data-i18n="bloodType">Blood Type (Optional)</label>
+                              <div class="blood-type-grid" id="blood-type">
+                                  <label><input type="radio" name="blood-type" value="A+">A+</label>
+                                  <label><input type="radio" name="blood-type" value="A-">A-</label>
+                                  <label><input type="radio" name="blood-type" value="B+">B+</label>
+                                  <label><input type="radio" name="blood-type" value="B-">B-</label>
+                                  <label><input type="radio" name="blood-type" value="AB+">AB+</label>
+                                  <label><input type="radio" name="blood-type" value="AB-">AB-</label>
+                                  <label><input type="radio" name="blood-type" value="O+">O+</label>
+                                  <label><input type="radio" name="blood-type" value="O-">O-</label>
+                                  <label><input type="radio" name="blood-type" value="">Unknown/Not Sure</label>
+                              </div>
                           </div>
 
                           <div class="form-group">
@@ -2539,18 +2658,62 @@
                           </div>
 
                           <div class="form-group">
-                              <label for="medications"><span data-i18n="medications">Medications</span></label>
-                              <textarea id="medications" placeholder="Current medications"></textarea>
+                              <label><span data-i18n="medications">Medications</span></label>
+                              <div class="medication-search" style="position:relative;">
+                                  <input type="text" id="medication-search" placeholder="Start typing medication name...">
+                                  <div id="medication-results" class="search-dropdown"></div>
+                              </div>
+                              <div id="selected-medications" class="medication-list"></div>
+                              <textarea id="medications" placeholder="Current medications" style="display:none;"></textarea>
+                              <div id="allergy-warnings" class="allergy-warnings"></div>
                           </div>
 
                           <div class="form-group">
                               <label for="contact-name"><span data-i18n="emergencyContactName">Primary Contact Name</span> *</label>
-                              <input type="text" id="contact-name" required placeholder="Jane Doe" data-i18n-placeholder="contactNamePlaceholder">
+                              <input type="text" id="contact-name" required placeholder="e.g., Jane Doe" data-i18n-placeholder="contactNamePlaceholder">
                           </div>
 
                           <div class="form-group">
                               <label for="contact-phone"><span data-i18n="emergencyContactPhone">Primary Contact Phone</span> *</label>
                               <input type="tel" id="contact-phone" required placeholder="(555) 123-4567" data-i18n-placeholder="contactPhonePlaceholder">
+                          </div>
+
+                          <div class="form-group">
+                              <label for="contact-relationship">Relationship</label>
+                              <select id="contact-relationship">
+                                  <option value="">Select relationship</option>
+                                  <option>Spouse</option>
+                                  <option>Parent</option>
+                                  <option>Sibling</option>
+                                  <option>Child</option>
+                                  <option>Friend</option>
+                                  <option>Other</option>
+                              </select>
+                          </div>
+
+                          <button type="button" id="add-secondary-contact" class="btn-secondary">+ Add Secondary Contact</button>
+
+                          <div id="secondary-contact" style="display:none;">
+                              <div class="form-group">
+                                  <label for="secondary-contact-name">Secondary Contact Name</label>
+                                  <input type="text" id="secondary-contact-name" placeholder="e.g., John Doe">
+                              </div>
+                              <div class="form-group">
+                                  <label for="secondary-contact-phone">Secondary Contact Phone</label>
+                                  <input type="tel" id="secondary-contact-phone" placeholder="(555) 987-6543">
+                              </div>
+                              <div class="form-group">
+                                  <label for="secondary-contact-relationship">Relationship</label>
+                                  <select id="secondary-contact-relationship">
+                                      <option value="">Select relationship</option>
+                                      <option>Spouse</option>
+                                      <option>Parent</option>
+                                      <option>Sibling</option>
+                                      <option>Child</option>
+                                      <option>Friend</option>
+                                      <option>Other</option>
+                                  </select>
+                              </div>
                           </div>
 
                           <div class="section-title" data-i18n="passwordProtected">Password Protected</div>
@@ -2622,6 +2785,9 @@
             // Add form submit handler
             document.getElementById('create-form').addEventListener('submit', handleCreateForm);
 
+            initMedicationField();
+            initContactSection();
+
             // Password strength meter
             document.getElementById('password').addEventListener('input', () => {
                 const pwd = document.getElementById('password').value;
@@ -2671,11 +2837,15 @@
                     name: document.getElementById('name').value,
                     pronouns: document.getElementById('pronouns').value,
                     criticalInfo: document.getElementById('critical-info').value,
-                    bloodType: document.getElementById('blood-type').value,
+                    bloodType: document.querySelector('input[name="blood-type"]:checked')?.value || '',
                     allergies: document.getElementById('allergies').value,
                     medications: document.getElementById('medications').value,
                     contactName: document.getElementById('contact-name').value,
                     contactPhone: document.getElementById('contact-phone').value,
+                    contactRelationship: document.getElementById('contact-relationship').value,
+                    secondaryName: document.getElementById('secondary-contact-name').value,
+                    secondaryPhone: document.getElementById('secondary-contact-phone').value,
+                    secondaryRelationship: document.getElementById('secondary-contact-relationship').value,
                     ssn: document.getElementById('ssn').value,
                     notes: document.getElementById('medical-notes').value,
                     passwordHint: document.getElementById('password-hint')?.value || ''
@@ -2686,8 +2856,15 @@
                     bloodType: formData.bloodType,
                     allergies: formData.allergies,
                     medications: formData.medications,
-                    contact: { name: formData.contactName, phone: formData.contactPhone }
+                    contact: { name: formData.contactName, phone: formData.contactPhone, relationship: formData.contactRelationship }
                 };
+                if (formData.secondaryName || formData.secondaryPhone) {
+                    publicInfo.secondaryContact = {
+                        name: formData.secondaryName,
+                        phone: formData.secondaryPhone,
+                        relationship: formData.secondaryRelationship
+                    };
+                }
 
                 const privateInfo = password ? {
                     ssn: formData.ssn,
@@ -2821,7 +2998,16 @@
         function isStrongPassword(pwd) {
             return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pwd);
         }
-        
+
+        function initContactSection() {
+            const btn = document.getElementById('add-secondary-contact');
+            const section = document.getElementById('secondary-contact');
+            if (!btn || !section) return;
+            btn.addEventListener('click', () => {
+                section.style.display = section.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+
         async function encrypt(text, password) {
             const enc = new TextEncoder();
             const salt = crypto.getRandomValues(new Uint8Array(16));
