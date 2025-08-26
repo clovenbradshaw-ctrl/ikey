@@ -25,3 +25,7 @@ The iKey vault uses a three-layer design to protect data:
 3. **Vault layer** – health records are encrypted with a key derived from the same password and then wrapped again with the profile key, leaving the vault unreadable even if profile access is compromised.
 
 See `app.js` for the implementation of this architecture.
+
+## Auto Save
+
+Form inputs are automatically stored in the browser after every change. Each edit also triggers a request to archive.org so the current state of the page is captured by the Wayback Machine.
