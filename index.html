@@ -1193,9 +1193,11 @@
         }
 
         // Initialize on page load
-<<<<<<< codex/implement-language-selector-for-emergency-app
         window.addEventListener('DOMContentLoaded', async function() {
-            const savedLang = localStorage.getItem('preferredLanguage') || navigator.language.substring(0,2) || 'en';
+            const savedLang =
+                localStorage.getItem('preferredLanguage') ||
+                navigator.language.substring(0, 2) ||
+                'en';
             currentLanguage = savedLang;
             setLanguage(savedLang);
             document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -1204,8 +1206,7 @@
 
             const { guid, key, name, created } = parseUrlParameters();
             console.log('Parsed parameters:', { guid, key, name, created });
-=======
-        window.addEventListener('DOMContentLoaded', parseUrlParameters);
+        });
 
         async function handleOfflineQR(data) {
             currentKey = data.k;
@@ -1216,9 +1217,13 @@
                 contact: data.c ? JSON.parse(atob(data.c)) : null
             };
             const hint = data.h ? await decrypt(data.h, data.k) : null;
-            const privateInfo = data.p ? JSON.parse(await decrypt(data.p, data.k)) : null;
+            const privateInfo = data.p
+                ? JSON.parse(await decrypt(data.p, data.k))
+                : null;
             currentBlob = { publicInfo, passwordHint: hint, privateInfo };
-            await displayEmergencyInfo(currentBlob, { banner: '✅ Offline QR - No internet required' });
+            await displayEmergencyInfo(currentBlob, {
+                banner: '✅ Offline QR - No internet required'
+            });
         }
 
         async function handleHybridQR(guid, key, embedded) {
@@ -1228,23 +1233,31 @@
                 name: embedded.n,
                 bloodType: embedded.b || 'Loading...',
                 allergies: embedded.a || 'Loading...',
-                contact: embedded.c ? JSON.parse(atob(embedded.c)) : { name: 'Loading...', phone: 'Loading...' }
+                contact: embedded.c
+                    ? JSON.parse(atob(embedded.c))
+                    : { name: 'Loading...', phone: 'Loading...' }
             };
             const hint = embedded.h ? await decrypt(embedded.h, key) : null;
-            await displayEmergencyInfo({ publicInfo, passwordHint: hint }, { banner: '🔄 Hybrid mode - Critical data available, loading additional info...' });
+            await displayEmergencyInfo(
+                { publicInfo, passwordHint: hint },
+                {
+                    banner:
+                        '🔄 Hybrid mode - Critical data available, loading additional info...'
+                }
+            );
             try {
                 const cloudData = await fetchFromArchive(guid, key);
                 const merged = { ...cloudData };
                 if (embedded.b) merged.publicInfo.bloodType = embedded.b;
                 if (embedded.a) merged.publicInfo.allergies = embedded.a;
-                if (embedded.c) merged.publicInfo.contact = JSON.parse(atob(embedded.c));
+                if (embedded.c)
+                    merged.publicInfo.contact = JSON.parse(atob(embedded.c));
                 if (embedded.h) merged.passwordHint = hint;
                 await displayEmergencyInfo(merged);
             } catch (error) {
                 console.log('Cloud fetch failed, using embedded data only');
             }
         }
->>>>>>> main
 
         async function handleCloudQR(parts) {
             const [guid, key, name, created] = parts.map(p => decodeURIComponent(p || ''));
