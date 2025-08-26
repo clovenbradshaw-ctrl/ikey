@@ -3,339 +3,497 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Emergency Profile - Sarah Chen</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f3f4f6;
-            color: #111827;
+            background: #f0f2f5;
+            color: #1a1a1a;
         }
-
-        .dashboard-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+        
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-
-        .dashboard-header {
-            background: #fff;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .progress-summary {
+        
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             align-items: center;
-            gap: 24px;
+            justify-content: space-between;
         }
-
-        .progress-ring {
-            position: relative;
-            width: 80px;
-            height: 80px;
-        }
-
-        .progress-ring svg {
-            transform: rotate(-90deg);
-            width: 100%;
-            height: 100%;
-        }
-
-        .progress-ring .circle-bg {
-            fill: none;
-            stroke: #e5e7eb;
-            stroke-width: 8;
-        }
-
-        .progress-ring .circle {
-            fill: none;
-            stroke: #667eea;
-            stroke-width: 8;
-            stroke-linecap: round;
-            stroke-dasharray: 20 100;
-        }
-
-        .progress-ring .percent {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: 600;
+        
+        .logo {
+            font-weight: bold;
+            font-size: 20px;
             color: #667eea;
         }
-
-        .header-info h1 {
-            font-size: 20px;
-            margin-bottom: 4px;
-        }
-
-        .badge-basic {
-            background: #e5e7eb;
-            color: #374151;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            gap: 16px;
-            padding: 16px;
-            flex: 1;
-        }
-
-        .card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        
+        .nav-center {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
+            gap: 30px;
         }
-
-        .card-header {
+        
+        .nav-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 5px 0;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .nav-link.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .nav-right {
             display: flex;
             align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 12px;
+            gap: 15px;
         }
-
-        .card-header h3 {
-            font-size: 16px;
-            font-weight: 600;
+        
+        .session-timer {
+            font-size: 12px;
+            color: #666;
+            padding: 4px 8px;
+            background: #f0f2f5;
+            border-radius: 12px;
         }
-
-        .progress-bar {
-            flex: 1;
-            height: 4px;
-            background: #e5e7eb;
-            border-radius: 2px;
-            margin-left: auto;
-            position: relative;
-            overflow: hidden;
+        
+        .btn-911 {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
         }
-
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: var(--progress, 0%);
-            background: #667eea;
+        
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
-
-        .card-fields {
+        
+        /* Profile Header Card */
+        .profile-header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        .profile-top {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-            flex: 1;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
         }
-
-        .field {
+        
+        .profile-identity {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .profile-info h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+        
+        .profile-meta {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .profile-status {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.active {
+            background: #d4f4dd;
+            color: #18794e;
+        }
+        
+        .status-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0f2f5;
+            color: #333;
+        }
+        
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        
+        /* Info Card */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-grid {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .info-row {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .info-label {
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .info-value {
             font-size: 14px;
         }
-
-        .value {
-            font-weight: 500;
-            color: #111827;
+        
+        .info-value.empty {
+            color: #999;
+            font-style: italic;
         }
-
-        .value.empty {
-            color: #9ca3af;
-        }
-
-        .add-btn {
-            color: #667eea;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .action-bar {
-            display: flex;
-            gap: 12px;
-            padding: 16px;
-            background: #fff;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .badge {
-            background: #fff;
-            color: #667eea;
-            padding: 2px 6px;
-            border-radius: 4px;
+        
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #f0f2f5;
+            border-radius: 6px;
             font-size: 12px;
-            margin-left: 4px;
+            margin-right: 4px;
         }
-
-        /* Tablet */
-        @media (min-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-                padding: 20px;
-            }
-
-            .card-wide {
-                grid-column: 1 / -1;
-            }
+        
+        .tag.critical {
+            background: #fee2e2;
+            color: #991b1b;
         }
-
-        /* Desktop */
-        @media (min-width: 1024px) {
-            .dashboard-container {
-                max-width: 1200px;
-                margin: 0 auto;
+        
+        /* Side Panel */
+        .quick-links {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .link-item:hover {
+            background: #e8eaed;
+            transform: translateX(4px);
+        }
+        
+        /* Health Vault Notice */
+        .vault-locked {
+            background: linear-gradient(135deg, #fef3c7, #fed7aa);
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            margin-top: 12px;
+        }
+        
+        .vault-locked-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .vault-locked-text {
+            font-size: 13px;
+            color: #78350f;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
             }
-
-            .dashboard-grid {
+            
+            .stats-bar {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 24px;
-                padding: 24px;
             }
-
-            .dashboard-header {
-                margin-bottom: 24px;
-            }
-        }
-
-        /* Large desktop */
-        @media (min-width: 1440px) {
-            .dashboard-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .card-emergency {
-                grid-column: span 1;
-            }
-
-            .card-vault {
-                grid-column: 1 / -1;
+            
+            .nav-center {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
-<div class="dashboard-container">
-    <div class="dashboard-header">
-        <div class="progress-summary">
-            <div class="progress-ring">
-                <svg viewBox="0 0 36 36">
-                    <path class="circle-bg" d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <span class="percent">20%</span>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">🔑 iKey</div>
+            <div class="nav-center">
+                <a href="#" class="nav-link active">Dashboard</a>
+                <a href="#" class="nav-link">Emergency View</a>
+                <a href="#" class="nav-link">Health Vault</a>
+                <a href="#" class="nav-link">Settings</a>
             </div>
-            <div class="header-info">
-                <h1>JohnDoe1234!</h1>
-                <p>Security Level: <span class="badge-basic">Basic</span></p>
-                <p>Last updated: Never</p>
+            <div class="nav-right">
+                <span class="session-timer">42m remaining</span>
+                <button class="btn-911">📍 911</button>
+                <button class="btn btn-secondary">Share Profile</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-top">
+                <div class="profile-identity">
+                    <div class="avatar">SC</div>
+                    <div class="profile-info">
+                        <h1>Sarah Chen</h1>
+                        <div class="profile-meta">Female • 34 years • San Francisco, CA</div>
+                        <div class="profile-status">
+                            <span class="status-badge active">✓ QR Active</span>
+                            <span class="status-badge active">✓ Verified</span>
+                            <span class="status-badge warning">⚠ Update medications</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="btn btn-primary">Edit Profile</button>
+                    <button class="btn btn-secondary">Download QR</button>
+                </div>
+            </div>
+            
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-value">O+</div>
+                    <div class="stat-label">Blood Type</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Allergies</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Medications</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">2d</div>
+                    <div class="stat-label">Last Updated</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <!-- Main Content -->
+            <div>
+                <!-- Critical Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">⚠️ Critical Information</h2>
+                        <button class="btn btn-secondary">Edit</button>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="info-label">Allergies</span>
+                            <div class="info-value">
+                                <span class="tag critical">Penicillin</span>
+                                <span class="tag critical">Shellfish</span>
+                                <span class="tag">Latex (mild)</span>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Medical Conditions</span>
+                            <div class="info-value">Type 1 Diabetes • Asthma</div>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Current Medications</span>
+                            <div class="info-value">Insulin (Humalog) • Albuterol inhaler • Metformin 500mg</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Contacts -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">📞 Emergency Contacts</h2>
+                        <button class="btn btn-secondary">Edit</button>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="info-label">Primary</span>
+                            <div class="info-value">
+                                Michael Chen (Husband)<br>
+                                <a href="tel:415-555-0123" style="color: #667eea;">(415) 555-0123</a>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Secondary</span>
+                            <div class="info-value">
+                                Dr. Emily Rodriguez<br>
+                                <a href="tel:415-555-0456" style="color: #667eea;">(415) 555-0456</a>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Insurance</span>
+                            <div class="info-value">Blue Cross • PPO • #XYZ123456</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Panel -->
+            <div>
+                <!-- Quick Access -->
+                <div class="card">
+                    <h3 class="card-title">⚡ Quick Access</h3>
+                    <div class="quick-links" style="margin-top: 16px;">
+                        <a href="#" class="link-item">
+                            <span>📋</span>
+                            <span>View Full Medical History</span>
+                        </a>
+                        <a href="#" class="link-item">
+                            <span>💉</span>
+                            <span>Vaccination Records</span>
+                        </a>
+                        <a href="#" class="link-item">
+                            <span>🏥</span>
+                            <span>Provider Directory</span>
+                        </a>
+                        <a href="#" class="link-item">
+                            <span>📄</span>
+                            <span>Documents (3)</span>
+                        </a>
+                    </div>
+                    
+                    <div class="vault-locked">
+                        <div class="vault-locked-icon">🔒</div>
+                        <div class="vault-locked-text">
+                            <strong>Health Vault Locked</strong><br>
+                            12 records • Requires additional password
+                        </div>
+                        <button class="btn btn-primary" style="margin-top: 12px; width: 100%;">
+                            Unlock Vault
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="dashboard-grid">
-        <div class="card card-basic">
-            <div class="card-header">
-                <span class="icon">👤</span>
-                <h3>Basic Info</h3>
-                <div class="progress-bar" style="--progress:50%"></div>
-            </div>
-            <div class="card-fields">
-                <div class="field">Name <span class="value">JohnDoe1234!</span></div>
-                <div class="field">Critical Info <span class="value empty">—</span></div>
-            </div>
-        </div>
-
-        <div class="card card-emergency">
-            <div class="card-header">
-                <span class="icon">🚨</span>
-                <h3>Emergency</h3>
-                <div class="progress-bar" style="--progress:0%"></div>
-            </div>
-            <div class="card-fields">
-                <div class="field">Blood Type <span class="value empty">—</span></div>
-                <div class="field">Allergies <span class="value empty">—</span></div>
-                <div class="field">Medications <button class="add-btn">+ Add</button></div>
-            </div>
-        </div>
-
-        <div class="card card-contacts">
-            <div class="card-header">
-                <span class="icon">📞</span>
-                <h3>Contacts</h3>
-                <div class="progress-bar" style="--progress:50%"></div>
-            </div>
-            <div class="card-fields">
-                <div class="field">Primary <span class="value">JohnDoe1234!</span></div>
-                <div class="field">Secondary <button class="add-btn">+ Add</button></div>
-            </div>
-        </div>
-
-        <div class="card card-private">
-            <div class="card-header">
-                <span class="icon">🔒</span>
-                <h3>Private</h3>
-                <div class="progress-bar" style="--progress:33%"></div>
-            </div>
-            <div class="card-fields">
-                <div class="field">SSN <span class="value">••••</span></div>
-                <div class="field">Insurance <button class="add-btn">+ Add</button></div>
-                <div class="field">Notes <span class="value empty">—</span></div>
-            </div>
-        </div>
-
-        <div class="card card-vault card-wide">
-            <div class="card-header">
-                <span class="icon">🏥</span>
-                <h3>Health Vault</h3>
-                <div class="progress-bar" style="--progress:0%"></div>
-            </div>
-            <div class="card-fields">
-                <div class="field">Records <span class="value">0 documents</span></div>
-                <button class="add-btn action-btn">Upload Documents</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="action-bar">
-        <button class="btn-primary">Add Missing Info <span class="badge">+8</span></button>
-        <button class="btn-secondary">Download QR</button>
-        <button class="btn-secondary">Share</button>
-    </div>
-</div>
 </body>
 </html>

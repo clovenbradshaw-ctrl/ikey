@@ -26,16 +26,21 @@
         }
 
         html, body {
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            width: 100%;
-            max-width: 100vw;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: var(--surface-alt);
+            min-height: 100vh !important;
+            display: flex !important;
+            flex-direction: column;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            padding-top: 80px !important;
         }
 
         #healthRecordsTab {
@@ -43,216 +48,76 @@
         }
 
         .container {
-            margin-top: 88px;
-            width: 100%;
-            max-width: 100%;
-            padding: 0;
-            height: calc(100vh - 88px);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .emergency-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 40px;
-            background: #ff4757;
-            z-index: 2000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .main-nav {
-            position: fixed;
-            top: 40px;
-            left: 0;
-            right: 0;
-            height: 48px;
+            width: 100% !important;
+            max-width: 700px;
+            margin: 20px auto !important;
             background: white;
-            border-bottom: 1px solid #e5e7eb;
-            z-index: 1999;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-        }
-
-        .nav-left .logo {
-            font-weight: bold;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .mobile-menu-toggle {
-            background: none;
-            border: none;
-            font-size: 24px;
-        }
-
-        .mobile-drawer {
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            right: -100%;
-            width: 80%;
-            background: white;
-            z-index: 3000;
-            padding: 16px;
-            transition: right 0.3s ease;
-        }
-
-        .mobile-drawer.active {
-            right: 0;
-        }
-
-        .drawer-close {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-        }
-
-        .drawer-items button {
-            display: block;
-            width: 100%;
-            text-align: left;
-            margin: 8px 0;
-        }
-
-        .dashboard-content {
-            padding: 16px;
-        }
-
-        .progress-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .progress-ring {
-            flex-shrink: 0;
-            width: 60px;
-            height: 60px;
-        }
-
-        .section-card {
-            background: white;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: visible;
+            animation: slideIn 0.3s ease;
         }
 
         @media (max-width: 640px) {
-            .nav-right > *:not(.mobile-menu-toggle) {
-                display: none;
-            }
-
-            .section-card {
-                padding: 8px 12px;
-                margin-bottom: 4px;
-            }
-
-            .progress-header {
-                padding: 8px;
-            }
-        }
-
-        @media (min-width: 640px) {
             .container {
-                padding: 0 16px;
-                max-width: 640px;
-                margin-left: auto;
-                margin-right: auto;
+                max-width: 100%;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding-bottom: 80px;
+            }
+
+            body {
+                background: white !important;
+                align-items: flex-start !important;
+            }
+
+            .top-bar {
+                display: flex;
+                justify-content: space-between;
+                grid-template-columns: none;
+            }
+
             .dashboard-btn,
             .health-records-btn {
                 display: none !important;
             }
 
-            .section-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 16px;
+            .dashboard-header {
+                flex-direction: row;
+                align-items: center;
             }
 
-            .progress-header {
-                grid-column: 1 / -1;
+            .progress-ring,
+            .progress-ring svg {
+                width: 60px;
+                height: 60px;
             }
 
-            .progress-ring {
-                width: 80px;
-                height: 80px;
-            }
-        }
-
-        @media (min-width: 768px) {
-            .container {
-                max-width: 768px;
-                padding: 0 24px;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .container {
-                max-width: 1024px;
-                padding: 0 32px;
+            .section-cards {
+                display: block;
             }
 
-            .dashboard-content {
-                padding: 32px;
+            .section-card {
+                margin: 8px;
+                padding: 12px;
             }
 
-            .progress-ring {
-                width: 100px;
-                height: 100px;
+            .action-buttons {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                border-top: 1px solid #e5e7eb;
+                padding: 12px;
+                display: flex;
+                gap: 8px;
+                z-index: 100;
             }
-        }
 
-        button, .btn, .add-button, input, select {
-            min-height: 44px;
-            padding: 12px 16px;
-        }
-
-        @media (hover: hover) {
-            button:hover {
-                background-color: rgba(0,0,0,0.05);
+            .action-buttons .btn {
+                flex: 1;
             }
-        }
-
-        .field-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            min-height: 48px;
-        }
-
-        .add-button {
-            padding: 8px 16px;
-            margin: -8px -16px -8px 0;
-        }
-
-        img, video, iframe {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .field-value {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            hyphens: auto;
-        }
-
-        .modal {
-            max-width: calc(100vw - 32px);
-            max-height: calc(100vh - 32px);
-            overflow-y: auto;
         }
         
         @keyframes slideIn {
@@ -1458,27 +1323,22 @@
     </style>
 </head>
 <body>
-    <div class="emergency-bar">
-        <button class="emergency-911" onclick="show911Tab()">📍 911</button>
-    </div>
-    <div class="main-nav">
-        <div class="nav-left">
-            <span class="logo" onclick="showQRTab()">🔑 iKey</span>
+    <div class="top-bar">
+        <div class="logo">🔑 <span class="logo-text-full">iKey</span><span class="logo-text-short">iKey</span></div>
+        <div class="center-911">
+            <button class="emergency-911-btn" onclick="show911Tab()">
+                <span>📍 911</span>
+            </button>
         </div>
-        <div class="nav-center"></div>
-        <div class="nav-right">
-            <div class="desktop-controls">
-                <button onclick="changeTextSize(-1)">🔍-</button>
-                <button onclick="changeTextSize(1)">🔍+</button>
+        <div class="controls">
+            <div class="size-controls">
+                <button class="size-toggle" onclick="changeTextSize(-1)">🔍-</button>
+                <button class="size-toggle" onclick="changeTextSize(1)">🔍+</button>
+            </div>
+            <div class="lang-select">
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
-                <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
-                <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">Health Records</button>
-                <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
-                <div id="session-timer" class="session-timer"><span id="session-countdown"></span></div>
-                <button class="logout-btn" style="display:none;" onclick="logoutOwner()">Logout</button>
             </div>
-            <button class="mobile-menu-toggle" onclick="toggleDrawer()">☰</button>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">Health Records</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
@@ -1494,13 +1354,12 @@
                 <!-- Content will be dynamically inserted here -->
             </div>
         </div>
-    </div>
-
+    
     <!-- Dev Tools Panel -->
     <div class="dev-trigger" onclick="toggleDevTools()">🛠️</div>
     <div id="dev-panel" class="dev-panel">
         <h3>🛠️ Dev Tools</h3>
-
+        
         <div style="margin-bottom: 15px;">
             <input type="text" id="dev-guid" placeholder="Enter GUID">
             <input type="text" id="dev-key" placeholder="Enter Key">
@@ -3427,80 +3286,6 @@
         </div>
         </div>
     </div>
-    <script>
-        function toggleDrawer() {
-            const drawer = document.querySelector('.mobile-drawer');
-            if (drawer) {
-                drawer.classList.toggle('active');
-            }
-        }
-
-        class ResponsiveNav {
-            constructor() {
-                this.breakpoint = 768;
-                this.isMobile = window.innerWidth < this.breakpoint;
-                this.init();
-            }
-
-            init() {
-                document.querySelectorAll('.mobile-drawer').forEach(el => el.remove());
-                if (this.isMobile) {
-                    this.setupMobileNav();
-                } else {
-                    this.setupDesktopNav();
-                }
-
-                window.addEventListener('resize', () => {
-                    const wasMobile = this.isMobile;
-                    this.isMobile = window.innerWidth < this.breakpoint;
-                    if (wasMobile !== this.isMobile) {
-                        this.init();
-                    }
-                });
-            }
-
-            setupMobileNav() {
-                const mobileNav = `
-                    <div class="mobile-drawer">
-                        <button class="drawer-close" onclick="toggleDrawer()">×</button>
-                        <div class="drawer-items">
-                            <button onclick="changeTextSize(-1)">Text Size -</button>
-                            <button onclick="changeTextSize(1)">Text Size +</button>
-                            <button onclick="toggleLangDropdown()">Language</button>
-                            ${ownerPassword ? '<button onclick="showOwnerDashboard()">Dashboard</button>' : ''}
-                            ${ownerPassword ? '<button onclick="showHealthRecordsTab()">Health Records</button>' : ''}
-                            ${ownerPassword ? '<button onclick="logoutOwner()">Logout</button>' : ''}
-                        </div>
-                    </div>
-                `;
-                document.body.insertAdjacentHTML('beforeend', mobileNav);
-                document.querySelector('.nav-right').innerHTML = `
-                    <button class="mobile-menu-toggle" onclick="toggleDrawer()">☰</button>
-                `;
-            }
-
-            setupDesktopNav() {
-                document.querySelector('.nav-right').innerHTML = `
-                    <div class="desktop-controls">
-                        <button onclick="changeTextSize(-1)">🔍-</button>
-                        <button onclick="changeTextSize(1)">🔍+</button>
-                        <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
-                        <div class="lang-dropdown"></div>
-                        ${ownerPassword ? '<button onclick="showOwnerDashboard()">Dashboard</button>' : ''}
-                        ${ownerPassword ? '<button onclick="showHealthRecordsTab()">Health Records</button>' : ''}
-                        ${ownerPassword ? '<button onclick="logoutOwner()">Logout</button>' : '<button onclick="ownerLogin()">Owner Login</button>'}
-                        <div id="session-timer" class="session-timer"><span id="session-countdown"></span></div>
-                    </div>
-                    <button class="mobile-menu-toggle" onclick="toggleDrawer()">☰</button>
-                `;
-            }
-        }
-
-        let responsiveNav;
-        document.addEventListener('DOMContentLoaded', () => {
-            responsiveNav = new ResponsiveNav();
-        });
-    </script>
     <script src="session.js"></script>
 </body>
 </html>
