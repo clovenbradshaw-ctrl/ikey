@@ -754,9 +754,32 @@
             gap: 6px;
         }
 
-        .logo-text-short {
-            display: none;
-        }
+         .logo-text-short {
+             display: none;
+         }
+
+         .center-911 {
+             position: absolute;
+             left: 50%;
+             transform: translateX(-50%);
+         }
+
+         .emergency-911-btn {
+             background: #ff4757;
+             color: white;
+             border: none;
+             border-radius: 20px;
+             padding: 6px 16px;
+             font-weight: bold;
+             cursor: pointer;
+             font-size: 14px;
+             transition: all 0.3s;
+         }
+
+         .emergency-911-btn:hover {
+             background: #ff6b7a;
+             transform: scale(1.05);
+         }
 
         .controls {
             display: flex;
@@ -813,26 +836,26 @@
             color: #667eea;
             cursor: pointer;
             font-size: 14px;
-        }
+          }
 
-        body.rtl {
-            direction: rtl;
-            text-align: right;
+          body.rtl {
+              direction: rtl;
+              text-align: right;
         }
 
         body.rtl .top-bar {
             flex-direction: row-reverse;
-        }
+          }
 
-        body.rtl .lang-dropdown {
-            right: auto;
-            left: 0;
-        }
+          body.rtl .lang-dropdown {
+              right: auto;
+              left: 0;
+          }
 
-body.rtl .info-icon {
-            margin-left: 12px;
-            margin-right: 0;
-        }
+          body.rtl .info-icon {
+              margin-left: 12px;
+              margin-right: 0;
+          }
 
         @media (max-width: 480px) {
             .lang-button {
@@ -848,10 +871,43 @@ body.rtl .info-icon {
                 display: none;
             }
 
-            .logo-text-short {
-                display: inline;
-            }
-        }
+              .logo-text-short {
+                  display: inline;
+              }
+          }
+
+         .privacy-notice {
+             background: #e8f4f8;
+             border: 2px solid #4a90e2;
+             border-radius: 10px;
+             padding: 20px;
+             margin-bottom: 20px;
+             text-align: center;
+         }
+
+         .privacy-notice h3 {
+             color: #2c5282;
+             margin-bottom: 15px;
+         }
+
+         .privacy-notice ul {
+             list-style: none;
+             padding: 0;
+         }
+
+         .privacy-notice li {
+             margin: 10px 0;
+             padding-left: 25px;
+             position: relative;
+         }
+
+         .privacy-notice li:before {
+             content: "✓";
+             position: absolute;
+             left: 0;
+             color: #48bb78;
+             font-weight: bold;
+         }
         /* Critical info helper */
         .field-info {
             display: flex;
@@ -863,9 +919,13 @@ body.rtl .info-icon {
     </style>
 </head>
 <body>
-<div id="qrTab">
     <div class="top-bar">
         <div class="logo">🚨 <span class="logo-text-full">Emergency QR</span><span class="logo-text-short">QR</span></div>
+        <div class="center-911">
+            <button class="emergency-911-btn" onclick="show911Tab()">
+                <span>📍 911</span>
+            </button>
+        </div>
         <div class="controls">
             <div class="lang-select">
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
@@ -874,11 +934,12 @@ body.rtl .info-icon {
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
         </div>
     </div>
-    <div class="container">
-        <div id="main-content">
-            <!-- Content will be dynamically inserted here -->
+    <div id="qrTab">
+        <div class="container">
+            <div id="main-content">
+                <!-- Content will be dynamically inserted here -->
+            </div>
         </div>
-    </div>
     
     <!-- Dev Tools Panel -->
     <div class="dev-trigger" onclick="toggleDevTools()">🛠️</div>
@@ -2375,17 +2436,66 @@ body.rtl .info-icon {
                 `Raw Data:\n${JSON.stringify(currentData, null, 2)}`;
         }
         
-        function devClearStorage() {
-            currentGUID = null;
-            currentKey = null;
-            currentData = null;
-            document.getElementById('dev-output').textContent = 'All data cleared';
-        }
+         function devClearStorage() {
+             currentGUID = null;
+             currentKey = null;
+             currentData = null;
+             document.getElementById('dev-output').textContent = 'All data cleared';
+         }
 
-        // Allow closing dev tools
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.getElementById('dev-panel').classList.remove('active');
+         let location911Enabled = false;
+
+         function show911Tab() {
+             // Hide QR tab
+             document.getElementById('qrTab').style.display = 'none';
+             // Show 911 tab
+             document.getElementById('text911Tab').style.display = 'block';
+
+             // Only load if not already loaded
+             if (!location911Enabled) {
+                 document.getElementById('location-permission-prompt').style.display = 'block';
+                 document.getElementById('location-content').style.display = 'none';
+             }
+         }
+
+         function showQRTab() {
+             document.getElementById('qrTab').style.display = 'block';
+             document.getElementById('text911Tab').style.display = 'none';
+         }
+
+         async function requestLocationAndLoad911() {
+             try {
+                 // Request location permission
+                 await navigator.geolocation.getCurrentPosition(
+                     (position) => {
+                         // Permission granted
+                         location911Enabled = true;
+                         document.getElementById('location-permission-prompt').style.display = 'none';
+                         document.getElementById('location-content').style.display = 'block';
+
+                         // Load the text911.html in iframe
+                         const iframe = document.getElementById('text911Frame');
+                         iframe.src = 'text911.html';
+                     },
+                     (error) => {
+                         alert('Location access is required for 911 emergency features. Please enable location in your browser settings.');
+                     },
+                     { enableHighAccuracy: true }
+                 );
+             } catch (error) {
+                 alert('Unable to access location. Please check your browser settings.');
+             }
+         }
+
+         // Add click handler for logo to return to QR
+         document.addEventListener('DOMContentLoaded', function() {
+             document.querySelector('.logo').addEventListener('click', showQRTab);
+         });
+
+         // Allow closing dev tools
+         document.addEventListener('keydown', function(e) {
+             if (e.key === 'Escape') {
+                 document.getElementById('dev-panel').classList.remove('active');
             }
         });
 
@@ -2417,26 +2527,34 @@ body.rtl .info-icon {
                 clickCount = 0;
             }, 500);
         });
-    </script>
-</div>
-<div id="text911Tab" style="display:none;">
-    <iframe src="text911.html" style="border:none;width:100%;height:100vh;"></iframe>
-</div>
-<nav class="tab-bar" style="position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid #ccc;z-index:1000;">
-    <button id="qrTabBtn" style="flex:1;padding:10px;">QR</button>
-    <button id="text911TabBtn" style="flex:1;padding:10px;">911 Location</button>
-</nav>
-<script>
-    const qrTab = document.getElementById('qrTab');
-    const text911Tab = document.getElementById('text911Tab');
-    document.getElementById('qrTabBtn').addEventListener('click', () => {
-        qrTab.style.display = 'block';
-        text911Tab.style.display = 'none';
-    });
-    document.getElementById('text911TabBtn').addEventListener('click', () => {
-        qrTab.style.display = 'none';
-        text911Tab.style.display = 'block';
-    });
 </script>
+    </div>
+    <div id="text911Tab" style="display:none;">
+        <div class="container">
+            <div class="header">
+                <h1>📍 911 Emergency Location</h1>
+                <p>Share your precise location for emergency services</p>
+            </div>
+            <div class="content">
+                <div id="location-permission-prompt" style="display:block;">
+                    <div class="privacy-notice">
+                        <h3>🔒 Your Privacy is Protected</h3>
+                        <ul style="text-align: left; margin: 20px 0;">
+                            <li>Location is ONLY used when you're on this screen</li>
+                            <li>Nothing is saved online or stored anywhere</li>
+                            <li>Location data stays on your device</li>
+                            <li>Only shared if YOU choose to text 911</li>
+                        </ul>
+                    </div>
+                    <button class="btn" onclick="requestLocationAndLoad911()">
+                        <span>Enable Location for Emergency Use</span>
+                    </button>
+                </div>
+                <div id="location-content" style="display:none;">
+                    <iframe id="text911Frame" style="border:none;width:100%;height:600px;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
