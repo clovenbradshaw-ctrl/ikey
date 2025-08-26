@@ -1,8 +1,8 @@
-class EmergencyQRApp {
-  // Placeholder base class representing existing emergency QR functionality.
+class IKeyApp {
+  // Placeholder base class representing existing iKey functionality.
 }
 
-class UnifiedHealthApp extends EmergencyQRApp {
+class UnifiedHealthApp extends IKeyApp {
   constructor() {
     super();
     this.vaultUnlocked = false;
