@@ -1474,6 +1474,9 @@
 
     <script src="session.js"></script>
     <script>
+        const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
+        const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
+
         // Application class to manage state and functionality
         class HealthVaultApp {
             constructor() {
@@ -1488,6 +1491,7 @@
                 this.lastActivityTime = Date.now();
                 this.lockTimeout = null;
                 this.timerInterval = null;
+                this.loaded = false;
 
                 // Record identifier
                 this.guid = (window.parent && window.parent.currentGUID)
@@ -1540,6 +1544,23 @@
 
                 // Ensure emergency content starts locked
                 document.getElementById('emergencyContent').classList.remove('unlocked');
+            }
+
+            async loadArchiveData() {
+                try {
+                    const archiveUrl = `${ARCHIVE_BASE}${this.guid}.json?ts=${Date.now()}`;
+                    const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                    if (!response.ok) return;
+                    const archiveData = await response.json();
+                    const payload = await this.crypto.decrypt(archiveData.data, this.sessionPassword);
+                    if (payload.healthRecords) {
+                        this.loadFormData(payload.healthRecords);
+                    }
+                } catch (e) {
+                    console.warn('No existing health records found', e);
+                } finally {
+                    this.loaded = true;
+                }
             }
             
             setupEventListeners() {
@@ -1817,7 +1838,7 @@
                 this.showPasswordModal('Enter Password to Unlock', false, 'unlockSession');
             }
             
-            completeUnlock() {
+            async completeUnlock() {
                 this.isLocked = false;
                 document.getElementById('lockBtn').innerHTML = '🔓 Lock';
                 document.getElementById('lockBtn').className = 'btn btn-lock';
@@ -1840,6 +1861,9 @@
                 this.trackActivity();
                 if (!this.timerInterval) {
                     this.timerInterval = setInterval(() => this.updateLockTimer(), 1000);
+                }
+                if (!this.loaded && this.sessionPassword) {
+                    this.loadArchiveData();
                 }
             }
             
@@ -2028,7 +2052,20 @@
                 formData.lastUpdated = timestamp;
 
                 try {
-                    const encrypted = await this.crypto.encrypt(formData, password);
+                    let existing = {};
+                    try {
+                        const archiveUrl = `${ARCHIVE_BASE}${this.guid}.json?ts=${Date.now()}`;
+                        const existingResp = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                        if (existingResp.ok) {
+                            const existingData = await existingResp.json();
+                            existing = await this.crypto.decrypt(existingData.data, password);
+                        }
+                    } catch (e) {
+                        console.warn('Could not load existing archive data', e);
+                    }
+                    existing.healthRecords = formData;
+
+                    const encrypted = await this.crypto.encrypt(existing, password);
                     const fileContent = JSON.stringify({
                         guid: this.guid,
                         encrypted: true,
@@ -2036,7 +2073,7 @@
                         data: encrypted
                     });
 
-                    const response = await fetch('https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441', {
+                    const response = await fetch(WEBHOOK_URL, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: fileContent
