@@ -945,6 +945,53 @@ body.rtl .info-icon {
             display: block;
             text-align: center;
         }
+
+        .status-widget {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        .status-panel {
+            display: none;
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .status-panel.active {
+            display: block;
+        }
+
+        .status-toggle {
+            background: #667eea;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
+
+        .update-history {
+            margin-top: 15px;
+            font-size: 12px;
+        }
+
+        .update-item {
+            margin-bottom: 5px;
+        }
+
+        .update-status.success {
+            color: green;
+        }
+
+        .update-status.failed {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -1032,6 +1079,192 @@ body.rtl .info-icon {
         const BEACON_TEXT = 'SQR:1';
         const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
+
+        const UploadStatus = {
+            PENDING: 'pending',
+            UPLOADING: 'uploading',
+            VERIFYING: 'verifying',
+            COMPLETE: 'complete',
+            FAILED: 'failed',
+            RETRY_NEEDED: 'retry_needed'
+        };
+
+        function trackUploadStatus(guid, status, details = {}) {
+            const uploadHistory = JSON.parse(localStorage.getItem('upload_history') || '{}');
+            uploadHistory[guid] = {
+                status,
+                timestamp: new Date().toISOString(),
+                attempts: (uploadHistory[guid]?.attempts || 0) + (status === UploadStatus.UPLOADING ? 1 : 0),
+                ...details
+            };
+            localStorage.setItem('upload_history', JSON.stringify(uploadHistory));
+            updateStatusPanel();
+            return uploadHistory[guid];
+        }
+
+        async function verifyArchiveUpload(guid, maxAttempts = 10) {
+            const archiveUrl = `${ARCHIVE_BASE}${guid}.json`;
+            let attempts = 0;
+
+            const checkInterval = setInterval(async () => {
+                attempts++;
+                try {
+                    const response = await fetch(archiveUrl, { mode: 'cors' });
+                    if (response.ok) {
+                        clearInterval(checkInterval);
+                        trackUploadStatus(guid, UploadStatus.COMPLETE, {
+                            verifiedAt: new Date().toISOString(),
+                            archiveUrl
+                        });
+                        showStatus('✅ Verified on Archive.org!', 'success');
+                        return true;
+                    }
+                } catch (e) {
+                    console.log(`Verification attempt ${attempts} failed`);
+                }
+
+                if (attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    trackUploadStatus(guid, UploadStatus.RETRY_NEEDED, {
+                        lastCheckAt: new Date().toISOString()
+                    });
+                    showStatus('⚠️ Upload may still be processing (can take up to 30 min)', 'info');
+                }
+            }, 30000);
+        }
+
+        function displayUpdateHistory(guid) {
+            const history = JSON.parse(localStorage.getItem('update_history_' + guid) || '[]');
+            if (history.length === 0) return '';
+
+            return `
+                <div class="update-history">
+                    <h4>Recent Updates</h4>
+                    ${history.slice(-3).reverse().map(update => `
+                        <div class="update-item">
+                            <span class="update-time">${new Date(update.timestamp).toLocaleString()}</span>
+                            <span class="update-status ${update.success ? 'success' : 'failed'}">
+                                ${update.success ? '✅' : '❌'} ${update.message}
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getUploadStatusBanner(guid, createdTime) {
+            const uploadStatus = JSON.parse(localStorage.getItem('upload_history') || '{}')[guid];
+            const ageMinutes = createdTime ? (Date.now() - createdTime.getTime()) / 60000 : null;
+
+            if (uploadStatus) {
+                switch(uploadStatus.status) {
+                    case UploadStatus.COMPLETE:
+                        return {
+                            type: 'success',
+                            message: `✅ Backed up to Archive.org (verified ${new Date(uploadStatus.verifiedAt).toLocaleString()})`
+                        };
+                    case UploadStatus.UPLOADING:
+                        return {
+                            type: 'info',
+                            message: `⏳ Upload in progress (attempt ${uploadStatus.attempts})...`
+                        };
+                    case UploadStatus.RETRY_NEEDED:
+                        return {
+                            type: 'warning',
+                            message: `⚠️ Upload may need retry. Last checked: ${new Date(uploadStatus.lastCheckAt).toLocaleString()}`
+                        };
+                    case UploadStatus.FAILED:
+                        return {
+                            type: 'error',
+                            message: `❌ Upload failed: ${uploadStatus.error}. Please retry.`,
+                            showRetry: true
+                        };
+                }
+            }
+
+            if (ageMinutes && ageMinutes < 5) {
+                return {
+                    type: 'info',
+                    message: '⏳ Data uploading to backup servers (usually takes 5-30 minutes)'
+                };
+            }
+
+            return null;
+        }
+
+        async function uploadWithProgress(payload, onProgress) {
+            try {
+                trackUploadStatus(payload.guid, UploadStatus.UPLOADING);
+                onProgress && onProgress({ phase: 'uploading', progress: 0 });
+
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                onProgress && onProgress({ phase: 'processing', progress: 50 });
+
+                if (response.ok) {
+                    onProgress && onProgress({ phase: 'verifying', progress: 75 });
+                    verifyArchiveUpload(payload.guid);
+                    return { success: true };
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (error) {
+                trackUploadStatus(payload.guid, UploadStatus.FAILED, { error: error.message });
+                throw error;
+            }
+        }
+
+        function createStatusWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'status-widget';
+            widget.innerHTML = `
+                <button class="status-toggle" onclick="toggleStatusPanel()">📊</button>
+                <div class="status-panel" id="status-panel">
+                    <h3>System Status</h3>
+                    <div id="status-content">Loading...</div>
+                </div>
+            `;
+            document.body.appendChild(widget);
+        }
+
+        function updateStatusPanel() {
+            const panel = document.getElementById('status-content');
+            if (!panel) return;
+
+            const uploadHistory = JSON.parse(localStorage.getItem('upload_history') || '{}');
+            const pendingUploads = Object.entries(uploadHistory)
+                .filter(([_, status]) => status.status === UploadStatus.PENDING);
+
+            panel.innerHTML = `
+                <div class="status-item">
+                    <strong>Current GUID:</strong> ${currentGUID || 'None'}
+                </div>
+                <div class="status-item">
+                    <strong>Pending Uploads:</strong> ${pendingUploads.length}
+                </div>
+                <div class="status-item">
+                    <strong>Last Activity:</strong> ${new Date().toLocaleTimeString()}
+                </div>
+            `;
+        }
+
+        function toggleStatusPanel() {
+            const panel = document.getElementById('status-panel');
+            if (panel) panel.classList.toggle('active');
+            updateStatusPanel();
+        }
+
+        function addUpdateHistory(guid, success, message) {
+            const key = 'update_history_' + guid;
+            const history = JSON.parse(localStorage.getItem(key) || '[]');
+            history.push({ timestamp: new Date().toISOString(), success, message });
+            localStorage.setItem(key, JSON.stringify(history));
+            updateStatusPanel();
+        }
 
         const translations = {
           en: {
@@ -1419,16 +1652,10 @@ body.rtl .info-icon {
             let data;
             let fetchSuccess = false;
 
-            // Calculate age of QR code
-            if (createdTime) {
-                const ageMinutes = (Date.now() - createdTime.getTime()) / 60000;
-                console.log('QR code age in minutes:', ageMinutes);
-
-                if (ageMinutes < 5) {
-                    banner = '⏳ Data still uploading to backup servers (usually takes 5-30 minutes). QR code works locally in the meantime.';
-                } else if (ageMinutes < 30) {
-                    banner = '⏳ Data may still be uploading to backup servers. If not loading, please wait a few more minutes.';
-                }
+            const statusBanner = getUploadStatusBanner(guid, createdTime);
+            if (statusBanner) {
+                banner = statusBanner.message;
+                showStatus(statusBanner.message, statusBanner.type);
             }
 
             try {
@@ -1590,7 +1817,9 @@ body.rtl .info-icon {
                         </div>
                 `;
             }
-            
+
+            html += displayUpdateHistory(currentGUID);
+
             html += `
                         <div class="help-link">
                             <button class="btn-outline" style="font-size:12px;padding:4px 8px;" onclick="ownerLogin()">Owner Login</button>
@@ -1778,6 +2007,7 @@ body.rtl .info-icon {
                     currentBlob = { ...fullData, passwordHint: newHint };
                     showStatus('✅ Successfully updated!', 'success');
                     stopSecurityAnimation(true);
+                    addUpdateHistory(currentGUID, true, 'Updated emergency data');
 
                     // Show the updated QR view
                     await loadAndDisplayEmergencyInfo(currentGUID, currentKey, currentBlob.name, currentBlob.created);
@@ -1788,6 +2018,7 @@ body.rtl .info-icon {
             } catch (error) {
                 showStatus('Error: ' + error.message, 'error');
                 stopSecurityAnimation(false);
+                addUpdateHistory(currentGUID, false, error.message);
             } finally {
                 button.disabled = false;
                 button.innerHTML = '<span>Update QR</span>';
@@ -2087,6 +2318,7 @@ body.rtl .info-icon {
                 // Generate unique identifiers
                 currentGUID = generateGUID();
                 currentKey = generateKey();
+                trackUploadStatus(currentGUID, UploadStatus.PENDING);
 
                  // Collect form data
                  const formData = {
@@ -2149,9 +2381,11 @@ body.rtl .info-icon {
                 document.getElementById('qr-result').style.display = 'block';
                 
                 showStatus('✅ QR code created successfully!', 'success');
+                addUpdateHistory(currentGUID, true, 'QR code created');
                 
             } catch (error) {
                 showStatus('Error: ' + error.message, 'error');
+                if (currentGUID) addUpdateHistory(currentGUID, false, error.message);
             } finally {
                 button.disabled = false;
                 button.innerHTML = '<span data-i18n="createQR">Create QR</span>';
@@ -2376,30 +2610,24 @@ body.rtl .info-icon {
                                 }
                             };
 
-                            const response = await fetch(WEBHOOK_URL, {
-                                method: 'POST',
-                                mode: 'cors',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload)
-                            });
-
                             let result;
-                            const contentType = response.headers.get("content-type");
-                            if (contentType && contentType.includes("application/json")) {
-                                result = await response.json();
-                            } else {
-                                const text = await response.text();
-                                if (text.includes("Uploaded to archive.org") || text.includes("encrypted")) {
-                                    result = { success: true, message: text };
-                                } else {
-                                    result = { success: false, message: text };
-                                }
+                            try {
+                                await uploadWithProgress(payload, ({ phase, progress }) => {
+                                    const fill = document.getElementById('progress-fill');
+                                    if (fill) fill.style.width = progress + '%';
+                                    const msg = document.getElementById('upload-message');
+                                    if (msg) msg.textContent = phase.charAt(0).toUpperCase() + phase.slice(1) + '...';
+                                });
+                                result = { success: true };
+                            } catch (err) {
+                                result = { success: false, message: err.message };
                             }
 
-                            if (!response.ok || result.success === false) {
-                                throw new Error(result.message || result.error || 'Upload failed');
+                            if (!result.success) {
+                                throw new Error(result.message || 'Upload failed');
                             }
 
+                            addUpdateHistory(currentGUID, true, 'Uploaded to Archive.org');
                             continue;
                         } catch (error) {
                             document.getElementById('upload-title').textContent = '❌ Upload Failed';
@@ -2416,6 +2644,8 @@ body.rtl .info-icon {
                             `;
                             document.getElementById('upload-error').style.display = 'block';
                             document.getElementById('progress-fill').style.background = '#ff4757';
+                            addUpdateHistory(currentGUID, false, error.message);
+                            trackUploadStatus(currentGUID, UploadStatus.FAILED, { error: error.message });
                             return false;
                         }
                     } else if (step.duration > 0) {
@@ -2866,7 +3096,7 @@ body.rtl .info-icon {
         
         document.addEventListener('click', function(e) {
             if (e.target.closest('.dev-trigger') || e.target.closest('.dev-panel')) return;
-            
+
             clickCount++;
             
             if (clickCount === 3) {
@@ -2878,6 +3108,12 @@ body.rtl .info-icon {
             clickTimer = setTimeout(() => {
                 clickCount = 0;
             }, 500);
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            createStatusWidget();
+            updateStatusPanel();
+            setInterval(updateStatusPanel, 30000);
         });
     </script>
 </body>
