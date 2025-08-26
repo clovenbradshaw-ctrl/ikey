@@ -1725,6 +1725,9 @@
             } catch (error) {
                 console.error('Update error:', error);
                 alert('Failed to prepare update: ' + error.message);
+                if (currentBlob) {
+                    displayFullInfo(currentBlob);
+                }
                 return false;
             }
         }
