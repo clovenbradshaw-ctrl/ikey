@@ -37,6 +37,15 @@
             font-size: 0.8125rem;
             opacity: 0.95;
         }
+        .breadcrumbs {
+            font-size: 0.875rem;
+            color: #4b5563;
+            padding: 10px 20px;
+        }
+        .breadcrumbs a {
+            color: #991b1b;
+            text-decoration: none;
+        }
         .emergency-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -265,6 +274,10 @@
 </head>
 <body>
     <div class="container">
+        <nav class="breadcrumbs">
+            <a href="index.html" onclick="goBackOrDashboard(event)">Dashboard</a> /
+            <span>Emergency 911</span>
+        </nav>
         <div class="emergency-buttons" id="emergencyButtons" style="display:none;">
             <a href="tel:911" class="btn-911 btn-call">
                 <span class="icon">📞</span>
@@ -314,6 +327,14 @@
     </div>
     <div id="toast" class="toast"></div>
     <script>
+        function goBackOrDashboard(e){
+            if (document.referrer !== '' && history.length > 1){
+                history.back();
+            } else {
+                window.location.href='index.html';
+            }
+            if(e) e.preventDefault();
+        }
         let currentLocation=null;
         const CODE_ALPHABET='23456789CFGHJMPQRVWX';
         const STATE_ABBREVIATIONS={
