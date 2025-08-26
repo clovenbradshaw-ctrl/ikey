@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Emergency QR</title>
+    <title>iKey - Your data. Your key.</title>
+    <meta name="description" content="Secure personal information with zero-knowledge encryption. Only your QR code can unlock your data.">
     
     <style>
         /* Softr embedding fixes */
@@ -87,12 +88,12 @@
             padding: 20px;
         }
         
-        /* Emergency Display Mode */
-        .emergency-card {
+        /* Info Display Mode */
+        .info-card {
             animation: fadeIn 0.5s ease;
         }
-        
-        .emergency-header {
+
+        .info-header {
             background: #ff4757;
             color: white;
             padding: 15px;
@@ -100,8 +101,8 @@
             margin-bottom: 20px;
             text-align: center;
         }
-        
-        .emergency-header h2 {
+
+        .info-header h2 {
             font-size: 18px;
             display: flex;
             align-items: center;
@@ -801,6 +802,15 @@
             direction: ltr;
         }
 
+        .size-toggle {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
         .lang-dropdown {
             position: absolute;
             right: 0;
@@ -928,13 +938,16 @@
 </head>
 <body>
     <div class="top-bar">
-        <div class="logo">🚨 <span class="logo-text-full">Emergency QR</span><span class="logo-text-short">QR</span></div>
+        <div class="logo">🔑 <span class="logo-text-full">iKey</span><span class="logo-text-short">iKey</span></div>
         <div class="center-911">
             <button class="emergency-911-btn" onclick="show911Tab()">
                 <span>📍 911</span>
             </button>
         </div>
         <div class="controls">
+            <button class="size-toggle" onclick="toggleTextSize()">
+                <span id="size-indicator">Aa</span>
+            </button>
             <div class="lang-select">
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
@@ -984,7 +997,7 @@
 
     <script>
         // Configuration
-        const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/safety/';
+        const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
         const BEACON_TEXT = 'SQR:1';
         const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
@@ -1061,7 +1074,7 @@
 
         function setLanguage(langCode) {
           currentLanguage = langCode;
-          localStorage.setItem('preferredLanguage', langCode);
+          localStorage.setItem('ikey_preferred_language', langCode);
 
           document.documentElement.lang = langCode;
           document.documentElement.dir = RTL_LANGS.includes(langCode) ? 'rtl' : 'ltr';
@@ -1082,6 +1095,24 @@
           document.querySelectorAll('.lang-option').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.lang === langCode);
           });
+        }
+
+        function applyTextSize(size) {
+          const sizes = { standard: '16px', large: '20px', xlarge: '24px' };
+          const next = sizes[size] || sizes.standard;
+          document.documentElement.style.fontSize = next;
+          const indicator = document.getElementById('size-indicator');
+          if (indicator) {
+            indicator.textContent = size === 'large' ? 'A+' : size === 'xlarge' ? 'A++' : 'Aa';
+          }
+        }
+
+        function toggleTextSize() {
+          const order = ['standard', 'large', 'xlarge'];
+          const current = localStorage.getItem('ikey_text_size') || 'standard';
+          const next = order[(order.indexOf(current) + 1) % order.length];
+          localStorage.setItem('ikey_text_size', next);
+          applyTextSize(next);
         }
 
         function toggleLangDropdown(force) {
@@ -1161,9 +1192,9 @@
         function displayBasicInfo({ name, criticalInfo }) {
             const container = document.getElementById('main-content');
             container.innerHTML = `
-                <div class="emergency-card">
-                    <div class="emergency-header">
-                        <h2><span class="info-icon">🚨</span><span data-i18n="emergencyInfo">EMERGENCY INFORMATION</span></h2>
+                <div class="info-card">
+                    <div class="info-header">
+                        <h2><span class="info-icon">🔑</span><span data-i18n="emergencyInfo">Personal Information</span></h2>
                     </div>
                     <div class="content">
                         <div class="info-section">
@@ -1246,10 +1277,13 @@
             buildLanguageButtons();
 
             const savedLang =
-                localStorage.getItem('preferredLanguage') ||
+                localStorage.getItem('ikey_preferred_language') ||
                 navigator.language.substring(0, 2) ||
                 'en';
             setLanguage(savedLang);
+
+            const savedSize = localStorage.getItem('ikey_text_size') || 'standard';
+            applyTextSize(savedSize);
 
             await parseAndDisplay();
         });
@@ -1373,7 +1407,7 @@
             container.innerHTML = `
                 <div class="loading-screen">
                     <div class="spinner"></div>
-                    <p>Loading emergency information${name ? ` for ${name}` : ''}...</p>
+                    <p>Loading personal information${name ? ` for ${name}` : ''}...</p>
                 </div>
             `;
         }
@@ -1466,7 +1500,7 @@
                 await displayEmergencyInfo(fullData, { overrideName: urlName, banner });
             } catch (error) {
                 console.error('Error loading data:', error);
-                showError('Unable to load emergency information. Please check the QR code.');
+                showError('Unable to load personal information. Please check the QR code.');
             }
         }
 
@@ -1478,9 +1512,9 @@
             const nameToShow = options.overrideName || fullData.name || publicInfo.name || 'Unknown';
 
             let html = `
-                <div class="emergency-card">
-                    <div class="emergency-header">
-                        <h2><span class="info-icon">🚨</span><span data-i18n="emergencyInfo">EMERGENCY INFORMATION</span></h2>
+                <div class="info-card">
+                    <div class="info-header">
+                        <h2><span class="info-icon">🔑</span><span data-i18n="emergencyInfo">Personal Information</span></h2>
                     </div>
                     ${options.banner ? `<div class="status-message status-info">${options.banner}</div>` : ''}
 
@@ -1539,7 +1573,7 @@
                             <div class="info-item">
                                 <span class="info-icon">📞</span>
                                 <div class="info-content">
-                                    <div class="info-label" data-i18n="emergencyContact">Emergency Contact</div>
+                                    <div class="info-label" data-i18n="emergencyContact">Primary Contact</div>
                                     <div class="info-value">
                                         ${publicInfo.contact.name}
                                         <a href="tel:${publicInfo.contact.phone}" class="phone-link">
@@ -1644,7 +1678,7 @@
             }
             let password = ownerPassword || document.getElementById('vault-password')?.value;
             if (!password) {
-                password = prompt('Please enter your password to update this emergency QR.');
+                password = prompt('Please enter your password to update this iKey.');
                 if (!password) {
                     return;
                 }
@@ -1788,7 +1822,7 @@
                 showStatus('Error: ' + error.message, 'error');
             } finally {
                 button.disabled = false;
-                button.innerHTML = '<span>Update QR</span>';
+                button.innerHTML = '<span>Update iKey</span>';
             }
         }
         
@@ -1799,13 +1833,13 @@
 
             container.innerHTML = `
                 <div class="header">
-                    <h1 data-i18n="createYourEmergencyQR">Create Your Emergency QR</h1>
-                    <p data-i18n="emergencyQRTagline">Your emergency QR: Public enough to save your life, private enough to protect your identity</p>
+                    <h1 data-i18n="createYourKey">Create Your iKey</h1>
+                    <p data-i18n="tagline">Your data. Your key. Your control.</p>
                 </div>
 
                 <div class="content">
                       <form id="create-form">
-                          <div class="section-title" data-i18n="emergencyInfo">Emergency Information</div>
+                          <div class="section-title" data-i18n="emergencyInfo">Personal Information</div>
 
                           <div class="form-group">
                               <label for="name"><span data-i18n="name">Name</span> *</label>
@@ -1848,12 +1882,12 @@
                           </div>
 
                           <div class="form-group">
-                              <label for="contact-name"><span data-i18n="emergencyContactName">Emergency Contact Name</span> *</label>
+                              <label for="contact-name"><span data-i18n="emergencyContactName">Primary Contact Name</span> *</label>
                               <input type="text" id="contact-name" required placeholder="Jane Doe" data-i18n-placeholder="contactNamePlaceholder">
                           </div>
 
                           <div class="form-group">
-                              <label for="contact-phone"><span data-i18n="emergencyContactPhone">Emergency Contact Phone</span> *</label>
+                              <label for="contact-phone"><span data-i18n="emergencyContactPhone">Primary Contact Phone</span> *</label>
                               <input type="tel" id="contact-phone" required placeholder="(555) 123-4567" data-i18n-placeholder="contactPhonePlaceholder">
                           </div>
 
@@ -1889,13 +1923,13 @@
                         </div>
 
                         <button type="submit" class="btn">
-                            <span data-i18n="createQR">Create QR</span>
+                            <span data-i18n="createKey">Create iKey</span>
                         </button>
                     </form>
 
                     <div id="qr-result" style="display: none;">
                         <div class="qr-display">
-                            <h3>✅ Your Emergency QR Code</h3>
+                            <h3>✅ Your iKey Created</h3>
                             <p style="color: #666; font-size: 14px; margin: 10px 0;">
                                 ✓ Encrypted with zero-knowledge security<br>
                                 ✓ Backed up to Archive.org<br>
@@ -2078,14 +2112,14 @@
                 // Show success
                 document.getElementById('create-form').style.display = 'none';
                 document.getElementById('qr-result').style.display = 'block';
-                showStatus('✅ QR code created and backed up online!', 'success');
+                showStatus('iKey created and secured online!', 'success');
 
             } catch (error) {
                 showStatus('Error: ' + error.message, 'error');
                 // Don't create QR if upload failed
             } finally {
                 button.disabled = false;
-                button.innerHTML = '<span data-i18n="createQR">Create QR</span>';
+                button.innerHTML = '<span data-i18n="createKey">Create iKey</span>';
                 setLanguage(currentLanguage);
             }
         }
@@ -2249,7 +2283,7 @@
                     bloodType: "O+",
                     allergies: "Penicillin, Peanuts",
                     contact: {
-                        name: "Emergency Contact",
+                        name: "Primary Contact",
                         phone: "(555) 123-4567"
                     }
                 },
@@ -2273,7 +2307,7 @@
             const canvas = document.querySelector('#qrcode canvas');
             if (canvas) {
                 const link = document.createElement('a');
-                link.download = 'emergency-qr.png';
+                link.download = 'ikey.png';
                 link.href = canvas.toDataURL();
                 link.click();
             }
@@ -2310,7 +2344,7 @@
                     <div class="status-message status-error">
                         ${message}
                     </div>
-                    <button class="btn" onclick="showCreationForm()">Create New QR</button>
+                    <button class="btn" onclick="showCreationForm()">Create New iKey</button>
                 </div>
             `;
         }
@@ -2323,26 +2357,16 @@
                 helpContent.classList.remove('active');
             } else {
                 helpContent.innerHTML = `
-                    <h4>How Your Privacy Works</h4>
-                    <p>Anyone who scans your QR sees:</p>
+                    <h4>How iKey Works</h4>
+                    <p>Your information is encrypted before leaving your device:</p>
                     <ul>
-                        <li>✓ Your name & emergency contact (that's the point - to help you!)</li>
-                        <li>✓ Blood type & allergies (critical for first responders)</li>
+                        <li>✓ Public info helps in emergencies</li>
+                        <li>✓ Private info needs your password</li>
+                        <li>🔑 Your iKey code is the only way to decrypt</li>
                     </ul>
-                    <p>Only with your password:</p>
-                    <ul>
-                        <li>🔒 Social Security Number</li>
-                        <li>🔒 Medical notes & medications</li>
-                    </ul>
-                    <p><strong>The Beautiful Math:</strong><br>
-                    Your encryption has more possible combinations than there are<br>
-                    grains of sand on all beaches on Earth... multiplied by the<br>
-                    number of stars in the universe... multiplied by a trillion.</p>
-                    <p><strong>Important:</strong> We designed this so even WE can't access your data.<br>
-                    Your QR code contains the only encryption key that exists.<br>
-                    Lose the QR = lose access forever. There's no password reset,<br>
-                    no customer service that can help, no backdoor.</p>
-                    <p>This is true security - not even the creators can break in.</p>
+                    <p><strong>True Security:</strong><br>
+                    Not even iKey can access your data. The QR code contains<br>
+                    the only decryption key that exists. Lose it = lose access forever.</p>
                 `;
                 helpContent.classList.add('active');
             }
