@@ -1478,6 +1478,11 @@
                 this.lastActivityTime = Date.now();
                 this.lockTimeout = null;
                 this.timerInterval = null;
+
+                // Record identifier
+                this.guid = (window.parent && window.parent.currentGUID)
+                    ? window.parent.currentGUID
+                    : window.crypto.randomUUID();
                 
                 // Dynamic data structure
                 this.dynamicData = {
@@ -2008,6 +2013,7 @@
                 try {
                     const encrypted = await this.crypto.encrypt(formData, password);
                     const fileContent = JSON.stringify({
+                        guid: this.guid,
                         encrypted: true,
                         version: '3.0',
                         data: encrypted
@@ -2091,8 +2097,14 @@
             
             async processFileData(fileData, password) {
                 try {
+                    if (fileData.guid) {
+                        this.guid = fileData.guid;
+                    }
                     const decrypted = await this.crypto.decrypt(fileData.data, password);
-                    
+                    if (decrypted.guid) {
+                        this.guid = decrypted.guid;
+                    }
+
                     this.loadFormData(decrypted);
                     
                     // Update UI
@@ -2151,6 +2163,8 @@
                 document.querySelectorAll('.section').forEach(section => {
                     formData.collapsedSections[section.id] = section.classList.contains('collapsed');
                 });
+
+                formData.guid = this.guid;
 
                 return formData;
             }
