@@ -1927,6 +1927,17 @@
                                 </div>
                             </div>
             `;
+            if (fullData.pronouns) {
+                html += `
+                            <div class="info-item">
+                                <span class="info-icon">🗣️</span>
+                                <div class="info-content">
+                                    <div class="info-label" data-i18n="pronouns">Pronouns</div>
+                                    <div class="info-value">${fullData.pronouns}</div>
+                                </div>
+                            </div>
+                `;
+            }
 
             if (fullData.criticalInfo) {
                 html += `
@@ -1959,6 +1970,18 @@
                                 <div class="info-content">
                                     <div class="info-label" data-i18n="allergies">Allergies</div>
                                     <div class="info-value">${publicInfo.allergies}</div>
+                                </div>
+                            </div>
+                `;
+            }
+
+            if (publicInfo.medications) {
+                html += `
+                            <div class="info-item">
+                                <span class="info-icon">💊</span>
+                                <div class="info-content">
+                                    <div class="info-label" data-i18n="medications">Medications</div>
+                                    <div class="info-value">${publicInfo.medications}</div>
                                 </div>
                             </div>
                 `;
@@ -2072,6 +2095,7 @@
             const fields = {
                 basic: {
                     name: currentBlob.name,
+                    pronouns: currentBlob.pronouns,
                     criticalInfo: currentBlob.criticalInfo
                 },
                 emergency: {
@@ -2156,6 +2180,7 @@
                     <div class="section-cards">
                         ${renderSectionCard('Basic Info', '👤', sections.basic, [
                             { label: 'Name', value: fields.basic.name, required: true },
+                            ...(fields.basic.pronouns ? [{ label: 'Pronouns', value: fields.basic.pronouns }] : []),
                             { label: 'Critical Info', value: fields.basic.criticalInfo }
                         ])}
 
@@ -2285,24 +2310,23 @@
                 showCreationForm();
 
                 const form = document.getElementById('create-form');
-                const nameGroup = document.getElementById('name').parentElement;
-                const critGroup = document.getElementById('critical-info').parentElement;
-                nameGroup.style.display = 'none';
-                critGroup.style.display = 'none';
-                const locked = document.createElement('div');
-                locked.className = 'info-section';
-                locked.innerHTML = `
-                    <div class="info-item"><span class="info-icon">🔒</span><div class="info-content"><div class="info-label">Name</div><div class="info-value">${currentBlob.name || ''}</div></div></div>
-                    <div class="info-item"><span class="info-icon">🔒</span><div class="info-content"><div class="info-label">Critical Info</div><div class="info-value">${currentBlob.criticalInfo || ''}</div></div></div>
-                `;
-                form.insertBefore(locked, form.firstChild);
 
                 const publicInfo = currentBlob.publicInfo || {};
 
+                document.getElementById('name').value = currentBlob.name || '';
+                document.getElementById('pronouns').value = currentBlob.pronouns || '';
+                document.getElementById('critical-info').value = currentBlob.criticalInfo || '';
                 document.getElementById('blood-type').value = publicInfo.bloodType || '';
                 document.getElementById('allergies').value = publicInfo.allergies || '';
+                document.getElementById('medications').value = publicInfo.medications || '';
                 document.getElementById('contact-name').value = publicInfo.contact?.name || '';
                 document.getElementById('contact-phone').value = publicInfo.contact?.phone || '';
+
+                document.getElementById('password').parentElement.style.display = 'none';
+                document.getElementById('password').required = false;
+                document.getElementById('password-confirm').parentElement.style.display = 'none';
+                document.getElementById('password-confirm').required = false;
+                document.getElementById('password-req').style.display = 'none';
 
                 const preview = document.createElement('div');
                 preview.id = 'update-preview';
@@ -2312,10 +2336,11 @@
                     preview.innerHTML = `
                         <div class="info-item"><div class="info-label">Blood Type</div><div class="info-value">${document.getElementById('blood-type').value}</div></div>
                         <div class="info-item"><div class="info-label">Allergies</div><div class="info-value">${document.getElementById('allergies').value}</div></div>
+                        <div class="info-item"><div class="info-label">Medications</div><div class="info-value">${document.getElementById('medications').value}</div></div>
                         <div class="info-item"><div class="info-label">Contact</div><div class="info-value">${document.getElementById('contact-name').value} ${document.getElementById('contact-phone').value}</div></div>
                     `;
                 }
-                ['blood-type','allergies','contact-name','contact-phone'].forEach(id => {
+                ['blood-type','allergies','medications','contact-name','contact-phone'].forEach(id => {
                     document.getElementById(id).addEventListener('input', updatePreview);
                 });
                 updatePreview();
@@ -2352,9 +2377,13 @@
 
             try {
                 // Collect updated form data
+                const name = document.getElementById('name').value;
+                const pronouns = document.getElementById('pronouns').value;
+                const criticalInfo = document.getElementById('critical-info').value;
                 const publicInfo = {
                     bloodType: document.getElementById('blood-type').value,
                     allergies: document.getElementById('allergies').value,
+                    medications: document.getElementById('medications').value,
                     contact: {
                         name: document.getElementById('contact-name').value,
                         phone: document.getElementById('contact-phone').value
@@ -2367,7 +2396,7 @@
                     encryptedWith: await sha256Hash(currentKey + password)
                 } : null;
 
-                const payload = { publicInfo, privateInfo };
+                const payload = { name, pronouns, criticalInfo, publicInfo, privateInfo };
                 const encryptedBlob = await encrypt(JSON.stringify(payload), currentKey);
 
                 const archivePayload = {
@@ -2398,7 +2427,7 @@
                 }
 
                 currentData = archivePayload;
-                currentBlob = { ...currentBlob, publicInfo, privateInfo, metadata: { ...(currentBlob.metadata || {}), updated: new Date().toISOString() } };
+                currentBlob = { ...currentBlob, name, pronouns, criticalInfo, publicInfo, privateInfo, metadata: { ...(currentBlob.metadata || {}), updated: new Date().toISOString() } };
                 showStatus('✅ Data archived!', 'success');
                 showOwnerDashboard();
 
@@ -2428,6 +2457,11 @@
                           <div class="form-group">
                               <label for="name"><span data-i18n="name">Name</span> *</label>
                               <input type="text" id="name" required placeholder="John Doe" data-i18n-placeholder="contactNamePlaceholder">
+                          </div>
+
+                          <div class="form-group">
+                              <label for="pronouns"><span data-i18n="pronouns">Pronouns</span></label>
+                              <input type="text" id="pronouns" placeholder="e.g., she/her">
                           </div>
 
                           <div class="form-group">
@@ -2463,6 +2497,11 @@
                           <div class="form-group">
                               <label for="allergies" data-i18n="allergies">Allergies</label>
                               <textarea id="allergies" placeholder="Penicillin, peanuts, etc." data-i18n-placeholder="allergiesPlaceholder"></textarea>
+                          </div>
+
+                          <div class="form-group">
+                              <label for="medications"><span data-i18n="medications">Medications</span></label>
+                              <textarea id="medications" placeholder="Current medications"></textarea>
                           </div>
 
                           <div class="form-group">
@@ -2591,9 +2630,11 @@
                 // Collect form data
                 const formData = {
                     name: document.getElementById('name').value,
+                    pronouns: document.getElementById('pronouns').value,
                     criticalInfo: document.getElementById('critical-info').value,
                     bloodType: document.getElementById('blood-type').value,
                     allergies: document.getElementById('allergies').value,
+                    medications: document.getElementById('medications').value,
                     contactName: document.getElementById('contact-name').value,
                     contactPhone: document.getElementById('contact-phone').value,
                     ssn: document.getElementById('ssn').value,
@@ -2605,6 +2646,7 @@
                 const publicInfo = {
                     bloodType: formData.bloodType,
                     allergies: formData.allergies,
+                    medications: formData.medications,
                     contact: { name: formData.contactName, phone: formData.contactPhone }
                 };
 
@@ -2615,6 +2657,9 @@
                 } : null;
 
                 const payload = {
+                    name: formData.name,
+                    pronouns: formData.pronouns,
+                    criticalInfo: formData.criticalInfo,
                     publicInfo,
                     privateInfo,
                     passwordHint: formData.passwordHint,
@@ -2680,6 +2725,7 @@
                     version: 'v2',
                     created,
                     name: formData.name,
+                    pronouns: formData.pronouns,
                     criticalInfo: formData.criticalInfo,
                     publicInfo,
                     privateInfo,
