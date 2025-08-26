@@ -136,6 +136,18 @@ function initMedicationField() {
   const allergyChecker = new AllergyChecker();
   const selected = [];
 
+  function serializeMed(m) {
+    return {
+      id: m.id,
+      drugbankId: m.drugbankId,
+      displayName: m.displayName,
+      genericName: m.genericName,
+      strength: m.strength,
+      dosageForm: m.dosageForm,
+      route: m.route
+    };
+  }
+
   function renderSelected() {
     list.innerHTML = '';
     selected.forEach((med, idx) => {
@@ -148,13 +160,20 @@ function initMedicationField() {
       btn.textContent = 'Remove';
       btn.addEventListener('click', () => {
         selected.splice(idx, 1);
-        textarea.value = selected.map(m => m.displayName).join(', ');
         renderSelected();
       });
       item.appendChild(btn);
       list.appendChild(item);
     });
-    textarea.value = selected.map(m => m.displayName).join(', ');
+    textarea.value = JSON.stringify(selected.map(serializeMed));
+  }
+
+  try {
+    const existing = JSON.parse(textarea.value || '[]');
+    existing.forEach(m => selected.push(m));
+    if (existing.length) renderSelected();
+  } catch (e) {
+    console.error('Failed to parse medications:', e);
   }
 
   medicationSearch.attach(searchInput, results, async (med) => {

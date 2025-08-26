@@ -1802,6 +1802,9 @@
                     ? { name: permanentData.cn || '', phone: permanentData.cp || '' }
                     : null
             };
+            displayData.medications = Array.isArray(displayData.medications)
+                ? displayData.medications
+                : (displayData.medications ? [displayData.medications] : []);
 
             currentBlob = { publicInfo: displayData };
             await displayEmergencyInfo(currentBlob);
@@ -1816,7 +1819,10 @@
                         const pub = editableFields.publicInfo;
                         if (pub.bloodType) displayData.bloodType = displayData.bloodType || pub.bloodType;
                         if (pub.allergies) displayData.allergies = displayData.allergies || pub.allergies;
-                        if (pub.medications) displayData.medications = displayData.medications || pub.medications;
+                        if (pub.medications && pub.medications.length) {
+                            const meds = Array.isArray(pub.medications) ? pub.medications : [pub.medications];
+                            displayData.medications = displayData.medications || meds;
+                        }
                         if (pub.contact) {
                             displayData.contact = pub.contact;
                         }
@@ -2084,13 +2090,14 @@
                 `;
             }
 
-            if (publicInfo.medications) {
+            if (publicInfo.medications && publicInfo.medications.length) {
+                const meds = publicInfo.medications.map(m => m.displayName || m).join(', ');
                 html += `
                             <div class="info-item">
                                 <span class="info-icon">💊</span>
                                 <div class="info-content">
                                     <div class="info-label" data-i18n="medications">Medications</div>
-                                    <div class="info-value">${publicInfo.medications}</div>
+                                    <div class="info-value">${meds}</div>
                                 </div>
                             </div>
                 `;
@@ -2249,7 +2256,12 @@
 
             const checkField = (value) => {
                 totalFields++;
-                if (value && value !== '' && value !== '-') {
+                if (Array.isArray(value)) {
+                    if (value.length > 0) {
+                        filledFields++;
+                        return true;
+                    }
+                } else if (value && value !== '' && value !== '-') {
                     filledFields++;
                     return true;
                 }
@@ -2314,7 +2326,7 @@
                         ${renderSectionCard('Emergency', '🚨', sections.emergency, [
                             { label: 'Blood Type', value: fields.emergency.bloodType },
                             { label: 'Allergies', value: fields.emergency.allergies },
-                            { label: 'Medications', value: fields.emergency.medications, missing: true, section: 'emergency', field: 'medications' }
+                            { label: 'Medications', value: Array.isArray(fields.emergency.medications) ? fields.emergency.medications.map(m => m.displayName || m).join(', ') : fields.emergency.medications, missing: true, section: 'emergency', field: 'medications' }
                         ])}
 
                         ${renderSectionCard('Contacts', '📞', sections.contacts, [
@@ -2456,7 +2468,7 @@
                     if (bt) bt.checked = true;
                 }
                 document.getElementById('allergies').value = publicInfo.allergies || '';
-                document.getElementById('medications').value = publicInfo.medications || '';
+                document.getElementById('medications').value = JSON.stringify(publicInfo.medications || []);
                 document.getElementById('contact-name').value = publicInfo.contact?.name || '';
                 document.getElementById('contact-phone').value = publicInfo.contact?.phone || '';
                 document.getElementById('contact-relationship').value = publicInfo.contact?.relationship || '';
@@ -2478,10 +2490,11 @@
                 preview.className = 'info-section';
                 form.appendChild(preview);
                 function updatePreview() {
+                    const meds = JSON.parse(document.getElementById('medications').value || '[]').map(m => m.displayName || m).join(', ');
                     preview.innerHTML = `
                         <div class="info-item"><div class="info-label">Blood Type</div><div class="info-value">${document.querySelector('input[name="blood-type"]:checked')?.value || ''}</div></div>
                         <div class="info-item"><div class="info-label">Allergies</div><div class="info-value">${document.getElementById('allergies').value}</div></div>
-                        <div class="info-item"><div class="info-label">Medications</div><div class="info-value">${document.getElementById('medications').value}</div></div>
+                        <div class="info-item"><div class="info-label">Medications</div><div class="info-value">${meds}</div></div>
                         <div class="info-item"><div class="info-label">Contacts</div><div class="info-value">${document.getElementById('contact-name').value} ${document.getElementById('contact-phone').value}${document.getElementById('secondary-contact-name').value ? '<br>' + document.getElementById('secondary-contact-name').value + ' ' + document.getElementById('secondary-contact-phone').value : ''}</div></div>
                     `;
                 }
@@ -2535,7 +2548,7 @@
                 const publicInfo = {
                     bloodType,
                     allergies: document.getElementById('allergies').value,
-                    medications: document.getElementById('medications').value,
+                    medications: JSON.parse(document.getElementById('medications').value || '[]'),
                     contact: {
                         name: document.getElementById('contact-name').value,
                         phone: document.getElementById('contact-phone').value,
@@ -2841,7 +2854,7 @@
                     criticalInfo: document.getElementById('critical-info').value,
                     bloodType: document.querySelector('input[name="blood-type"]:checked')?.value || '',
                     allergies: document.getElementById('allergies').value,
-                    medications: document.getElementById('medications').value,
+                    medications: JSON.parse(document.getElementById('medications').value || '[]'),
                     contactName: document.getElementById('contact-name').value,
                     contactPhone: document.getElementById('contact-phone').value,
                     contactRelationship: document.getElementById('contact-relationship').value,
