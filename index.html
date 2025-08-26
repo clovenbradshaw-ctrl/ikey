@@ -1945,7 +1945,6 @@
                         <button onclick="displayFullInfo(currentBlob)">View Full Details</button>
                         <button onclick="showVaultTab()">Access Health Vault</button>
                         <button onclick="downloadQR()">Download QR</button>
-                        <button onclick="shareQR()">Share QR</button>
                     </div>
                 </div>
             `;
@@ -1955,16 +1954,6 @@
                 new QRCode(qrContainer, { text: window.currentQRUrl, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.M });
             }
             startSessionTimer();
-        }
-
-        async function shareQR() {
-            if (navigator.share && window.currentQRUrl) {
-                try {
-                    await navigator.share({ title: 'Emergency QR', url: window.currentQRUrl });
-                } catch (e) {}
-            } else {
-                alert('Sharing not supported on this device');
-            }
         }
 
         async function showUpdateForm(password) {
