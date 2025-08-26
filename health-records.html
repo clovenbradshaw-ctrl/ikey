@@ -2949,7 +2949,7 @@
                     <div class="pdf-header">
                         <h1>Personal Health Record</h1>
                         <p>Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
-                        <p>Last Updated: ${data.lastUpdated || 'Never'}</p>
+                        <p>Last Updated: ${data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : 'Never'}</p>
                     </div>
                 `;
                 
