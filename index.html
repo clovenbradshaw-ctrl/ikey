@@ -1104,8 +1104,7 @@ body.rtl .info-icon {
                         name: embedded.n,
                         criticalInfo: embedded.c,
                         publicInfo: full.publicInfo,
-                        privateInfo: full.privateInfo,
-                        passwordHint: full.passwordHint
+                        privateInfo: full.privateInfo
                     });
                 })
                 .catch(() => {
@@ -1226,11 +1225,10 @@ body.rtl .info-icon {
                 allergies: data.a,
                 contact: data.c ? JSON.parse(atob(data.c)) : null
             };
-            const hint = data.h ? await decrypt(data.h, data.k) : null;
             const privateInfo = data.p
                 ? JSON.parse(await decrypt(data.p, data.k))
                 : null;
-            currentBlob = { publicInfo, passwordHint: hint, privateInfo };
+            currentBlob = { publicInfo, privateInfo };
             await displayEmergencyInfo(currentBlob, {
                 banner: '✅ Offline QR - No internet required'
             });
@@ -1247,9 +1245,8 @@ body.rtl .info-icon {
                     ? JSON.parse(atob(embedded.c))
                     : { name: 'Loading...', phone: 'Loading...' }
             };
-            const hint = embedded.h ? await decrypt(embedded.h, key) : null;
             await displayEmergencyInfo(
-                { publicInfo, passwordHint: hint },
+                { publicInfo },
                 {
                     banner:
                         '🔄 Hybrid mode - Critical data available, loading additional info...'
@@ -1262,7 +1259,6 @@ body.rtl .info-icon {
                 if (embedded.a) merged.publicInfo.allergies = embedded.a;
                 if (embedded.c)
                     merged.publicInfo.contact = JSON.parse(atob(embedded.c));
-                if (embedded.h) merged.passwordHint = hint;
                 await displayEmergencyInfo(merged);
             } catch (error) {
                 console.log('Cloud fetch failed, using embedded data only');
@@ -1290,14 +1286,8 @@ body.rtl .info-icon {
             const data = await response.json();
             const decrypted = await decrypt(data.data, key);
             const fullData = JSON.parse(decrypted);
-            let passwordHint = null;
-            if (fullData.passwordHint) {
-                try {
-                    passwordHint = await decrypt(fullData.passwordHint, key);
-                } catch {}
-            }
             currentData = data;
-            currentBlob = { ...fullData, passwordHint };
+            currentBlob = { ...fullData };
             return currentBlob;
         }
         
@@ -1394,18 +1384,8 @@ body.rtl .info-icon {
                     throw new Error('Invalid QR code');
                 }
 
-                // Decrypt password hint if it exists
-                let passwordHint = null;
-                if (fullData.passwordHint) {
-                    try {
-                        passwordHint = await decrypt(fullData.passwordHint, key);
-                    } catch (e) {
-                        console.log('Could not decrypt password hint');
-                    }
-                }
-
                 currentData = data;
-                currentBlob = { ...fullData, passwordHint };
+                currentBlob = { ...fullData };
 
                 await displayEmergencyInfo(fullData, { overrideName: urlName, banner });
             } catch (error) {
@@ -1419,7 +1399,6 @@ body.rtl .info-icon {
             const container = document.getElementById('main-content');
 
             const publicInfo = fullData.publicInfo || {};
-            const passwordHint = fullData.passwordHint;
             const nameToShow = options.overrideName || fullData.name || publicInfo.name || 'Unknown';
 
             let html = `
@@ -1501,7 +1480,6 @@ body.rtl .info-icon {
                 html += `
                         <div class="private-section">
                             <h3><span class="info-icon">🔒</span><span data-i18n="privateInfo">Private Information</span></h3>
-                            ${passwordHint ? `<div class="hint">Hint: ${passwordHint}</div>` : ''}
                             <input type="password" class="password-input" id="vault-password" data-i18n-placeholder="enterPassword" placeholder="Enter password">
                             <button class="btn" onclick="unlockPrivateInfo()" data-i18n="unlock">Unlock</button>
                             <div id="private-content"></div>
@@ -1611,7 +1589,6 @@ body.rtl .info-icon {
                 document.getElementById('allergies').value = publicInfo.allergies || '';
                 document.getElementById('contact-name').value = publicInfo.contact?.name || '';
                 document.getElementById('contact-phone').value = publicInfo.contact?.phone || '';
-                document.getElementById('password-hint').value = currentBlob.passwordHint || '';
 
                 if (currentBlob.privateInfo) {
                     const privateInfo = currentBlob.privateInfo;
@@ -1651,8 +1628,6 @@ body.rtl .info-icon {
                     }
                 };
 
-                const newHint = document.getElementById('password-hint').value;
-
                 const privateInfo = password ? {
                     ssn: document.getElementById('ssn').value,
                     notes: document.getElementById('medical-notes').value,
@@ -1661,8 +1636,7 @@ body.rtl .info-icon {
 
                 const payload = {
                     publicInfo,
-                    privateInfo,
-                    passwordHint: newHint
+                    privateInfo
                 };
 
                 const encryptedBlob = await encrypt(JSON.stringify(payload), currentKey);
@@ -1690,7 +1664,7 @@ body.rtl .info-icon {
 
                 if (response.ok && result.success) {
                     currentData = updatedData;
-                    currentBlob = { ...currentBlob, publicInfo, privateInfo, passwordHint: newHint };
+                    currentBlob = { ...currentBlob, publicInfo, privateInfo };
                     showStatus('✅ Successfully updated!', 'success');
                     stopSecurityAnimation(true);
 
@@ -1800,9 +1774,8 @@ body.rtl .info-icon {
                             Password must be 8+ chars with upper, lower, number and special character.
                         </div>
 
-                        <div class="form-group">
-                            <label for="password-hint">Password Hint</label>
-                            <input type="text" id="password-hint" placeholder="Birth year + pet name">
+                        <div class="hint">
+                            Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever.
                         </div>
 
                         <button type="submit" class="btn">
@@ -1886,8 +1859,7 @@ body.rtl .info-icon {
                     contactName: document.getElementById('contact-name').value,
                     contactPhone: document.getElementById('contact-phone').value,
                     ssn: document.getElementById('ssn').value,
-                    notes: document.getElementById('medical-notes').value,
-                    passwordHint: document.getElementById('password-hint').value
+                    notes: document.getElementById('medical-notes').value
                 };
 
                 const embedded = btoa(JSON.stringify({
@@ -1907,7 +1879,7 @@ body.rtl .info-icon {
                     encryptedWith: await sha256Hash(currentKey + password)
                 } : null;
 
-                const payload = { publicInfo, privateInfo, passwordHint: formData.passwordHint };
+                const payload = { publicInfo, privateInfo };
                 const encryptedData = await encrypt(JSON.stringify(payload), currentKey);
 
                 const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${embedded}`;
@@ -1917,7 +1889,7 @@ body.rtl .info-icon {
                 const auth = await sha256Hash(updateToken);
 
                 currentData = { id: currentGUID, data: encryptedData, auth };
-                currentBlob = { version: "v2", created, name: formData.name, criticalInfo: formData.criticalInfo, publicInfo, privateInfo, passwordHint: formData.passwordHint };
+                currentBlob = { version: "v2", created, name: formData.name, criticalInfo: formData.criticalInfo, publicInfo, privateInfo };
 
                 const qrContainer = document.getElementById('qrcode');
                 qrContainer.innerHTML = '';
@@ -2407,7 +2379,6 @@ body.rtl .info-icon {
                         phone: "(555) 123-4567"
                     }
                 },
-                passwordHint: await encrypt("Password is: demo", key),
                 privateInfo: {
                     ssn: "XXX-XX-XXXX",
                     notes: "This is demo data. Password is: demo",
