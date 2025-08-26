@@ -116,6 +116,7 @@
             .section-card {
                 margin: 8px;
                 padding: 12px;
+                position: relative;
             }
 
             .action-buttons {
@@ -1064,9 +1065,23 @@
             background: #f8f9fa;
             border-radius: 12px;
             padding: 15px;
+            position: relative;
         }
         .section-card.complete {
             opacity: 0.7;
+        }
+        .edit-section-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        .edit-section-btn:hover {
+            text-decoration: underline;
         }
         .section-header {
             display: flex;
@@ -2386,28 +2401,28 @@
                             { label: 'Name', value: fields.basic.name, required: true },
                             ...(fields.basic.pronouns ? [{ label: 'Pronouns', value: fields.basic.pronouns }] : []),
                             { label: 'Critical Info', value: fields.basic.criticalInfo }
-                        ])}
+                        ], null, 'basic')}
 
                         ${renderSectionCard('Emergency', '🚨', sections.emergency, [
                             { label: 'Blood Type', value: fields.emergency.bloodType },
                             { label: 'Allergies', value: fields.emergency.allergies },
                             { label: 'Medications', value: fields.emergency.medications, missing: true, section: 'emergency', field: 'medications' }
-                        ])}
+                        ], null, 'emergency')}
 
                         ${renderSectionCard('Contacts', '📞', sections.contacts, [
                             { label: 'Primary', value: fields.contacts.primary?.name },
                             { label: 'Secondary', value: fields.contacts.secondary?.name, missing: true, section: 'contacts', field: 'secondary' }
-                        ])}
+                        ], null, 'contacts')}
 
                         ${renderSectionCard('Private', '🔒', sections.private, [
                             { label: 'SSN', value: fields.private.ssn, masked: true },
                             { label: 'Insurance', value: fields.private.insurance, missing: true, section: 'private', field: 'insurance' },
                             { label: 'Notes', value: fields.private.medicalNotes }
-                        ])}
+                        ], null, 'private')}
 
                         ${renderSectionCard('Electronic Health Records', '🏥', sections.vault, [
                             { label: 'Records', value: fields.vault.records + ' documents' }
-                        ], 'showHealthRecordsTab()')}
+                        ], 'showHealthRecordsTab()', 'vault')}
                         <div class="emergency-card">
                             <h3>🚨 Emergency Services</h3>
                             <p style="margin-bottom:8px;">Double-click to open</p>
@@ -2434,7 +2449,7 @@
             startSessionTimer();
         }
 
-        function renderSectionCard(title, icon, progress, fields, onClick) {
+        function renderSectionCard(title, icon, progress, fields, onClick, sectionKey) {
             const percent = Math.round((progress.filled / progress.total) * 100);
             const clickAttr = onClick ? ` onclick="${onClick}" style="cursor:pointer"` : '';
             return `
@@ -2452,13 +2467,111 @@
                                 <span class="field-label">${f.label}</span>
                                 <span class="field-value">
                                     ${f.missing ? `<span class="add-button" onclick="addFieldModal('${f.section}','${f.field}')">+ Add</span>` :
-                                      (f.masked ? '••••' : (f.value || '—'))}
+                                     (f.masked ? '••••' : (f.value || '—'))}
                                 </span>
                             </div>
                         `).join('')}
                     </div>
+                    <button class="edit-section-btn" onclick="event.stopPropagation(); openEditModal('${sectionKey}')">Edit</button>
                 </div>
             `;
+        }
+
+        function openEditModal(section) {
+            const titles = {
+                basic: 'Basic Info',
+                emergency: 'Emergency',
+                contacts: 'Contacts',
+                private: 'Private',
+                vault: 'Electronic Health Records'
+            };
+            const modal = document.createElement('div');
+            modal.className = 'field-modal active';
+            modal.innerHTML = `
+                <div class="modal-backdrop" onclick="closeModal()"></div>
+                <div class="modal-content">
+                    <h3>Edit ${titles[section] || ''}</h3>
+                    ${getSectionInputs(section)}
+                    <div class="modal-actions">
+                        <button onclick="saveSection('${section}')" class="btn-primary">Save</button>
+                        <button onclick="closeModal()" class="btn-ghost">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function getSectionInputs(section) {
+            switch (section) {
+                case 'basic':
+                    return `
+                        <input id="edit-name" type="text" placeholder="Name" value="${currentBlob?.name || ''}">
+                        <input id="edit-pronouns" type="text" placeholder="Pronouns" value="${currentBlob?.pronouns || ''}">
+                        <textarea id="edit-critical" placeholder="Critical Info">${currentBlob?.criticalInfo || ''}</textarea>`;
+                case 'emergency':
+                    const bt = currentBlob?.publicInfo?.bloodType || '';
+                    return `
+                        <select id="edit-blood">
+                            <option value="">Blood Type</option>
+                            ${['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(o => `<option value="${o}" ${bt===o?'selected':''}>${o}</option>`).join('')}
+                        </select>
+                        <textarea id="edit-allergies" placeholder="Allergies">${currentBlob?.publicInfo?.allergies || ''}</textarea>
+                        <textarea id="edit-medications" placeholder="Medications">${currentBlob?.publicInfo?.medications || ''}</textarea>`;
+                case 'contacts':
+                    return `
+                        <input id="edit-primary-name" type="text" placeholder="Primary Name" value="${currentBlob?.publicInfo?.contact?.name || ''}">
+                        <input id="edit-primary-phone" type="tel" placeholder="Primary Phone" value="${currentBlob?.publicInfo?.contact?.phone || ''}">
+                        <input id="edit-secondary-name" type="text" placeholder="Secondary Name" value="${currentBlob?.publicInfo?.secondaryContact?.name || ''}">
+                        <input id="edit-secondary-phone" type="tel" placeholder="Secondary Phone" value="${currentBlob?.publicInfo?.secondaryContact?.phone || ''}">`;
+                case 'private':
+                    return `
+                        <input id="edit-ssn" type="text" placeholder="SSN" value="${currentBlob?.privateInfo?.ssn || ''}">
+                        <input id="edit-insurance-provider" type="text" placeholder="Insurance Provider" value="${currentBlob?.privateInfo?.insurance?.provider || ''}">
+                        <input id="edit-insurance-policy" type="text" placeholder="Policy #" value="${currentBlob?.privateInfo?.insurance?.policy || ''}">
+                        <textarea id="edit-notes" placeholder="Notes">${currentBlob?.privateInfo?.notes || ''}</textarea>`;
+                default:
+                    return `<p>No editable fields.</p>`;
+            }
+        }
+
+        function saveSection(section) {
+            if (!currentBlob) currentBlob = {};
+            switch (section) {
+                case 'basic':
+                    currentBlob.name = document.getElementById('edit-name').value.trim();
+                    currentBlob.pronouns = document.getElementById('edit-pronouns').value.trim();
+                    currentBlob.criticalInfo = document.getElementById('edit-critical').value.trim();
+                    break;
+                case 'emergency':
+                    currentBlob.publicInfo = currentBlob.publicInfo || {};
+                    currentBlob.publicInfo.bloodType = document.getElementById('edit-blood').value;
+                    currentBlob.publicInfo.allergies = document.getElementById('edit-allergies').value.trim();
+                    currentBlob.publicInfo.medications = document.getElementById('edit-medications').value.trim();
+                    break;
+                case 'contacts':
+                    currentBlob.publicInfo = currentBlob.publicInfo || {};
+                    currentBlob.publicInfo.contact = {
+                        name: document.getElementById('edit-primary-name').value.trim(),
+                        phone: document.getElementById('edit-primary-phone').value.trim()
+                    };
+                    currentBlob.publicInfo.secondaryContact = {
+                        name: document.getElementById('edit-secondary-name').value.trim(),
+                        phone: document.getElementById('edit-secondary-phone').value.trim()
+                    };
+                    break;
+                case 'private':
+                    currentBlob.privateInfo = currentBlob.privateInfo || {};
+                    currentBlob.privateInfo.ssn = document.getElementById('edit-ssn').value.trim();
+                    const provider = document.getElementById('edit-insurance-provider').value.trim();
+                    const policy = document.getElementById('edit-insurance-policy').value.trim();
+                    currentBlob.privateInfo.insurance = provider || policy ? { provider, policy } : undefined;
+                    currentBlob.privateInfo.notes = document.getElementById('edit-notes').value.trim();
+                    break;
+                default:
+                    break;
+            }
+            closeModal();
+            showOwnerDashboard();
         }
 
         function addFieldModal(section, field) {
