@@ -727,9 +727,195 @@
             background: #667eea;
             transition: width 0.5s ease;
         }
+
+        .language-selector {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .primary-languages {
+            display: flex;
+            gap: 6px;
+        }
+
+        .lang-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 60px;
+            font-size: 14px;
+        }
+
+        .lang-btn:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .lang-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .lang-native {
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .lang-flag {
+            font-size: 16px;
+        }
+
+        .more-languages-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .more-languages-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .globe-icon {
+            font-size: 20px;
+        }
+
+        .plus-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 12px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .secondary-languages {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        body.rtl {
+            direction: rtl;
+            text-align: right;
+        }
+
+        body.rtl .language-selector {
+            left: 10px;
+            right: auto;
+        }
+
+        body.rtl .info-icon {
+            margin-left: 12px;
+            margin-right: 0;
+        }
+
+        @media (max-width: 480px) {
+            .primary-languages {
+                flex-wrap: wrap;
+            }
+
+            .lang-btn .lang-native {
+                font-size: 12px;
+            }
+
+            .secondary-languages {
+                grid-template-columns: 1fr;
+                width: calc(100vw - 20px);
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="language-selector">
+        <div class="primary-languages">
+            <button class="lang-btn active" data-lang="en">
+                <span class="lang-native">English</span>
+                <span class="lang-flag">🇺🇸</span>
+            </button>
+            <button class="lang-btn" data-lang="es">
+                <span class="lang-native">Español</span>
+                <span class="lang-flag">🇲🇽</span>
+            </button>
+            <button class="lang-btn" data-lang="ar">
+                <span class="lang-native">العربية</span>
+                <span class="lang-flag">🇸🇦</span>
+            </button>
+            <button class="lang-btn" data-lang="ku">
+                <span class="lang-native">کوردی</span>
+                <span class="lang-flag">🏳️</span>
+            </button>
+        </div>
+
+        <button class="more-languages-btn" onclick="toggleMoreLanguages()">
+            <span class="globe-icon">🌍</span>
+            <span class="plus-icon">+</span>
+        </button>
+
+        <div class="secondary-languages" style="display: none;">
+            <button class="lang-btn" data-lang="vi">
+                <span class="lang-native">Tiếng Việt</span>
+                <span class="lang-flag">🇻🇳</span>
+            </button>
+            <button class="lang-btn" data-lang="zh">
+                <span class="lang-native">中文</span>
+                <span class="lang-flag">🇨🇳</span>
+            </button>
+            <button class="lang-btn" data-lang="so">
+                <span class="lang-native">Soomaali</span>
+                <span class="lang-flag">🇸🇴</span>
+            </button>
+            <button class="lang-btn" data-lang="my">
+                <span class="lang-native">မြန်မာ</span>
+                <span class="lang-flag">🇲🇲</span>
+            </button>
+            <button class="lang-btn" data-lang="ne">
+                <span class="lang-native">नेपाली</span>
+                <span class="lang-flag">🇳🇵</span>
+            </button>
+            <button class="lang-btn" data-lang="am">
+                <span class="lang-native">አማርኛ</span>
+                <span class="lang-flag">🇪🇹</span>
+            </button>
+        </div>
+    </div>
     <div class="container">
         <div id="main-content">
             <!-- Content will be dynamically inserted here -->
@@ -772,6 +958,172 @@
         const BEACON_TEXT = 'SQR:1';
         const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
+
+        const translations = {
+          en: {
+            emergencyInfo: "EMERGENCY INFORMATION",
+            name: "Name",
+            bloodType: "Blood Type",
+            allergies: "Allergies",
+            emergencyContact: "Emergency Contact",
+            privateInfo: "Private Information",
+            enterPassword: "Enter password",
+            unlock: "Unlock",
+            createQR: "Create Emergency QR",
+            download: "Download",
+            test: "Test"
+          },
+          es: {
+            emergencyInfo: "INFORMACIÓN DE EMERGENCIA",
+            name: "Nombre",
+            bloodType: "Tipo de Sangre",
+            allergies: "Alergias",
+            emergencyContact: "Contacto de Emergencia",
+            privateInfo: "Información Privada",
+            enterPassword: "Ingrese contraseña",
+            unlock: "Desbloquear",
+            createQR: "Crear QR de Emergencia",
+            download: "Descargar",
+            test: "Probar"
+          },
+          ar: {
+            emergencyInfo: "معلومات الطوارئ",
+            name: "الاسم",
+            bloodType: "فصيلة الدم",
+            allergies: "الحساسية",
+            emergencyContact: "جهة اتصال الطوارئ",
+            privateInfo: "معلومات خاصة",
+            enterPassword: "أدخل كلمة المرور",
+            unlock: "فتح",
+            createQR: "إنشاء رمز QR للطوارئ",
+            download: "تحميل",
+            test: "اختبار"
+          },
+          ku: {
+            emergencyInfo: "زانیاری فریاکەوتن",
+            name: "ناو",
+            bloodType: "جۆری خوێن",
+            allergies: "هەستیاری",
+            emergencyContact: "پەیوەندی فریاکەوتن",
+            privateInfo: "زانیاری تایبەت",
+            enterPassword: "وشەی تێپەڕ بنووسە",
+            unlock: "کردنەوە",
+            createQR: "دروستکردنی QR فریاکەوتن",
+            download: "داگرتن",
+            test: "تاقیکردنەوە"
+          },
+          vi: {
+            emergencyInfo: "THÔNG TIN KHẨN CẤP",
+            name: "Tên",
+            bloodType: "Nhóm Máu",
+            allergies: "Dị Ứng",
+            emergencyContact: "Liên Hệ Khẩn Cấp",
+            privateInfo: "Thông Tin Riêng Tư",
+            enterPassword: "Nhập mật khẩu",
+            unlock: "Mở khóa",
+            createQR: "Tạo QR Khẩn Cấp",
+            download: "Tải xuống",
+            test: "Kiểm tra"
+          },
+          zh: {
+            emergencyInfo: "紧急信息",
+            name: "姓名",
+            bloodType: "血型",
+            allergies: "过敏",
+            emergencyContact: "紧急联系人",
+            privateInfo: "私人信息",
+            enterPassword: "输入密码",
+            unlock: "解锁",
+            createQR: "创建紧急二维码",
+            download: "下载",
+            test: "测试"
+          },
+          so: {
+            emergencyInfo: "MACLUUMAADKA DEGDEGGA",
+            name: "Magaca",
+            bloodType: "Nooca Dhiigga",
+            allergies: "Xasaasiyad",
+            emergencyContact: "Xiriirka Degdegga",
+            privateInfo: "Macluumaadka Gaarka",
+            enterPassword: "Geli furaha",
+            unlock: "Fur",
+            createQR: "Samee QR Degdegga",
+            download: "Soo deji",
+            test: "Tijaabi"
+          },
+          my: {
+            emergencyInfo: "အရေးပေါ် အချက်အလက်",
+            name: "အမည်",
+            bloodType: "သွေးအုပ်စု",
+            allergies: "ဓာတ်မတည့်မှု",
+            emergencyContact: "အရေးပေါ်ဆက်သွယ်ရန်",
+            privateInfo: "သီးသန့်အချက်အလက်",
+            enterPassword: "စကားဝှက်ထည့်ပါ",
+            unlock: "ဖွင့်ပါ",
+            createQR: "အရေးပေါ် QR ဖန်တီးပါ",
+            download: "ဒေါင်းလုတ်",
+            test: "စမ်းသပ်"
+          },
+          ne: {
+            emergencyInfo: "आपतकालीन जानकारी",
+            name: "नाम",
+            bloodType: "रक्त समूह",
+            allergies: "एलर्जी",
+            emergencyContact: "आपतकालीन सम्पर्क",
+            privateInfo: "निजी जानकारी",
+            enterPassword: "पासवर्ड प्रविष्ट गर्नुहोस्",
+            unlock: "अनलक गर्नुहोस्",
+            createQR: "आपतकालीन QR सिर्जना",
+            download: "डाउनलोड",
+            test: "परीक्षण"
+          },
+          am: {
+            emergencyInfo: "የአደጋ መረጃ",
+            name: "ስም",
+            bloodType: "የደም ዓይነት",
+            allergies: "አለርጂዎች",
+            emergencyContact: "የአደጋ ጊዜ ግንኙነት",
+            privateInfo: "የግል መረጃ",
+            enterPassword: "የይለፍ ቃል ያስገቡ",
+            unlock: "ክፈት",
+            createQR: "የአደጋ QR ፍጠር",
+            download: "አውርድ",
+            test: "ሙከራ"
+          }
+        };
+
+        let currentLanguage = 'en';
+
+        function setLanguage(langCode) {
+          currentLanguage = langCode;
+          localStorage.setItem('preferredLanguage', langCode);
+
+          const t = translations[langCode] || translations.en;
+          document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key]) el.textContent = t[key];
+          });
+          document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (t[key]) el.placeholder = t[key];
+          });
+
+          const rtlLanguages = ['ar', 'ku'];
+          document.body.classList.toggle('rtl', rtlLanguages.includes(langCode));
+
+          document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === langCode);
+          });
+        }
+
+        function toggleMoreLanguages() {
+          const secondary = document.querySelector('.secondary-languages');
+          const isVisible = secondary.style.display === 'grid';
+          secondary.style.display = isVisible ? 'none' : 'grid';
+
+          const plusIcon = document.querySelector('.plus-icon');
+          plusIcon.textContent = isVisible ? '+' : '×';
+        }
 
 
         const SECURITY_STEPS = [
@@ -836,6 +1188,13 @@
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', async function() {
+            const savedLang = localStorage.getItem('preferredLanguage') || navigator.language.substring(0,2) || 'en';
+            currentLanguage = savedLang;
+            setLanguage(savedLang);
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+            });
+
             const { guid, key, name, created } = parseUrlParameters();
             console.log('Parsed parameters:', { guid, key, name, created });
 
@@ -975,7 +1334,7 @@
             let html = `
                 <div class="emergency-card">
                     <div class="emergency-header">
-                        <h2>🚨 EMERGENCY INFORMATION</h2>
+                        <h2><span class="info-icon">🚨</span><span data-i18n="emergencyInfo">EMERGENCY INFORMATION</span></h2>
                     </div>
                     ${options.banner ? `<div class="status-message status-info">${options.banner}</div>` : ''}
 
@@ -984,7 +1343,7 @@
                             <div class="info-item">
                                 <span class="info-icon">👤</span>
                                 <div class="info-content">
-                                    <div class="info-label">Name</div>
+                                    <div class="info-label" data-i18n="name">Name</div>
                                     <div class="info-value">${nameToShow}</div>
                                 </div>
                             </div>
@@ -995,7 +1354,7 @@
                             <div class="info-item">
                                 <span class="info-icon">🩸</span>
                                 <div class="info-content">
-                                    <div class="info-label">Blood Type</div>
+                                    <div class="info-label" data-i18n="bloodType">Blood Type</div>
                                     <div class="info-value">${publicInfo.bloodType}</div>
                                 </div>
                             </div>
@@ -1007,7 +1366,7 @@
                             <div class="info-item">
                                 <span class="info-icon">⚠️</span>
                                 <div class="info-content">
-                                    <div class="info-label">Allergies</div>
+                                    <div class="info-label" data-i18n="allergies">Allergies</div>
                                     <div class="info-value">${publicInfo.allergies}</div>
                                 </div>
                             </div>
@@ -1022,7 +1381,7 @@
                             <div class="info-item">
                                 <span class="info-icon">📞</span>
                                 <div class="info-content">
-                                    <div class="info-label">Emergency Contact</div>
+                                    <div class="info-label" data-i18n="emergencyContact">Emergency Contact</div>
                                     <div class="info-value">
                                         ${publicInfo.contact.name}
                                         <a href="tel:${publicInfo.contact.phone}" class="phone-link">
@@ -1038,10 +1397,10 @@
             if (currentBlob && currentBlob.privateInfo) {
                 html += `
                         <div class="private-section">
-                            <h3>🔒 Private Information</h3>
+                            <h3><span class="info-icon">🔒</span><span data-i18n="privateInfo">Private Information</span></h3>
                             ${passwordHint ? `<div class="hint">Hint: ${passwordHint}</div>` : ''}
-                            <input type="password" class="password-input" id="vault-password" placeholder="Enter password">
-                            <button class="btn" onclick="unlockPrivateInfo()">Unlock</button>
+                            <input type="password" class="password-input" id="vault-password" data-i18n-placeholder="enterPassword" placeholder="Enter password">
+                            <button class="btn" onclick="unlockPrivateInfo()" data-i18n="unlock">Unlock</button>
                             <div id="private-content"></div>
                         </div>
                 `;
@@ -1058,6 +1417,7 @@
             `;
             
             container.innerHTML = html;
+            setLanguage(currentLanguage);
         }
         
         // Unlock private information
@@ -1260,14 +1620,14 @@
                 <div class="content">
                     <form id="create-form">
                         <div class="section-title">Always Visible</div>
-                        
+
                         <div class="form-group">
-                            <label for="name">Name *</label>
+                            <label for="name"><span data-i18n="name">Name</span> *</label>
                             <input type="text" id="name" required placeholder="John Doe">
                         </div>
-                        
+
                         <div class="form-group">
-                            <label for="blood-type">Blood Type</label>
+                            <label for="blood-type" data-i18n="bloodType">Blood Type</label>
                             <select id="blood-type">
                                 <option value="">Unknown</option>
                                 <option value="A+">A+</option>
@@ -1282,7 +1642,7 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="allergies">Allergies</label>
+                            <label for="allergies" data-i18n="allergies">Allergies</label>
                             <textarea id="allergies" placeholder="Penicillin, peanuts, etc."></textarea>
                         </div>
                         
@@ -1329,7 +1689,7 @@
                         </div>
                         
                         <button type="submit" class="btn">
-                            <span>Create QR</span>
+                            <span data-i18n="createQR">Create QR</span>
                         </button>
                     </form>
                     
@@ -1338,8 +1698,8 @@
                             <h3>✅ Your Emergency QR Code</h3>
                             <div id="qrcode"></div>
                             <div class="action-buttons">
-                                <button class="btn" onclick="downloadQR()">💾 Download</button>
-                                <button class="btn" onclick="testQR()">🔍 Test</button>
+                                <button class="btn" onclick="downloadQR()">💾 <span data-i18n="download">Download</span></button>
+                                <button class="btn" onclick="testQR()">🔍 <span data-i18n="test">Test</span></button>
                             </div>
                             <button class="btn-secondary" onclick="uploadToArchive()">☁️ Save Online</button>
                         </div>
@@ -1353,7 +1713,9 @@
                     </div>
                 </div>
             `;
-            
+
+            setLanguage(currentLanguage);
+
             // Add form submit handler
             document.getElementById('create-form').addEventListener('submit', handleCreateForm);
 
@@ -1474,7 +1836,8 @@
                 showStatus('Error: ' + error.message, 'error');
             } finally {
                 button.disabled = false;
-                button.innerHTML = '<span>Create QR</span>';
+                button.innerHTML = '<span data-i18n="createQR">Create QR</span>';
+                setLanguage(currentLanguage);
             }
         }
 
