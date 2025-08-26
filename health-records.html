@@ -782,6 +782,100 @@
                 font-size: 0.75rem;
             }
         }
+        /* Session timer styles */
+        .session-timer {
+            --progress: 0deg;
+            --ring-color: #4caf50;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: conic-gradient(var(--ring-color) var(--progress), #e0e0e0 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-left: 10px;
+        }
+        .session-timer::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: white;
+            border-radius: 50%;
+        }
+        .session-timer span {
+            font-size: 10px;
+            position: relative;
+        }
+        .session-timer.pulse {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+        }
+        .session-banner {
+            position: fixed;
+            top: -100px;
+            left: 0;
+            right: 0;
+            background: #fff3cd;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: top 0.3s;
+            z-index: 1000;
+        }
+        .session-banner.active {
+            top: 0;
+        }
+        .session-banner button {
+            margin-left: 10px;
+        }
+        .session-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .session-modal.active {
+            display: flex;
+        }
+        .session-modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            animation: modalPulse 1s infinite alternate;
+        }
+        @keyframes modalPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
+        }
+        .session-expired {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+        }
+        .session-expired.active {
+            display: flex;
+        }
     </style>
 </head>
 <body>
@@ -801,6 +895,9 @@
             <button class="btn btn-secondary" id="changePasswordBtn" style="display: none;">Change Password</button>
             <button class="btn btn-save" id="saveBtn">Save to Archive.org</button>
             <input type="file" id="fileInput" accept=".phv" style="display: none;">
+            <div id="session-timer" class="session-timer">
+                <span id="session-countdown"></span>
+            </div>
         </div>
     </div>
 
@@ -1357,13 +1454,14 @@
             </div>
         </div>
 
-        <div class="info-box" style="margin-top: 30px;">
+    <div class="info-box" style="margin-top: 30px;">
             <strong>Remember:</strong> This document contains sensitive medical information. Store securely and share only with trusted healthcare providers and individuals. Update regularly to maintain accuracy.
             <br><br>
             <strong>Keyboard Shortcuts:</strong> Ctrl+S (or Cmd+S) to save to archive
         </div>
     </div>
 
+    <script src="session.js"></script>
     <script>
         // Application class to manage state and functionality
         class HealthVaultApp {
