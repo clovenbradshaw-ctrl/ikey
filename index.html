@@ -863,6 +863,7 @@ body.rtl .info-icon {
     </style>
 </head>
 <body>
+<div id="qrTab">
     <div class="top-bar">
         <div class="logo">🚨 <span class="logo-text-full">Emergency QR</span><span class="logo-text-short">QR</span></div>
         <div class="controls">
@@ -2379,5 +2380,25 @@ body.rtl .info-icon {
             }, 500);
         });
     </script>
+</div>
+<div id="text911Tab" style="display:none;">
+    <iframe src="text911.html" style="border:none;width:100%;height:100vh;"></iframe>
+</div>
+<nav class="tab-bar" style="position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid #ccc;z-index:1000;">
+    <button id="qrTabBtn" style="flex:1;padding:10px;">QR</button>
+    <button id="text911TabBtn" style="flex:1;padding:10px;">911 Location</button>
+</nav>
+<script>
+    const qrTab = document.getElementById('qrTab');
+    const text911Tab = document.getElementById('text911Tab');
+    document.getElementById('qrTabBtn').addEventListener('click', () => {
+        qrTab.style.display = 'block';
+        text911Tab.style.display = 'none';
+    });
+    document.getElementById('text911TabBtn').addEventListener('click', () => {
+        qrTab.style.display = 'none';
+        text911Tab.style.display = 'block';
+    });
+</script>
 </body>
 </html>
