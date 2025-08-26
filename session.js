@@ -195,12 +195,22 @@ class SessionManager {
     }
 
     autoSave() {
+        const status = document.getElementById('autosave-status');
+        if (status) status.textContent = 'Saving...';
+
         const draft = {};
         document.querySelectorAll('input, textarea').forEach(el => {
             draft[el.id || el.name] = el.value;
         });
         localStorage.setItem('sessionDraft', JSON.stringify(draft));
         this.saveToArchive(draft);
+
+        if (status) {
+            status.textContent = 'Saved';
+            setTimeout(() => { status.textContent = ''; }, 2000);
+        }
+        const updated = document.getElementById('last-updated-time');
+        if (updated) updated.textContent = new Date().toLocaleString();
     }
 
     saveToArchive(data) {

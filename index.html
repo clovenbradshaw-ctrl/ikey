@@ -2418,7 +2418,7 @@
                         <div class="profile-summary">
                             <h2>${fields.basic.name || 'Your iKey'}</h2>
                             <p class="security-status">Security Level: <span class="level-${securityLevel.toLowerCase()}">${securityLevel}</span></p>
-                            <p class="last-updated">Last updated: ${currentBlob.metadata?.updated || 'Never'}</p>
+                            <p class="last-updated">Last updated: <span id="last-updated-time">${currentBlob.metadata?.updated || 'Never'}</span> <span id="autosave-status"></span></p>
                         </div>
                     </div>
 
