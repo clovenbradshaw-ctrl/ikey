@@ -498,7 +498,7 @@
             // Default configuration
             const defaultConfig = {
                 version: "1.0",
-                lastUpdated: new Date().toISOString(),
+                lastUpdated: new Date().toLocaleString(),
                 modules: {}
             };
             
@@ -506,7 +506,7 @@
                 defaultConfig.modules[module.id] = {
                     enabled: module.defaultEnabled,
                     settings: {},
-                    addedDate: new Date().toISOString()
+                    addedDate: new Date().toLocaleString()
                 };
             });
             
@@ -556,12 +556,12 @@
             if (!moduleConfig.modules[moduleId]) {
                 moduleConfig.modules[moduleId] = {
                     settings: {},
-                    addedDate: new Date().toISOString()
+                    addedDate: new Date().toLocaleString()
                 };
             }
-            
+
             moduleConfig.modules[moduleId].enabled = enabled;
-            moduleConfig.lastUpdated = new Date().toISOString();
+            moduleConfig.lastUpdated = new Date().toLocaleString();
             
             // Update UI
             const card = document.querySelector(`[data-module="${moduleId}"]`).closest('.module-card');
