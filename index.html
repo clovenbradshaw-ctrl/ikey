@@ -1565,6 +1565,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="app.js"></script>
     <script src="medication.js"></script>
+    <script src="text-size.js"></script>
 
     <script>
         // Configuration
@@ -1667,21 +1668,6 @@
           document.querySelectorAll('.lang-option').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.lang === langCode);
           });
-        }
-
-        function applyTextSize(size) {
-          const sizes = { standard: '16px', large: '20px', xlarge: '24px' };
-          const next = sizes[size] || sizes.standard;
-          document.documentElement.style.fontSize = next;
-        }
-
-        function changeTextSize(delta) {
-          const order = ['standard', 'large', 'xlarge'];
-          const current = localStorage.getItem('ikey_text_size') || 'standard';
-          const nextIndex = Math.min(Math.max(order.indexOf(current) + delta, 0), order.length - 1);
-          const next = order[nextIndex];
-          localStorage.setItem('ikey_text_size', next);
-          applyTextSize(next);
         }
 
         function toggleLangDropdown(force) {
@@ -1864,9 +1850,6 @@
                 navigator.language.substring(0, 2) ||
                 'en';
             setLanguage(savedLang);
-
-            const savedSize = localStorage.getItem('ikey_text_size') || 'standard';
-            applyTextSize(savedSize);
 
             await parseAndDisplay();
 
