@@ -171,6 +171,9 @@
                 max-width: 640px;
                 margin-left: auto;
                 margin-right: auto;
+            .dashboard-btn,
+            .health-records-btn {
+                display: none !important;
             }
 
             .section-grid {
@@ -1476,6 +1479,13 @@
                 <button class="logout-btn" style="display:none;" onclick="logoutOwner()">Logout</button>
             </div>
             <button class="mobile-menu-toggle" onclick="toggleDrawer()">☰</button>
+            <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
+            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">Health Records</button>
+            <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
+            <div id="session-timer" class="session-timer">
+                <span id="session-countdown"></span>
+            </div>
+            <button class="logout-btn" style="display:none;" onclick="logoutOwner()">Logout</button>
         </div>
     </div>
     <div id="qrTab">
@@ -2142,7 +2152,6 @@
             const verified = await verifyOwnerPassword(password);
             if (verified) {
                 ownerPassword = password;
-                document.querySelector('.vault-btn').style.display = 'inline-block';
                 document.querySelector('.login-btn').style.display = 'none';
                 document.querySelector('.dashboard-btn').style.display = 'inline-block';
                 document.querySelector('.logout-btn').style.display = 'inline-block';
@@ -2155,7 +2164,6 @@
         function logoutOwner() {
             ownerPassword = null;
 
-            document.querySelector('.vault-btn').style.display = 'none';
             document.querySelector('.dashboard-btn').style.display = 'none';
             document.querySelector('.health-records-btn').style.display = 'none';
             document.querySelector('.logout-btn').style.display = 'none';
