@@ -1333,21 +1333,6 @@
             display: flex;
         }
 
-        .blood-type-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .blood-type-grid label {
-            border: 1px solid #cbd5e0;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
         .search-dropdown {
             position: absolute;
             background: white;
@@ -2451,10 +2436,7 @@
                 document.getElementById('name').value = currentBlob.name || '';
                 document.getElementById('pronouns').value = currentBlob.pronouns || '';
                 document.getElementById('critical-info').value = currentBlob.criticalInfo || '';
-                if (publicInfo.bloodType) {
-                    const bt = document.querySelector(`input[name="blood-type"][value="${publicInfo.bloodType}"]`);
-                    if (bt) bt.checked = true;
-                }
+                document.getElementById('blood-type').value = publicInfo.bloodType || '';
                 document.getElementById('allergies').value = publicInfo.allergies || '';
                 document.getElementById('medications').value = publicInfo.medications || '';
                 document.getElementById('contact-name').value = publicInfo.contact?.name || '';
@@ -2479,7 +2461,7 @@
                 form.appendChild(preview);
                 function updatePreview() {
                     preview.innerHTML = `
-                        <div class="info-item"><div class="info-label">Blood Type</div><div class="info-value">${document.querySelector('input[name="blood-type"]:checked')?.value || ''}</div></div>
+                        <div class="info-item"><div class="info-label">Blood Type</div><div class="info-value">${document.getElementById('blood-type').value || ''}</div></div>
                         <div class="info-item"><div class="info-label">Allergies</div><div class="info-value">${document.getElementById('allergies').value}</div></div>
                         <div class="info-item"><div class="info-label">Medications</div><div class="info-value">${document.getElementById('medications').value}</div></div>
                         <div class="info-item"><div class="info-label">Contacts</div><div class="info-value">${document.getElementById('contact-name').value} ${document.getElementById('contact-phone').value}${document.getElementById('secondary-contact-name').value ? '<br>' + document.getElementById('secondary-contact-name').value + ' ' + document.getElementById('secondary-contact-phone').value : ''}</div></div>
@@ -2489,7 +2471,7 @@
                     const el = document.getElementById(id);
                     if (el) el.addEventListener('input', updatePreview);
                 });
-                document.querySelectorAll('input[name="blood-type"]').forEach(r => r.addEventListener('change', updatePreview));
+                document.getElementById('blood-type').addEventListener('change', updatePreview);
                 updatePreview();
 
                 if (currentBlob.privateInfo) {
@@ -2527,7 +2509,7 @@
                 const name = document.getElementById('name').value;
                 const pronouns = document.getElementById('pronouns').value;
                 const criticalInfo = document.getElementById('critical-info').value;
-                const bloodType = document.querySelector('input[name="blood-type"]:checked')?.value || '';
+                const bloodType = document.getElementById('blood-type').value || '';
                 const contactRelationship = document.getElementById('contact-relationship').value;
                 const secondaryName = document.getElementById('secondary-contact-name').value;
                 const secondaryPhone = document.getElementById('secondary-contact-phone').value;
@@ -2640,18 +2622,18 @@
                           </div>
 
                           <div class="form-group">
-                              <label data-i18n="bloodType">Blood Type (Optional)</label>
-                              <div class="blood-type-grid" id="blood-type">
-                                  <label><input type="radio" name="blood-type" value="A+">A+</label>
-                                  <label><input type="radio" name="blood-type" value="A-">A-</label>
-                                  <label><input type="radio" name="blood-type" value="B+">B+</label>
-                                  <label><input type="radio" name="blood-type" value="B-">B-</label>
-                                  <label><input type="radio" name="blood-type" value="AB+">AB+</label>
-                                  <label><input type="radio" name="blood-type" value="AB-">AB-</label>
-                                  <label><input type="radio" name="blood-type" value="O+">O+</label>
-                                  <label><input type="radio" name="blood-type" value="O-">O-</label>
-                                  <label><input type="radio" name="blood-type" value="">Unknown/Not Sure</label>
-                              </div>
+                              <label for="blood-type" data-i18n="bloodType">Blood Type (Optional)</label>
+                              <select id="blood-type" name="blood-type">
+                                  <option value="">Unknown/Not Sure</option>
+                                  <option value="A+">A+</option>
+                                  <option value="A-">A-</option>
+                                  <option value="B+">B+</option>
+                                  <option value="B-">B-</option>
+                                  <option value="AB+">AB+</option>
+                                  <option value="AB-">AB-</option>
+                                  <option value="O+">O+</option>
+                                  <option value="O-">O-</option>
+                              </select>
                           </div>
 
                           <div class="form-group">
@@ -2839,7 +2821,7 @@
                     name: document.getElementById('name').value,
                     pronouns: document.getElementById('pronouns').value,
                     criticalInfo: document.getElementById('critical-info').value,
-                    bloodType: document.querySelector('input[name="blood-type"]:checked')?.value || '',
+                    bloodType: document.getElementById('blood-type').value || '',
                     allergies: document.getElementById('allergies').value,
                     medications: document.getElementById('medications').value,
                     contactName: document.getElementById('contact-name').value,
