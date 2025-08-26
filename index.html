@@ -3677,14 +3677,16 @@
 
          let location911Enabled = false;
 
-         window.addEventListener('message', function(e) {
-             if (e.data && e.data.type === 'text911Height') {
-                 const frame = document.getElementById('text911Frame');
-                 if (frame) {
-                     frame.style.height = e.data.height + 'px';
-                 }
-             }
-         });
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'text911Height') {
+                const frame = document.getElementById('text911Frame');
+                if (frame) {
+                    frame.style.height = e.data.height + 'px';
+                }
+            } else if (e.data && e.data.type === 'closeHealthRecords') {
+                showQRTab();
+            }
+        });
 
          function show911Tab() {
              document.getElementById('qrTab').style.display = 'none';

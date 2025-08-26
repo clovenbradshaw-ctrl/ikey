@@ -901,6 +901,7 @@
             ⚠️ Never Saved - Not Archived
         </div>
         <div class="action-buttons">
+            <button class="btn btn-secondary" id="backBtn">Dashboard</button>
             <button class="btn btn-lock" id="lockBtn" style="display: none;">🔓 Lock</button>
             <button class="btn btn-secondary" id="exportBtn">Export/Print</button>
             <button class="btn btn-secondary" id="changePasswordBtn" style="display: none;">Change Password</button>
@@ -1575,6 +1576,13 @@
                 document.getElementById('lockBtn').addEventListener('click', () => this.toggleLock());
                 document.getElementById('changePasswordBtn').addEventListener('click', () => this.changePassword());
                 document.getElementById('unlockEmergencyBtn').addEventListener('click', () => this.unlockEmergencyPlans());
+                document.getElementById('backBtn').addEventListener('click', () => {
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({ type: 'closeHealthRecords' }, '*');
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                });
                 
                 // Add buttons
                 document.getElementById('addProviderBtn').addEventListener('click', () => this.addProvider());
