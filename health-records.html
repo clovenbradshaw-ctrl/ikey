@@ -1495,9 +1495,13 @@
                 this.loaded = false;
 
                 // Record identifier
+                // Prefer existing GUID from parent window, localStorage or URL
+                const urlParams = new URLSearchParams(window.location.search);
                 this.guid = (window.parent && window.parent.currentGUID)
-                    ? window.parent.currentGUID
-                    : window.crypto.randomUUID();
+                    || localStorage.getItem('ikey_current_guid')
+                    || urlParams.get('guid')
+                    || window.location.hash.slice(1)
+                    || window.crypto.randomUUID();
                 
                 // Dynamic data structure
                 this.dynamicData = {
