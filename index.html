@@ -1712,27 +1712,28 @@ body.rtl .info-icon {
 
                           <div class="form-group">
                               <label for="name"><span data-i18n="name">Name</span> *</label>
-                              <input type="text" id="name" required placeholder="John Doe">
+                              <input type="text" id="name" required placeholder="John Doe" data-i18n-placeholder="contactNamePlaceholder">
                           </div>
 
                           <div class="form-group">
-                              <label for="critical-info">Critical Information (Optional)</label>
-                              <textarea 
-                                  id="critical-info" 
+                              <label for="critical-info"><span data-i18n="criticalInfo">Critical Information</span> (<span data-i18n="optional">Optional</span>)</label>
+                              <textarea
+                                  id="critical-info"
                                   maxlength="100"
                                   rows="2"
+                                  data-i18n-placeholder="criticalInfoPlaceholder"
                                   placeholder="e.g., Severe penicillin allergy, Type 1 diabetic"
                               ></textarea>
                               <div class="field-info">
                                   <span class="char-counter">0/100</span>
-                                  <span class="info-note">• Embedded in QR • Always visible</span>
+                                  <span class="info-note" data-i18n="criticalInfoNote">• Embedded in QR • Always visible</span>
                               </div>
                           </div>
 
                           <div class="form-group">
                               <label for="blood-type" data-i18n="bloodType">Blood Type</label>
                               <select id="blood-type">
-                                  <option value="">Unknown</option>
+                                  <option value="" data-i18n="unknown">Unknown</option>
                                   <option value="A+">A+</option>
                                   <option value="A-">A-</option>
                                   <option value="B+">B+</option>
@@ -1746,43 +1747,43 @@ body.rtl .info-icon {
 
                           <div class="form-group">
                               <label for="allergies" data-i18n="allergies">Allergies</label>
-                              <textarea id="allergies" placeholder="Penicillin, peanuts, etc."></textarea>
+                              <textarea id="allergies" placeholder="Penicillin, peanuts, etc." data-i18n-placeholder="allergiesPlaceholder"></textarea>
                           </div>
 
                           <div class="form-group">
-                              <label for="contact-name">Emergency Contact Name *</label>
-                              <input type="text" id="contact-name" required placeholder="Jane Doe">
+                              <label for="contact-name"><span data-i18n="emergencyContactName">Emergency Contact Name</span> *</label>
+                              <input type="text" id="contact-name" required placeholder="Jane Doe" data-i18n-placeholder="contactNamePlaceholder">
                           </div>
 
                           <div class="form-group">
-                              <label for="contact-phone">Emergency Contact Phone *</label>
-                              <input type="tel" id="contact-phone" required placeholder="(555) 123-4567">
+                              <label for="contact-phone"><span data-i18n="emergencyContactPhone">Emergency Contact Phone</span> *</label>
+                              <input type="tel" id="contact-phone" required placeholder="(555) 123-4567" data-i18n-placeholder="contactPhonePlaceholder">
                           </div>
 
-                          <div class="section-title">Password Protected</div>
+                          <div class="section-title" data-i18n="passwordProtected">Password Protected</div>
 
                           <div class="form-group">
-                              <label for="ssn">Social Security Number</label>
-                              <input type="text" id="ssn" placeholder="XXX-XX-XXXX">
+                              <label for="ssn"><span data-i18n="ssn">Social Security Number</span></label>
+                              <input type="text" id="ssn" placeholder="XXX-XX-XXXX" data-i18n-placeholder="ssnPlaceholder">
                           </div>
 
                           <div class="form-group">
-                              <label for="medical-notes">Medical Notes</label>
-                              <textarea id="medical-notes" placeholder="Medications, conditions, etc."></textarea>
+                              <label for="medical-notes"><span data-i18n="medicalNotes">Medical Notes</span></label>
+                              <textarea id="medical-notes" placeholder="Medications, conditions, etc." data-i18n-placeholder="medicalNotesPlaceholder"></textarea>
                           </div>
 
                         <div class="form-group">
-                            <label for="password">Password *</label>
-                            <input type="password" id="password" required placeholder="Choose a password">
+                            <label for="password"><span data-i18n="password">Password</span> *</label>
+                            <input type="password" id="password" required placeholder="Choose a password" data-i18n-placeholder="choosePassword">
                             <div id="password-strength" class="hint"></div>
                         </div>
 
                         <div class="form-group">
-                            <label for="password-confirm">Confirm Password *</label>
-                            <input type="password" id="password-confirm" required placeholder="Re-enter password">
+                            <label for="password-confirm"><span data-i18n="confirmPassword">Confirm Password</span> *</label>
+                            <input type="password" id="password-confirm" required placeholder="Re-enter password" data-i18n-placeholder="reenterPassword">
                         </div>
 
-                        <div class="hint" id="password-req">
+                        <div class="hint" id="password-req" data-i18n="passwordRequirements">
                             Password must be 8+ chars with upper, lower, number and special character.
                         </div>
 
