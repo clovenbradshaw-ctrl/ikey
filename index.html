@@ -1566,10 +1566,12 @@ body.rtl .info-icon {
         }
 
         function ownerLogin() {
-            const password = ownerPassword || document.getElementById('vault-password')?.value;
+            let password = ownerPassword || document.getElementById('vault-password')?.value;
             if (!password) {
-                alert('Please enter your password to update this emergency QR.');
-                return;
+                password = prompt('Please enter your password to update this emergency QR.');
+                if (!password) {
+                    return;
+                }
             }
             showUpdateForm(password);
         }
