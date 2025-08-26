@@ -813,32 +813,76 @@
         let currentName = null;
         let securityInterval = null;
 
-        // Parse parameters from various URL formats
-        function parseUrlParameters() {
-            let guid, key, name, created;
-
-            // Check hash first (new format: #guid|key|name|created)
+        // Parse URL and handle QR modes
+        async function parseUrlParameters() {
             const hash = window.location.hash.substring(1);
-            if (hash && hash.includes('|')) {
-                [guid, key, name, created] = hash.split('|').map(decodeURIComponent);
-                return { guid, key, name, created };
+            if (!hash) {
+                currentMode = 'create';
+                showCreationForm();
+                return;
             }
 
-            // Check URL params (Google Sites format)
-            const urlParams = new URLSearchParams(window.location.search);
-            guid = urlParams.get('guid');
-            name = urlParams.get('name');
-            created = urlParams.get('created');
-            key = hash; // Key might be in hash even with params
+            if (hash.startsWith('OFFLINE|')) {
+                const dataStr = hash.substring(8);
+                const data = JSON.parse(atob(dataStr));
+                await handleOfflineQR(data);
+                return;
+            }
 
-            return { guid, key, name, created };
+            const parts = hash.split('|');
+            if (parts.length === 3 && parts[2].length > 100) {
+                const [guid, key, embeddedData] = parts;
+                const embedded = JSON.parse(atob(embeddedData));
+                await handleHybridQR(guid, key, embedded);
+                return;
+            }
+
+            await handleCloudQR(parts);
         }
 
         // Initialize on page load
-        window.addEventListener('DOMContentLoaded', async function() {
-            const { guid, key, name, created } = parseUrlParameters();
-            console.log('Parsed parameters:', { guid, key, name, created });
+        window.addEventListener('DOMContentLoaded', parseUrlParameters);
 
+        async function handleOfflineQR(data) {
+            currentKey = data.k;
+            const publicInfo = {
+                name: data.n,
+                bloodType: data.b,
+                allergies: data.a,
+                contact: data.c ? JSON.parse(atob(data.c)) : null
+            };
+            const hint = data.h ? await decrypt(data.h, data.k) : null;
+            const privateInfo = data.p ? JSON.parse(await decrypt(data.p, data.k)) : null;
+            currentBlob = { publicInfo, passwordHint: hint, privateInfo };
+            await displayEmergencyInfo(currentBlob, { banner: '✅ Offline QR - No internet required' });
+        }
+
+        async function handleHybridQR(guid, key, embedded) {
+            currentGUID = guid;
+            currentKey = key;
+            const publicInfo = {
+                name: embedded.n,
+                bloodType: embedded.b || 'Loading...',
+                allergies: embedded.a || 'Loading...',
+                contact: embedded.c ? JSON.parse(atob(embedded.c)) : { name: 'Loading...', phone: 'Loading...' }
+            };
+            const hint = embedded.h ? await decrypt(embedded.h, key) : null;
+            await displayEmergencyInfo({ publicInfo, passwordHint: hint }, { banner: '🔄 Hybrid mode - Critical data available, loading additional info...' });
+            try {
+                const cloudData = await fetchFromArchive(guid, key);
+                const merged = { ...cloudData };
+                if (embedded.b) merged.publicInfo.bloodType = embedded.b;
+                if (embedded.a) merged.publicInfo.allergies = embedded.a;
+                if (embedded.c) merged.publicInfo.contact = JSON.parse(atob(embedded.c));
+                if (embedded.h) merged.passwordHint = hint;
+                await displayEmergencyInfo(merged);
+            } catch (error) {
+                console.log('Cloud fetch failed, using embedded data only');
+            }
+        }
+
+        async function handleCloudQR(parts) {
+            const [guid, key, name, created] = parts.map(p => decodeURIComponent(p || ''));
             if (guid && key) {
                 currentMode = 'view';
                 currentCreated = created;
@@ -849,7 +893,25 @@
                 currentMode = 'create';
                 showCreationForm();
             }
-        });
+        }
+
+        async function fetchFromArchive(guid, key) {
+            const archiveUrl = `${ARCHIVE_BASE}${guid}.json`;
+            const response = await fetch(archiveUrl, { mode: 'cors' });
+            if (!response.ok) throw new Error('Not found');
+            const data = await response.json();
+            const decrypted = await decrypt(data.data, key);
+            const fullData = JSON.parse(decrypted);
+            let passwordHint = null;
+            if (fullData.passwordHint) {
+                try {
+                    passwordHint = await decrypt(fullData.passwordHint, key);
+                } catch {}
+            }
+            currentData = data;
+            currentBlob = { ...fullData, passwordHint };
+            return currentBlob;
+        }
         
         // Show loading screen
         function showLoadingScreen(name) {
@@ -1295,7 +1357,53 @@
                             <label for="contact-phone">Emergency Contact Phone *</label>
                             <input type="tel" id="contact-phone" required placeholder="(555) 123-4567">
                         </div>
-                        
+
+                        <div class="section-title">QR Storage Options</div>
+                        <div class="storage-mode-selector">
+                            <label class="storage-option">
+                                <input type="radio" name="storage-mode" value="cloud" checked>
+                                <div class="option-card">
+                                    <span class="option-icon">☁️</span>
+                                    <span class="option-title">Cloud Backup</span>
+                                    <span class="option-desc">Smaller QR, requires internet</span>
+                                </div>
+                            </label>
+                            <label class="storage-option">
+                                <input type="radio" name="storage-mode" value="hybrid">
+                                <div class="option-card">
+                                    <span class="option-icon">🔄</span>
+                                    <span class="option-title">Hybrid</span>
+                                    <span class="option-desc">Critical data in QR + cloud backup</span>
+                                </div>
+                            </label>
+                            <label class="storage-option">
+                                <input type="radio" name="storage-mode" value="offline">
+                                <div class="option-card">
+                                    <span class="option-icon">💾</span>
+                                    <span class="option-title">Offline Only</span>
+                                    <span class="option-desc">Everything in QR, works forever</span>
+                                </div>
+                            </label>
+                        </div>
+
+        
+                        <div id="embed-options" class="embed-selector" style="display:none;">
+                            <p class="embed-warning">⚠️ Each field increases QR complexity. Too many may affect scanning.</p>
+                            <div class="embed-checkboxes">
+                                <label><input type="checkbox" name="embed" value="bloodType" checked> Blood Type</label>
+                                <label><input type="checkbox" name="embed" value="allergies" checked> Allergies</label>
+                                <label><input type="checkbox" name="embed" value="contact"> Emergency Contact</label>
+                                <label><input type="checkbox" name="embed" value="hint"> Password Hint</label>
+                            </div>
+                            <div class="qr-size-indicator">
+                                <span>Estimated QR Size:</span>
+                                <div class="size-bar">
+                                    <div class="size-fill" id="size-estimate"></div>
+                                </div>
+                                <span id="size-warning"></span>
+                            </div>
+                        </div>
+
                         <div class="section-title">Password Protected</div>
                         
                         <div class="form-group">
@@ -1363,6 +1471,51 @@
                 const strengthEl = document.getElementById('password-strength');
                 strengthEl.textContent = isStrongPassword(pwd) ? '✅ Meets requirements' : '❌ Does not meet requirements';
             });
+
+            // Storage mode and embed options
+            document.querySelectorAll('input[name="storage-mode"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    document.getElementById('embed-options').style.display = this.value === 'hybrid' ? 'block' : 'none';
+                    updateQRSizeEstimate();
+                });
+            });
+            document.querySelectorAll('input[name="embed"]').forEach(cb => cb.addEventListener('change', updateQRSizeEstimate));
+            updateQRSizeEstimate();
+        }
+
+        function updateQRSizeEstimate() {
+            const checkboxes = document.querySelectorAll('input[name="embed"]:checked');
+            const baseSize = 150; // base URL + structure
+            let totalSize = baseSize;
+
+            const fieldSizes = {
+                bloodType: 10,
+                allergies: 100,
+                contact: 150,
+                hint: 80
+            };
+
+            checkboxes.forEach(cb => {
+                totalSize += fieldSizes[cb.value] || 50;
+            });
+
+            const maxSize = 2953;
+            const percentage = (totalSize / maxSize) * 100;
+
+            const fill = document.getElementById('size-estimate');
+            const warning = document.getElementById('size-warning');
+            if (fill) fill.style.width = percentage + '%';
+
+            if (percentage > 80) {
+                warning.textContent = '⚠️ QR may be hard to scan';
+                if (fill) fill.style.background = '#ff4757';
+            } else if (percentage > 60) {
+                warning.textContent = 'QR getting complex';
+                if (fill) fill.style.background = '#ffc107';
+            } else {
+                warning.textContent = 'Good size';
+                if (fill) fill.style.background = '#27ae60';
+            }
         }
         
         // Handle form submission
@@ -1436,9 +1589,11 @@
                 };
 
                 currentBlob = { ...fullData, passwordHint };
-                
+
                 // Generate QR code
-                const qrUrl = `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(publicInfo.name)}|${encodeURIComponent(created)}`;
+                const mode = document.querySelector('input[name="storage-mode"]:checked').value;
+                const selectedFields = Array.from(document.querySelectorAll('input[name="embed"]:checked')).map(cb => cb.value);
+                const qrUrl = await generateQR(mode, selectedFields, publicInfo, privateInfo, passwordHint, created);
                 
                 const qrContainer = document.getElementById('qrcode');
                 qrContainer.innerHTML = '';
@@ -1476,6 +1631,53 @@
                 button.disabled = false;
                 button.innerHTML = '<span>Create QR</span>';
             }
+        }
+
+        async function generateQR(mode, selectedFields, publicInfo, privateInfo, passwordHint, created) {
+            const baseUrl = VIEWER_URL;
+            let qrData;
+
+            switch (mode) {
+                case 'offline':
+                    const fullData = {
+                        v: "4",
+                        n: publicInfo.name,
+                        b: publicInfo.bloodType,
+                        a: publicInfo.allergies,
+                        c: btoa(JSON.stringify(publicInfo.contact)),
+                        h: passwordHint ? await encrypt(passwordHint, currentKey) : null,
+                        p: privateInfo ? await encrypt(JSON.stringify(privateInfo), currentKey) : null,
+                        k: currentKey
+                    };
+                    qrData = `${baseUrl}#OFFLINE|${btoa(JSON.stringify(fullData))}`;
+                    break;
+                case 'hybrid':
+                    const hybridData = {
+                        v: "3h",
+                        g: currentGUID,
+                        n: publicInfo.name
+                    };
+                    if (selectedFields.includes('bloodType')) hybridData.b = publicInfo.bloodType;
+                    if (selectedFields.includes('allergies')) hybridData.a = publicInfo.allergies;
+                    if (selectedFields.includes('contact')) hybridData.c = btoa(JSON.stringify(publicInfo.contact));
+                    if (selectedFields.includes('hint') && passwordHint) hybridData.h = await encrypt(passwordHint, currentKey);
+                    qrData = `${baseUrl}#${currentGUID}|${currentKey}|${btoa(JSON.stringify(hybridData))}`;
+                    break;
+                case 'cloud':
+                default:
+                    qrData = `${baseUrl}#${currentGUID}|${currentKey}|${encodeURIComponent(publicInfo.name)}|${encodeURIComponent(created)}`;
+                    break;
+            }
+
+            const qrSize = estimateQRComplexity(qrData);
+            if (qrSize > 2953) {
+                throw new Error('Data too large for QR code. Please select fewer embedded fields.');
+            }
+            return qrData;
+        }
+
+        function estimateQRComplexity(data) {
+            return new TextEncoder().encode(data).length;
         }
 
         function startSecurityAnimation() {
