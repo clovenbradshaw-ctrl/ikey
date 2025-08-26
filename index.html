@@ -2308,6 +2308,11 @@
         }
 
         function showOwnerDashboard() {
+            // Ensure the dashboard content is visible regardless of the current tab
+            document.getElementById('qrTab').style.display = 'block';
+            document.getElementById('text911Tab').style.display = 'none';
+            document.getElementById('healthRecordsTab').style.display = 'none';
+
             currentMode = 'dashboard';
             const container = document.getElementById('main-content');
 
