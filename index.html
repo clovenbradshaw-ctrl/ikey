@@ -1238,6 +1238,7 @@ body.rtl .info-icon {
         let currentCreated = null;
         let currentName = null;
         let securityInterval = null;
+        let ownerPassword = null;
 
         // Parse URL and handle QR data
         async function parseUrlParameters() {
@@ -1614,6 +1615,7 @@ body.rtl .info-icon {
                 if (!currentBlob.privateInfo || hash !== currentBlob.privateInfo.encryptedWith) {
                     throw new Error('Incorrect password');
                 }
+                ownerPassword = password;
 
                 const privateInfo = currentBlob.privateInfo;
                 let html = '<div style="margin-top: 15px;">';
@@ -1654,13 +1656,15 @@ body.rtl .info-icon {
         }
 
         function ownerLogin() {
-            showUpdateForm();
+            const password = ownerPassword || document.getElementById('vault-password')?.value;
+            if (!password) {
+                alert('Please enter your password to update this emergency QR.');
+                return;
+            }
+            showUpdateForm(password);
         }
 
-        async function showUpdateForm() {
-            const password = prompt("Enter your password to update this emergency QR:");
-            if (!password) return;
-
+        async function showUpdateForm(password) {
             try {
                 // Generate update token
                 const updateToken = await generateUpdateToken(password, currentGUID);
