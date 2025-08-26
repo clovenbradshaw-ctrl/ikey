@@ -57,6 +57,9 @@ class SessionManager {
             this.restoreDraft();
             this.hideExpired();
             this.reset();
+            if (typeof ownerPassword !== 'undefined' && ownerPassword && typeof showOwnerDashboard === 'function') {
+                showOwnerDashboard();
+            }
         });
         document.getElementById('public-view-btn').addEventListener('click', () => window.location.reload());
     }
