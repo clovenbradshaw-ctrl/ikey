@@ -3249,14 +3249,13 @@
                 document.getElementById('qrTab').style.display = 'none';
                 document.getElementById('text911Tab').style.display = 'none';
                 const frame = document.getElementById('healthRecordsFrame');
-                frame.onload = () => {
-                    frame.style.height = frame.contentDocument.body.scrollHeight + 'px';
+                const setFrameHeight = () => {
+                    frame.style.height = window.innerHeight + 'px';
                 };
+                setFrameHeight();
+                window.addEventListener('resize', setFrameHeight);
                 if (!frame.src) {
                     frame.src = 'health-records.html';
-                } else {
-                    // Ensure height is adjusted if the frame was already loaded
-                    frame.style.height = frame.contentDocument.body.scrollHeight + 'px';
                 }
                 document.getElementById('healthRecordsTab').style.display = 'block';
             } catch (e) {
@@ -3337,7 +3336,7 @@
     </script>
     </div>
     <div id="healthRecordsTab" style="display:none;">
-        <iframe id="healthRecordsFrame" style="border:none;width:100%;"></iframe>
+        <iframe id="healthRecordsFrame" style="border:none;width:100%;height:100vh;"></iframe>
     </div>
     <div id="text911Tab" style="display:none;">
         <div class="container">
