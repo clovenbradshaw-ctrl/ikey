@@ -1270,6 +1270,7 @@
         const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
         const BEACON_TEXT = 'SQR:1';
         const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
+        const MANUAL_AUTH_OVERRIDE = "YOUR_MANUAL_AUTH_KEY_HERE";
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
 
         const LANGUAGE_NAMES = {
@@ -1401,7 +1402,7 @@
         // State
         let currentGUID = null;
         let currentKey = null;
-        let currentData = null; // {id, data, auth}
+        let currentData = null; // {encrypted, version, data}
         let currentBlob = null; // decrypted full data
         let currentMode = null;
         let currentCreated = null;
@@ -2008,31 +2009,8 @@
         }
 
         function verifyOwnerPassword(password) {
-            return (async () => {
-                try {
-                    let originalAuth = localStorage.getItem(`auth_${currentGUID}`);
-                    if (!originalAuth) {
-                        const response = await fetch(`${ARCHIVE_BASE}${currentGUID}.json?ts=${Date.now()}`, { mode: 'cors', cache: 'no-store' });
-                        if (response.ok) {
-                            const data = await response.json();
-                            originalAuth = data.auth;
-                            localStorage.setItem(`auth_${currentGUID}`, originalAuth);
-                        }
-                    }
-                    if (!originalAuth) {
-                        throw new Error('Cannot retrieve authentication data');
-                    }
-                    const updateToken = await generateUpdateToken(password, currentGUID);
-                    const testAuth = await sha256Hash(updateToken);
-                    if (testAuth !== originalAuth) {
-                        throw new Error('Password verification failed');
-                    }
-                    return true;
-                } catch (e) {
-                    alert('Failed to authenticate: ' + e.message);
-                    return false;
-                }
-            })();
+            // Manual auth override - skip verification
+            return Promise.resolve(true);
         }
 
         function showOwnerDashboard() {
@@ -2269,10 +2247,6 @@
             button.innerHTML = '<span>Archiving...</span>';
 
             try {
-                // Generate update token and auth
-                const updateToken = await generateUpdateToken(password, currentGUID);
-                const auth = await sha256Hash(updateToken);
-
                 // Collect updated form data
                 const publicInfo = {
                     bloodType: document.getElementById('blood-type').value,
@@ -2292,19 +2266,24 @@
                 const payload = { publicInfo, privateInfo };
                 const encryptedBlob = await encrypt(JSON.stringify(payload), currentKey);
 
-                const updatePayload = {
-                    guid: currentGUID,
-                    auth: auth,  // Send unencrypted for verification
-                    data: encryptedBlob,  // New encrypted data
-                    metadata: {
-                        updated: new Date().toISOString()
-                    }
+                const archivePayload = {
+                    encrypted: true,
+                    version: "3.0",
+                    data: encryptedBlob
                 };
 
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatePayload)
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-archive-meta-subject': 'Emergency Contacts',
+                        'x-archive-meta-description': 'Encrypted emergency contact information',
+                        'x-archive-meta-guid': currentGUID,
+                        'x-archive-meta-identifier': `ikey_${currentGUID}`,
+                        'x-archive-meta-mediatype': 'data',
+                        'x-archive-meta-updated': new Date().toISOString()
+                    },
+                    body: JSON.stringify(archivePayload)
                 });
 
                 if (response.status === 403) {
@@ -2314,7 +2293,7 @@
                     throw new Error('Archive failed');
                 }
 
-                currentData = { id: currentGUID, data: encryptedBlob, auth };
+                currentData = archivePayload;
                 currentBlob = { ...currentBlob, publicInfo, privateInfo, metadata: { ...(currentBlob.metadata || {}), updated: new Date().toISOString() } };
                 showStatus('✅ Data archived!', 'success');
                 showOwnerDashboard();
@@ -2518,10 +2497,6 @@
                     passwordHint: document.getElementById('password-hint')?.value || ''
                 };
 
-                // Create auth hash
-                const updateToken = await generateUpdateToken(password, currentGUID);
-                const auth = await sha256Hash(updateToken);
-
                 // Prepare encrypted data
                 const publicInfo = {
                     bloodType: formData.bloodType,
@@ -2543,40 +2518,34 @@
                 };
                 const encryptedData = await encrypt(JSON.stringify(payload), currentKey);
 
-                // Create data package
-                currentData = {
-                    id: currentGUID,
-                    data: encryptedData,
-                    auth: auth
+                const archivePayload = {
+                    encrypted: true,
+                    version: "3.0",
+                    data: encryptedData
                 };
+
+                currentData = archivePayload;
 
                 // IMMEDIATELY upload to server
                 showStatus('⏳ Securing your data online...', 'info');
 
-                // Send to server with UNENCRYPTED auth hash
-                const serverPayload = {
-                    guid: currentGUID,
-                    data: encryptedData,
-                    auth: auth,
-                    metadata: {
-                        created: created,
-                        type: 'emergency_qr',
-                        version: 'v2'
-                    }
-                };
-
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(serverPayload)
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-archive-meta-subject': 'Emergency Contacts',
+                        'x-archive-meta-description': 'Encrypted emergency contact information',
+                        'x-archive-meta-guid': currentGUID,
+                        'x-archive-meta-identifier': `ikey_${currentGUID}`,
+                        'x-archive-meta-title': `ikey_emergency_${currentGUID}.json`,
+                        'x-archive-meta-mediatype': 'data'
+                    },
+                    body: JSON.stringify(archivePayload)
                 });
 
                 if (!response.ok) {
                     throw new Error('Failed to secure data online');
                 }
-
-                // Store auth for future updates
-                localStorage.setItem(`auth_${currentGUID}`, auth);
 
                 // Only generate QR after successful upload
                 const embedded = btoa(
@@ -2799,11 +2768,10 @@
             };
 
             const encryptedBlob = await encrypt(JSON.stringify(fullData), key);
-            const updateToken = await generateUpdateToken("demo", guid);
             return {
-                id: guid,
-                data: encryptedBlob,
-                auth: await sha256Hash(updateToken)
+                encrypted: true,
+                version: "3.0",
+                data: encryptedBlob
             };
         }
 
@@ -2951,8 +2919,8 @@
                     const data = await response.json();
                     document.getElementById('dev-output').textContent =
                         `Success! Found on Archive.org\n\n` +
-                        `ID: ${data.id}\n` +
-                        `Has Auth: ${!!data.auth}\n\n` +
+                        `Encrypted: ${data.encrypted}\n` +
+                        `Version: ${data.version}\n\n` +
                         `Raw JSON:\n${JSON.stringify(data, null, 2)}`;
                 } else {
                     document.getElementById('dev-output').textContent = 
