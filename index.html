@@ -1384,7 +1384,6 @@
     <!-- QR Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="translations.js"></script>
     <script src="app.js"></script>
 
     <script>
@@ -1436,7 +1435,7 @@
         const PRIMARY_LANGS = ['en', 'es', 'ar', 'ku'];
         const RTL_LANGS = ['ar', 'ku', 'fa', 'he', 'ur'];
 
-        let translations = window.IKEY_TRANSLATIONS || {};
+        let translations = {};
 
         let currentLanguage = 'en';
 
