@@ -3243,6 +3243,18 @@
             };
         }
         
+        // Adjust nav tabs position based on the security bar height
+        function adjustNavTabsPosition() {
+            const securityBar = document.querySelector('.security-bar');
+            const navTabs = document.getElementById('navTabs');
+            if (securityBar && navTabs) {
+                navTabs.style.top = securityBar.offsetHeight + 'px';
+            }
+        }
+
+        window.addEventListener('load', adjustNavTabsPosition);
+        window.addEventListener('resize', adjustNavTabsPosition);
+
         // Initialize the application
         const app = new HealthVaultApp();
     </script>
