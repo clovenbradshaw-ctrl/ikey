@@ -839,7 +839,7 @@
             right: auto;
         }
 
-        body.rtl .info-icon {
+body.rtl .info-icon {
             margin-left: 12px;
             margin-right: 0;
         }
@@ -853,10 +853,97 @@
                 font-size: 12px;
             }
 
-            .secondary-languages {
-                grid-template-columns: 1fr;
-                width: calc(100vw - 20px);
-            }
+  .secondary-languages {
+    grid-template-columns: 1fr;
+    width: calc(100vw - 20px);
+    }
+  }
+
+        /* Permanence toggles */
+        .with-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .with-toggle label {
+            flex: 1;
+        }
+        .permanence-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .permanence-toggle input {
+            display: none;
+        }
+        .toggle-slider {
+            width: 40px;
+            height: 20px;
+            background: #ccc;
+            border-radius: 20px;
+            position: relative;
+            transition: background 0.3s;
+        }
+        .toggle-slider::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            top: 1px;
+            left: 1px;
+            transition: transform 0.3s;
+        }
+        .permanence-toggle input:checked + .toggle-slider {
+            background: #27ae60;
+        }
+        .permanence-toggle input:checked + .toggle-slider::after {
+            transform: translateX(20px);
+        }
+        .toggle-label {
+            font-size: 12px;
+            color: #555;
+        }
+        .permanence-indicator.locked {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
+        .qr-impact-display {
+            margin-top: 20px;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .config-summary {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+        }
+        .config-summary ul {
+            padding-left: 20px;
+        }
+        .complexity-bar {
+            width: 100%;
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            margin-top: 10px;
+        }
+        .complexity-fill {
+            height: 100%;
+            width: 0%;
+            background: #27ae60;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .complexity-label {
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+            text-align: center;
         }
     </style>
 </head>
@@ -1145,14 +1232,14 @@
         // State
         let currentGUID = null;
         let currentKey = null;
-        let currentData = null; // minimal {id, data, auth}
+        let currentData = null; // minimal {guid, editable, auth}
         let currentBlob = null; // decrypted full data
         let currentMode = null;
         let currentCreated = null;
         let currentName = null;
         let securityInterval = null;
 
-        // Parse URL and handle QR modes
+        // Parse URL and handle QR data
         async function parseUrlParameters() {
             const hash = window.location.hash.substring(1);
             if (!hash) {
@@ -1160,23 +1247,14 @@
                 showCreationForm();
                 return;
             }
-
-            if (hash.startsWith('OFFLINE|')) {
-                const dataStr = hash.substring(8);
-                const data = JSON.parse(atob(dataStr));
-                await handleOfflineQR(data);
-                return;
-            }
-
             const parts = hash.split('|');
-            if (parts.length === 3 && parts[2].length > 100) {
-                const [guid, key, embeddedData] = parts;
-                const embedded = JSON.parse(atob(embeddedData));
-                await handleHybridQR(guid, key, embedded);
-                return;
+            if (parts.length === 3) {
+                const [guid, key, dataStr] = parts;
+                await loadEmergencyInfo(guid, key, dataStr);
+            } else {
+                currentMode = 'create';
+                showCreationForm();
             }
-
-            await handleCloudQR(parts);
         }
 
         // Initialize on page load
@@ -1191,9 +1269,47 @@
                 btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
             });
 
-            const { guid, key, name, created } = parseUrlParameters();
-            console.log('Parsed parameters:', { guid, key, name, created });
+            await parseUrlParameters();
         });
+
+        async function loadEmergencyInfo(guid, key, permanentDataStr) {
+            currentGUID = guid;
+            currentKey = key;
+
+            const permanentData = JSON.parse(atob(permanentDataStr));
+            const displayData = {
+                name: permanentData.n,
+                bloodType: permanentData.b,
+                allergies: permanentData.a,
+                contact: (permanentData.cn || permanentData.cp)
+                    ? { name: permanentData.cn || '', phone: permanentData.cp || '' }
+                    : null
+            };
+
+            currentBlob = { publicInfo: displayData };
+            await displayEmergencyInfo(currentBlob);
+
+            try {
+                const response = await fetch(`${ARCHIVE_BASE}${guid}.json`);
+                if (response.ok) {
+                    const archiveData = await response.json();
+                    const decrypted = await decrypt(archiveData.editable, key);
+                    const editableFields = JSON.parse(decrypted);
+
+                    if (editableFields.bloodType) displayData.bloodType = displayData.bloodType || editableFields.bloodType;
+                    if (editableFields.allergies) displayData.allergies = displayData.allergies || editableFields.allergies;
+                    if (editableFields.contactName || editableFields.contactPhone) {
+                        displayData.contact = displayData.contact || {};
+                        if (editableFields.contactName) displayData.contact.name = editableFields.contactName;
+                        if (editableFields.contactPhone) displayData.contact.phone = editableFields.contactPhone;
+                    }
+                    currentBlob.publicInfo = displayData;
+                    await displayEmergencyInfo(currentBlob);
+                }
+            } catch (e) {
+                console.log('Could not load editable fields', e);
+            }
+        }
 
         async function handleOfflineQR(data) {
             currentKey = data.k;
@@ -1686,101 +1802,117 @@
                 </div>
 
                 <div class="content">
-                    <form id="create-form">
-                        <div class="section-title">Always Visible</div>
+                      <form id="create-form">
+                          <div class="section-title">Emergency Information</div>
+                          <div class="permanence-notice">
+                              ⚠️ Permanent fields cannot be changed after QR creation
+                          </div>
 
-                        <div class="form-group">
-                            <label for="name"><span data-i18n="name">Name</span> *</label>
-                            <input type="text" id="name" required placeholder="John Doe">
-                        </div>
+                          <div class="form-group">
+                              <label for="name"><span data-i18n="name">Name</span> *</label>
+                              <input type="text" id="name" required placeholder="John Doe">
+                              <div class="permanence-indicator locked">
+                                  🔒 Always Permanent (embedded in QR)
+                              </div>
+                          </div>
 
-                        <div class="form-group">
-                            <label for="blood-type" data-i18n="bloodType">Blood Type</label>
-                            <select id="blood-type">
-                                <option value="">Unknown</option>
-                                <option value="A+">A+</option>
-                                <option value="A-">A-</option>
-                                <option value="B+">B+</option>
-                                <option value="B-">B-</option>
-                                <option value="AB+">AB+</option>
-                                <option value="AB-">AB-</option>
-                                <option value="O+">O+</option>
-                                <option value="O-">O-</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="allergies" data-i18n="allergies">Allergies</label>
-                            <textarea id="allergies" placeholder="Penicillin, peanuts, etc."></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="contact-name">Emergency Contact Name *</label>
-                            <input type="text" id="contact-name" required placeholder="Jane Doe">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="contact-phone">Emergency Contact Phone *</label>
-                            <input type="tel" id="contact-phone" required placeholder="(555) 123-4567">
-                        </div>
+                          <div class="form-group with-toggle">
+                              <label for="blood-type" data-i18n="bloodType">Blood Type</label>
+                              <select id="blood-type">
+                                  <option value="">Unknown</option>
+                                  <option value="A+">A+</option>
+                                  <option value="A-">A-</option>
+                                  <option value="B+">B+</option>
+                                  <option value="B-">B-</option>
+                                  <option value="AB+">AB+</option>
+                                  <option value="AB-">AB-</option>
+                                  <option value="O+">O+</option>
+                                  <option value="O-">O-</option>
+                              </select>
+                              <label class="permanence-toggle">
+                                  <input type="checkbox" name="permanent-blood" checked>
+                                  <span class="toggle-slider"></span>
+                                  <span class="toggle-label">Permanent</span>
+                              </label>
+                          </div>
 
-                        <div class="section-title">QR Storage Options</div>
-                        <div class="storage-mode-selector">
-                            <label class="storage-option">
-                                <input type="radio" name="storage-mode" value="cloud" checked>
-                                <div class="option-card">
-                                    <span class="option-icon">☁️</span>
-                                    <span class="option-title">Cloud Backup</span>
-                                    <span class="option-desc">Smaller QR, requires internet</span>
-                                </div>
-                            </label>
-                            <label class="storage-option">
-                                <input type="radio" name="storage-mode" value="hybrid">
-                                <div class="option-card">
-                                    <span class="option-icon">🔄</span>
-                                    <span class="option-title">Hybrid</span>
-                                    <span class="option-desc">Critical data in QR + cloud backup</span>
-                                </div>
-                            </label>
-                            <label class="storage-option">
-                                <input type="radio" name="storage-mode" value="offline">
-                                <div class="option-card">
-                                    <span class="option-icon">💾</span>
-                                    <span class="option-title">Offline Only</span>
-                                    <span class="option-desc">Everything in QR, works forever</span>
-                                </div>
-                            </label>
-                        </div>
+                          <div class="form-group with-toggle">
+                              <label for="allergies" data-i18n="allergies">Allergies</label>
+                              <textarea id="allergies" placeholder="Penicillin, peanuts, etc."></textarea>
+                              <label class="permanence-toggle">
+                                  <input type="checkbox" name="permanent-allergies">
+                                  <span class="toggle-slider"></span>
+                                  <span class="toggle-label">Editable</span>
+                              </label>
+                          </div>
 
-        
-                        <div id="embed-options" class="embed-selector" style="display:none;">
-                            <p class="embed-warning">⚠️ Each field increases QR complexity. Too many may affect scanning.</p>
-                            <div class="embed-checkboxes">
-                                <label><input type="checkbox" name="embed" value="bloodType" checked> Blood Type</label>
-                                <label><input type="checkbox" name="embed" value="allergies" checked> Allergies</label>
-                                <label><input type="checkbox" name="embed" value="contact"> Emergency Contact</label>
-                                <label><input type="checkbox" name="embed" value="hint"> Password Hint</label>
-                            </div>
-                            <div class="qr-size-indicator">
-                                <span>Estimated QR Size:</span>
-                                <div class="size-bar">
-                                    <div class="size-fill" id="size-estimate"></div>
-                                </div>
-                                <span id="size-warning"></span>
-                            </div>
-                        </div>
+                          <div class="form-group with-toggle">
+                              <label for="contact-name">Emergency Contact Name *</label>
+                              <input type="text" id="contact-name" required placeholder="Jane Doe">
+                              <label class="permanence-toggle">
+                                  <input type="checkbox" name="permanent-contactName">
+                                  <span class="toggle-slider"></span>
+                                  <span class="toggle-label">Editable</span>
+                              </label>
+                          </div>
 
-                        <div class="section-title">Password Protected</div>
-                        
-                        <div class="form-group">
-                            <label for="ssn">Social Security Number</label>
-                            <input type="text" id="ssn" placeholder="XXX-XX-XXXX">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="medical-notes">Medical Notes</label>
-                            <textarea id="medical-notes" placeholder="Medications, conditions, etc."></textarea>
-                        </div>
+                          <div class="form-group with-toggle">
+                              <label for="contact-phone">Emergency Contact Phone *</label>
+                              <input type="tel" id="contact-phone" required placeholder="(555) 123-4567">
+                              <label class="permanence-toggle">
+                                  <input type="checkbox" name="permanent-contactPhone">
+                                  <span class="toggle-slider"></span>
+                                  <span class="toggle-label">Editable</span>
+                              </label>
+                          </div>
+
+                          <div class="qr-impact-display">
+                              <h4>Your QR Configuration:</h4>
+                              <div class="config-summary">
+                                  <div class="permanent-fields">
+                                      <strong>🔒 Permanent (in QR):</strong>
+                                      <ul id="permanent-list">
+                                          <li>Name</li>
+                                          <li>Blood Type</li>
+                                      </ul>
+                                  </div>
+                                  <div class="editable-fields">
+                                      <strong>✏️ Editable (online):</strong>
+                                      <ul id="editable-list">
+                                          <li>Allergies</li>
+                                          <li>Emergency Contact</li>
+                                      </ul>
+                                  </div>
+                              </div>
+                              <div class="qr-complexity-meter">
+                                  <div class="complexity-bar">
+                                      <div class="complexity-fill" style="width: 30%"></div>
+                                  </div>
+                                  <span class="complexity-label">QR Complexity: Low</span>
+                              </div>
+                          </div>
+
+                          <div class="section-title">Password Protected</div>
+
+                          <div class="form-group with-toggle">
+                              <label for="ssn">Social Security Number</label>
+                              <input type="text" id="ssn" placeholder="XXX-XX-XXXX">
+                              <label class="permanence-toggle">
+                                  <input type="checkbox" name="permanent-ssn">
+                                  <span class="toggle-slider"></span>
+                                  <span class="toggle-label">Editable</span>
+                              </label>
+                          </div>
+
+                          <div class="form-group with-toggle">
+                              <label for="medical-notes">Medical Notes</label>
+                              <textarea id="medical-notes" placeholder="Medications, conditions, etc."></textarea>
+                              <label class="permanence-toggle">
+                                  <input type="checkbox" name="permanent-notes">
+                                  <span class="toggle-slider"></span>
+                                  <span class="toggle-label">Editable</span>
+                              </label>
+                          </div>
                         
                         <div class="form-group">
                             <label for="password">Password *</label>
@@ -1840,51 +1972,91 @@
                 strengthEl.textContent = isStrongPassword(pwd) ? '✅ Meets requirements' : '❌ Does not meet requirements';
             });
 
-            // Storage mode and embed options
-            document.querySelectorAll('input[name="storage-mode"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    document.getElementById('embed-options').style.display = this.value === 'hybrid' ? 'block' : 'none';
-                    updateQRSizeEstimate();
-                });
-            });
-            document.querySelectorAll('input[name="embed"]').forEach(cb => cb.addEventListener('change', updateQRSizeEstimate));
-            updateQRSizeEstimate();
-        }
+             // Permanence toggles
+             document.querySelectorAll('.permanence-toggle input').forEach(cb => cb.addEventListener('change', updatePermanenceUI));
+             updatePermanenceUI();
+         }
 
-        function updateQRSizeEstimate() {
-            const checkboxes = document.querySelectorAll('input[name="embed"]:checked');
-            const baseSize = 150; // base URL + structure
-            let totalSize = baseSize;
+         function updatePermanenceUI() {
+             const permanentList = document.getElementById('permanent-list');
+             const editableList = document.getElementById('editable-list');
+             const complexityBar = document.querySelector('.complexity-fill');
 
-            const fieldSizes = {
-                bloodType: 10,
-                allergies: 100,
-                contact: 150,
-                hint: 80
-            };
+             let permanentSize = 100; // base
+             let permanentItems = ['Name'];
+             let editableItems = [];
 
-            checkboxes.forEach(cb => {
-                totalSize += fieldSizes[cb.value] || 50;
-            });
+             const fieldLabels = {
+                 blood: 'Blood Type',
+                 allergies: 'Allergies',
+                 contactName: 'Emergency Contact Name',
+                 contactPhone: 'Emergency Contact Phone',
+                 ssn: 'SSN',
+                 notes: 'Medical Notes'
+             };
 
-            const maxSize = 2953;
-            const percentage = (totalSize / maxSize) * 100;
+             const fieldSizes = {
+                 blood: 10,
+                 allergies: 100,
+                 contactName: 80,
+                 contactPhone: 80,
+                 ssn: 40,
+                 notes: 120
+             };
 
-            const fill = document.getElementById('size-estimate');
-            const warning = document.getElementById('size-warning');
-            if (fill) fill.style.width = percentage + '%';
+             document.querySelectorAll('.permanence-toggle input').forEach(toggle => {
+                 const fieldName = toggle.name.replace('permanent-', '');
+                 const label = fieldLabels[fieldName] || fieldName;
+                 if (toggle.checked) {
+                     permanentItems.push(label);
+                     permanentSize += fieldSizes[fieldName] || 50;
+                     toggle.nextElementSibling.nextElementSibling.textContent = 'Permanent';
+                 } else {
+                     editableItems.push(label);
+                     toggle.nextElementSibling.nextElementSibling.textContent = 'Editable';
+                 }
+             });
 
-            if (percentage > 80) {
-                warning.textContent = '⚠️ QR may be hard to scan';
-                if (fill) fill.style.background = '#ff4757';
-            } else if (percentage > 60) {
-                warning.textContent = 'QR getting complex';
-                if (fill) fill.style.background = '#ffc107';
-            } else {
-                warning.textContent = 'Good size';
-                if (fill) fill.style.background = '#27ae60';
-            }
-        }
+             permanentList.innerHTML = permanentItems.map(i => `<li>${i}</li>`).join('');
+             editableList.innerHTML = editableItems.map(i => `<li>${i}</li>`).join('');
+
+             const complexity = Math.min((permanentSize / 1000) * 100, 100);
+             if (complexityBar) complexityBar.style.width = complexity + '%';
+             const labelEl = document.querySelector('.complexity-label');
+             if (complexity > 70) {
+                 if (complexityBar) complexityBar.style.background = '#ff4757';
+                 if (labelEl) labelEl.textContent = 'QR Complexity: High (may affect scanning)';
+             } else if (complexity > 40) {
+                 if (complexityBar) complexityBar.style.background = '#ffc107';
+                 if (labelEl) labelEl.textContent = 'QR Complexity: Medium';
+             } else {
+                 if (complexityBar) complexityBar.style.background = '#27ae60';
+                 if (labelEl) labelEl.textContent = 'QR Complexity: Low';
+             }
+         }
+
+         async function generateQRData(formData, permanentFields) {
+             const permanentData = { v: "5", n: formData.name };
+
+             if (permanentFields.blood && formData.bloodType) permanentData.b = formData.bloodType;
+             if (permanentFields.allergies && formData.allergies) permanentData.a = formData.allergies;
+             if (permanentFields.contactName && formData.contactName) permanentData.cn = formData.contactName;
+             if (permanentFields.contactPhone && formData.contactPhone) permanentData.cp = formData.contactPhone;
+             if (permanentFields.ssn && formData.ssn) permanentData.s = await encrypt(formData.ssn, currentKey);
+             if (permanentFields.notes && formData.notes) permanentData.m = await encrypt(formData.notes, currentKey);
+
+             const editableData = {};
+             if (!permanentFields.blood && formData.bloodType) editableData.bloodType = formData.bloodType;
+             if (!permanentFields.allergies && formData.allergies) editableData.allergies = formData.allergies;
+             if (!permanentFields.contactName && formData.contactName) editableData.contactName = formData.contactName;
+             if (!permanentFields.contactPhone && formData.contactPhone) editableData.contactPhone = formData.contactPhone;
+             if (!permanentFields.ssn && formData.ssn) editableData.ssn = formData.ssn;
+             if (!permanentFields.notes && formData.notes) editableData.notes = formData.notes;
+             if (formData.passwordHint) editableData.passwordHint = formData.passwordHint;
+
+             const qrUrl = `${VIEWER_URL}#${currentGUID}|${currentKey}|${btoa(JSON.stringify(permanentData))}`;
+             return { qrUrl, permanentData, editableData };
+         }
         
         // Handle form submission
         async function handleCreateForm(e) {
@@ -1912,80 +2084,61 @@
                 currentGUID = generateGUID();
                 currentKey = generateKey();
 
-                // Collect form data
-                const publicInfo = {
-                    name: document.getElementById('name').value,
-                    bloodType: document.getElementById('blood-type').value,
-                    allergies: document.getElementById('allergies').value,
-                    contact: {
-                        name: document.getElementById('contact-name').value,
-                        phone: document.getElementById('contact-phone').value
-                    }
-                };
+                 // Collect form data
+                 const formData = {
+                     name: document.getElementById('name').value,
+                     bloodType: document.getElementById('blood-type').value,
+                     allergies: document.getElementById('allergies').value,
+                     contactName: document.getElementById('contact-name').value,
+                     contactPhone: document.getElementById('contact-phone').value,
+                     ssn: document.getElementById('ssn').value,
+                     notes: document.getElementById('medical-notes').value,
+                     passwordHint: document.getElementById('password-hint').value
+                 };
 
-                const passwordHint = document.getElementById('password-hint').value;
-                const encryptedHint = passwordHint ? await encrypt(passwordHint, currentKey) : null;
+                 const permanentFields = {
+                     blood: document.querySelector('input[name="permanent-blood"]').checked,
+                     allergies: document.querySelector('input[name="permanent-allergies"]').checked,
+                     contactName: document.querySelector('input[name="permanent-contactName"]').checked,
+                     contactPhone: document.querySelector('input[name="permanent-contactPhone"]').checked,
+                     ssn: document.querySelector('input[name="permanent-ssn"]').checked,
+                     notes: document.querySelector('input[name="permanent-notes"]').checked
+                 };
 
-                const privateInfo = {
-                    ssn: document.getElementById('ssn').value,
-                    notes: document.getElementById('medical-notes').value,
-                    encryptedWith: await sha256Hash(currentKey + password)
-                };
+                 const { qrUrl, permanentData, editableData } = await generateQRData(formData, permanentFields);
 
-                const created = new Date().toISOString();
-                const fullData = {
-                    version: "3.0",
-                    created,
-                    name: publicInfo.name,
-                    beacon: BEACON_TEXT,
-                    publicInfo,
-                    passwordHint: encryptedHint,
-                    privateInfo
-                };
+                 const encryptedEditable = await encrypt(JSON.stringify(editableData), currentKey);
 
-                // Encrypt entire blob
-                const encryptedBlob = await encrypt(JSON.stringify(fullData), currentKey);
+                 const created = new Date().toISOString();
+                 const updateToken = await generateUpdateToken(password, currentGUID);
+                 const auth = await sha256Hash(updateToken);
 
-                // Generate auth hash for updates
-                const updateToken = await generateUpdateToken(password, currentGUID);
-                const auth = await sha256Hash(updateToken);
+                 currentData = { guid: currentGUID, editable: encryptedEditable, auth };
+                 currentBlob = { version: "5", created, permanent: permanentData, editable: editableData, publicInfo: { name: formData.name, bloodType: formData.bloodType, allergies: formData.allergies, contact: { name: formData.contactName, phone: formData.contactPhone } } };
 
-                currentData = {
-                    id: currentGUID,
-                    data: encryptedBlob,
-                    auth
-                };
+                 const qrContainer = document.getElementById('qrcode');
+                 qrContainer.innerHTML = '';
 
-                currentBlob = { ...fullData, passwordHint };
+                 new QRCode(qrContainer, {
+                     text: qrUrl,
+                     width: 256,
+                     height: 256,
+                     colorDark: '#000000',
+                     colorLight: '#ffffff',
+                     correctLevel: QRCode.CorrectLevel.H
+                 });
 
-                // Generate QR code
-                const mode = document.querySelector('input[name="storage-mode"]:checked').value;
-                const selectedFields = Array.from(document.querySelectorAll('input[name="embed"]:checked')).map(cb => cb.value);
-                const qrUrl = await generateQR(mode, selectedFields, publicInfo, privateInfo, passwordHint, created);
-                
-                const qrContainer = document.getElementById('qrcode');
-                qrContainer.innerHTML = '';
-                
-                new QRCode(qrContainer, {
-                    text: qrUrl,
-                    width: 256,
-                    height: 256,
-                    colorDark: '#000000',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-                
-                window.currentQRUrl = qrUrl;
+                 window.currentQRUrl = qrUrl;
 
-                // Store fallback data locally for short-term access
-                const fallbackData = {
-                    version: "3.0",
-                    created,
-                    name: publicInfo.name, // include name for local fallback
-                    beacon: BEACON_TEXT,
-                    publicInfo
-                };
-                localStorage.setItem('pending_' + currentGUID, JSON.stringify(fallbackData));
+                 // Store fallback data locally for short-term access
+                 const fallbackData = {
+                     version: "5",
+                     created,
+                     name: formData.name,
+                     beacon: BEACON_TEXT,
+                     publicInfo: currentBlob.publicInfo
+                 };
+                 localStorage.setItem('pending_' + currentGUID, JSON.stringify(fallbackData));
                 
                 // Show QR display
                 document.getElementById('create-form').style.display = 'none';
@@ -2002,52 +2155,6 @@
             }
         }
 
-        async function generateQR(mode, selectedFields, publicInfo, privateInfo, passwordHint, created) {
-            const baseUrl = VIEWER_URL;
-            let qrData;
-
-            switch (mode) {
-                case 'offline':
-                    const fullData = {
-                        v: "4",
-                        n: publicInfo.name,
-                        b: publicInfo.bloodType,
-                        a: publicInfo.allergies,
-                        c: btoa(JSON.stringify(publicInfo.contact)),
-                        h: passwordHint ? await encrypt(passwordHint, currentKey) : null,
-                        p: privateInfo ? await encrypt(JSON.stringify(privateInfo), currentKey) : null,
-                        k: currentKey
-                    };
-                    qrData = `${baseUrl}#OFFLINE|${btoa(JSON.stringify(fullData))}`;
-                    break;
-                case 'hybrid':
-                    const hybridData = {
-                        v: "3h",
-                        g: currentGUID,
-                        n: publicInfo.name
-                    };
-                    if (selectedFields.includes('bloodType')) hybridData.b = publicInfo.bloodType;
-                    if (selectedFields.includes('allergies')) hybridData.a = publicInfo.allergies;
-                    if (selectedFields.includes('contact')) hybridData.c = btoa(JSON.stringify(publicInfo.contact));
-                    if (selectedFields.includes('hint') && passwordHint) hybridData.h = await encrypt(passwordHint, currentKey);
-                    qrData = `${baseUrl}#${currentGUID}|${currentKey}|${btoa(JSON.stringify(hybridData))}`;
-                    break;
-                case 'cloud':
-                default:
-                    qrData = `${baseUrl}#${currentGUID}|${currentKey}|${encodeURIComponent(publicInfo.name)}|${encodeURIComponent(created)}`;
-                    break;
-            }
-
-            const qrSize = estimateQRComplexity(qrData);
-            if (qrSize > 2953) {
-                throw new Error('Data too large for QR code. Please select fewer embedded fields.');
-            }
-            return qrData;
-        }
-
-        function estimateQRComplexity(data) {
-            return new TextEncoder().encode(data).length;
-        }
 
         function startSecurityAnimation() {
             const overlay = document.createElement('div');
@@ -2216,7 +2323,7 @@
                                 <div class="arrow">↓ AES-256-GCM Encryption ↓</div>
                                 <div class="after">
                                     <label>After:</label>
-                                    <code>${currentData.data.substring(0, 50)}...</code>
+                                      <code>${currentData.editable.substring(0, 50)}...</code>
                                 </div>
                             </div>
                         </div>
