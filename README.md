@@ -14,7 +14,7 @@ This repository contains the iKey web application and related assets.
 
 ## Dashboard
 
-`dashboard.html` provides a streamlined owner view. After login, one password unlocks both the full profile and the Health Vault for sensitive records.
+`dashboard.html` provides a streamlined owner view. After login, one password unlocks both the full profile and the Electronic Health Records (EHR) for sensitive records.
 
 ## Three-Layer Encryption
 

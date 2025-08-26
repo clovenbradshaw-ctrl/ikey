@@ -1380,7 +1380,7 @@
                 <div class="lang-dropdown"></div>
             </div>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
-            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">Health Records</button>
+            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">EHR</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
             <div id="session-timer" class="session-timer">
                 <span id="session-countdown"></span>
@@ -2240,9 +2240,9 @@
                             { label: 'Notes', value: fields.private.medicalNotes }
                         ])}
 
-                        ${renderSectionCard('Health Vault', '🏥', sections.vault, [
+                        ${renderSectionCard('Electronic Health Records', '🏥', sections.vault, [
                             { label: 'Records', value: fields.vault.records + ' documents' }
-                        ])}
+                        ], 'showHealthRecordsTab()')}
                     </div>
 
                     <div class="quick-actions">
@@ -2262,10 +2262,11 @@
             startSessionTimer();
         }
 
-        function renderSectionCard(title, icon, progress, fields) {
+        function renderSectionCard(title, icon, progress, fields, onClick) {
             const percent = Math.round((progress.filled / progress.total) * 100);
+            const clickAttr = onClick ? ` onclick="${onClick}" style="cursor:pointer"` : '';
             return `
-                <div class="section-card ${percent === 100 ? 'complete' : ''}">
+                <div class="section-card ${percent === 100 ? 'complete' : ''}"${clickAttr}>
                     <div class="section-header">
                         <span class="section-icon">${icon}</span>
                         <h3>${title}</h3>
