@@ -5,8 +5,9 @@
   <title>Redirecting...</title>
   <script>
     (function() {
-      const { search, hash } = window.location;
-      const target = '/' + (search || '') + (hash || '');
+      const { pathname, search, hash } = window.location;
+      const base = pathname.replace(/\/ikey\/?$/, '/');
+      const target = base + (search || '') + (hash || '');
       window.location.replace(target);
     })();
   </script>
