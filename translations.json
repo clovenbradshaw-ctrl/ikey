@@ -36,8 +36,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "es": {
       "emergencyInfo": "INFORMACIÓN DE EMERGENCIA",
@@ -75,8 +75,8 @@
       "choosePassword": "Elija una contraseña",
       "confirmPassword": "Confirmar contraseña",
       "reenterPassword": "Vuelva a ingresar la contraseña",
-      "passwordRequirements": "La contraseña debe tener 8+ caracteres con mayúsculas, minúsculas, números y un carácter especial.",
-      "passwordWarning": "Asegúrese de guardar esta contraseña si desea actualizar esto; de lo contrario, deberá crear una nueva y los datos no se pueden cambiar y los datos protegidos por contraseña se perderán para siempre."
+      "passwordRequirements": "Se requiere una contraseña segura para crear su código. Debe tener al menos 8 caracteres e incluir letras mayúsculas y minúsculas, un número y un carácter especial. Sin ella no podrá actualizar los datos ni modificar el contenido protegido.",
+      "passwordWarning": "Guarde esta contraseña en un lugar seguro. Sin ella, no podrá actualizar el código ni modificar el contenido protegido; si la pierde, tendrá que crear un código nuevo y los datos protegidos por contraseña se perderán para siempre."
     },
     "ar": {
       "emergencyInfo": "معلومات الطوارئ",
@@ -114,8 +114,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "ku": {
       "emergencyInfo": "زانیارییەکانی فریاکەوتن",
@@ -153,8 +153,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "vi": {
       "emergencyInfo": "THÔNG TIN KHẨN CẤP",
@@ -192,8 +192,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "zh": {
       "emergencyInfo": "紧急信息",
@@ -231,8 +231,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "so": {
       "emergencyInfo": "MACLUUMAAD DEGDEG AH",
@@ -270,8 +270,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "my": {
       "emergencyInfo": "အရေးပေါ် အချက်အလက်",
@@ -309,8 +309,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "ne": {
       "emergencyInfo": "आपतकालीन जानकारी",
@@ -348,8 +348,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "am": {
       "emergencyInfo": "የአደጋ መረጃ",
@@ -387,8 +387,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "ko": {
       "emergencyInfo": "응급 정보",
@@ -426,8 +426,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "tl": {
       "emergencyInfo": "IMPORMASYON NG EMERHENSYA",
@@ -465,8 +465,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "fr": {
       "emergencyInfo": "INFORMATIONS D'URGENCE",
@@ -504,8 +504,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "ht": {
       "emergencyInfo": "ENFÒMASYON IJANS",
@@ -543,8 +543,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "pt": {
       "emergencyInfo": "INFORMAÇÕES DE EMERGÊNCIA",
@@ -582,8 +582,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "ru": {
       "emergencyInfo": "ЭКСТРЕННАЯ ИНФОРМАЦИЯ",
@@ -621,8 +621,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "de": {
       "emergencyInfo": "NOTFALLINFORMATIONEN",
@@ -699,8 +699,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "te": {
       "emergencyInfo": "అత్యవసర సమాచారం",
@@ -738,8 +738,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "gu": {
       "emergencyInfo": "કટોકટીની માહિતી",
@@ -777,8 +777,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "ta": {
       "emergencyInfo": "அவசரகால தகவல்",
@@ -816,8 +816,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "ur": {
       "emergencyInfo": "ہنگامی معلومات",
@@ -855,8 +855,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "bn": {
       "emergencyInfo": "জরুরি তথ্য",
@@ -894,8 +894,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "ja": {
       "emergencyInfo": "緊急情報",
@@ -933,8 +933,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "fa": {
       "emergencyInfo": "اطلاعات اضطراری",
@@ -972,8 +972,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "pl": {
       "emergencyInfo": "INFORMACJE AWARYJNE",
@@ -1011,8 +1011,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "it": {
       "emergencyInfo": "INFORMAZIONI DI EMERGENZA",
@@ -1050,8 +1050,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "he": {
       "emergencyInfo": "מידע חירום",
@@ -1089,8 +1089,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "el": {
       "emergencyInfo": "ΠΛΗΡΟΦΟΡΙΕΣ ΕΚΤΑΚΤΗΣ ΑΝΑΓΚΗΣ",
@@ -1128,8 +1128,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "uk": {
       "emergencyInfo": "ЕКСТРЕНА ІНФОРМАЦІЯ",
@@ -1167,8 +1167,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "th": {
       "emergencyInfo": "ข้อมูลฉุกเฉิน",
@@ -1206,8 +1206,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "lo": {
       "emergencyInfo": "ຂໍ້ມູນສຸກເສີນ",
@@ -1245,8 +1245,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "pa": {
       "emergencyInfo": "ਐਮਰਜੈਂਸੀ ਜਾਣਕਾਰੀ",
@@ -1284,8 +1284,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "tr": {
       "emergencyInfo": "ACİL DURUM BİLGİSİ",
@@ -1323,8 +1323,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     },
     "sw": {
       "emergencyInfo": "TAARIFA ZA DHARURA",
@@ -1362,8 +1362,8 @@
       "choosePassword": "Choose a password",
       "confirmPassword": "Confirm Password",
       "reenterPassword": "Re-enter password",
-      "passwordRequirements": "Password must be 8+ chars with upper, lower, number and special character.",
-      "passwordWarning": "Be sure to store this password if you want to update this, otherwise you will need to create a new one and the data is unchangable and the data that is password protected will be lost forever."
+      "passwordRequirements": "A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.",
+      "passwordWarning": "Store this password somewhere safe. Without it, you cannot update the code or modify the protected content; losing it means creating a new code and losing any password-protected data forever."
     }
   }
 }
