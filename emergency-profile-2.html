@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Profile 2.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            color: #2d3748;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .profile-header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .completion-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        
+        .completion-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 35%;
+            transition: width 0.3s ease;
+        }
+        
+        .completion-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .missing-items {
+            font-size: 14px;
+            color: #718096;
+        }
+        
+        .missing-items ul {
+            display: flex;
+            gap: 16px;
+            list-style: none;
+            margin-top: 4px;
+        }
+        
+        .missing-items li {
+            padding: 4px 12px;
+            background: #fff5f5;
+            color: #c53030;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .section-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .edit-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .edit-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .edit-btn.editing {
+            background: #48bb78;
+        }
+        
+        .section-content {
+            padding: 24px;
+        }
+        
+        .emergency-contacts {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .contact-card {
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            position: relative;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .contact-card.primary {
+            border-color: #667eea;
+            background: linear-gradient(145deg, #f0f4ff 0%, #f7fafc 100%);
+        }
+        
+        .contact-card.editing-mode {
+            background: white;
+            border: 2px dashed #cbd5e0;
+        }
+        
+        .contact-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        
+        .contact-name {
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .contact-type {
+            padding: 4px 12px;
+            background: #edf2f7;
+            color: #4a5568;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        
+        .primary-badge {
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .contact-info {
+            display: grid;
+            gap: 8px;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+        }
+        
+        .input-group {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .input-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .input-field label {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 500;
+        }
+        
+        .input-field input,
+        .input-field select,
+        .input-field textarea {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.2s;
+        }
+        
+        .input-field input:focus,
+        .input-field select:focus,
+        .input-field textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .add-contact-btn {
+            width: 100%;
+            padding: 12px;
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            color: #718096;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .add-contact-btn:hover {
+            background: white;
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .btn-secondary {
+            padding: 10px 20px;
+            background: white;
+            color: #4a5568;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background: #f7fafc;
+        }
+        
+        .btn-primary {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .medical-info-grid {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .info-item {
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: #718096;
+        }
+        
+        .info-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d3748;
+        }
+        
+        .medication-list {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .medication-item {
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        
+        .medication-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .medication-details {
+            font-size: 13px;
+            color: #718096;
+        }
+        
+        .delete-btn {
+            padding: 6px 12px;
+            background: #fed7d7;
+            color: #c53030;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background: #fc8181;
+            color: white;
+        }
+        
+        @media (max-width: 640px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Profile Header with Completion Status -->
+        <div class="profile-header">
+            <div class="completion-details">
+                <div>
+                    <h1 style="font-size: 24px; margin-bottom: 4px;">JohnDoe1234!</h1>
+                    <span style="color: #718096; font-size: 14px;">Emergency Profile</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 24px; font-weight: bold; color: #667eea;">35%</div>
+                    <div style="font-size: 12px; color: #718096;">Complete</div>
+                </div>
+            </div>
+            <div class="completion-bar">
+                <div class="completion-fill"></div>
+            </div>
+            <div class="missing-items">
+                <span>Missing critical information:</span>
+                <ul>
+                    <li>Blood Type</li>
+                    <li>Allergies</li>
+                    <li>Secondary Contact</li>
+                    <li>Medical Conditions</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Emergency Contacts Section -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>🚨</span>
+                    <span>Emergency Contacts</span>
+                </div>
+                <button class="edit-btn" onclick="toggleEdit('contacts')">Edit All</button>
+            </div>
+            <div class="section-content">
+                <div class="emergency-contacts" id="contacts-view">
+                    <div class="contact-card primary">
+                        <div class="contact-header">
+                            <div class="contact-name">
+                                Jane Doe
+                                <span class="primary-badge">PRIMARY</span>
+                            </div>
+                            <span class="contact-type">Spouse</span>
+                        </div>
+                        <div class="contact-info">
+                            <div class="contact-row">
+                                <span class="icon">📱</span>
+                                <span>(555) 123-4567</span>
+                            </div>
+                            <div class="contact-row">
+                                <span class="icon">✉️</span>
+                                <span>jane.doe@email.com</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-contact-btn">
+                        <span>+</span>
+                        <span>Add Emergency Contact</span>
+                    </button>
+                </div>
+
+                <!-- Edit Mode (Hidden by default) -->
+                <div class="emergency-contacts" id="contacts-edit" style="display: none;">
+                    <div class="contact-card editing-mode">
+                        <div class="input-group">
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label>Contact Name *</label>
+                                    <input type="text" value="Jane Doe" placeholder="Enter full name">
+                                </div>
+                                <div class="input-field">
+                                    <label>Relationship *</label>
+                                    <select>
+                                        <option>Spouse</option>
+                                        <option>Parent</option>
+                                        <option>Sibling</option>
+                                        <option>Child</option>
+                                        <option>Friend</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label>Phone Number *</label>
+                                    <input type="tel" value="(555) 123-4567" placeholder="(555) 123-4567">
+                                </div>
+                                <div class="input-field">
+                                    <label>Email (Optional)</label>
+                                    <input type="email" value="jane.doe@email.com" placeholder="email@example.com">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" checked>
+                                    <span style="font-size: 14px;">Set as primary contact</span>
+                                </label>
+                                <button class="delete-btn" style="margin-left: auto;">Remove Contact</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-card editing-mode">
+                        <div class="input-group">
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label>Contact Name *</label>
+                                    <input type="text" placeholder="Enter full name">
+                                </div>
+                                <div class="input-field">
+                                    <label>Relationship *</label>
+                                    <select>
+                                        <option value="">Select relationship</option>
+                                        <option>Spouse</option>
+                                        <option>Parent</option>
+                                        <option>Sibling</option>
+                                        <option>Child</option>
+                                        <option>Friend</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label>Phone Number *</label>
+                                    <input type="tel" placeholder="(555) 123-4567">
+                                </div>
+                                <div class="input-field">
+                                    <label>Email (Optional)</label>
+                                    <input type="email" placeholder="email@example.com">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox">
+                                    <span style="font-size: 14px;">Set as primary contact</span>
+                                </label>
+                                <button class="delete-btn" style="margin-left: auto;">Remove Contact</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="add-contact-btn">
+                        <span>+</span>
+                        <span>Add Another Contact</span>
+                    </button>
+
+                    <div class="action-buttons">
+                        <button class="btn-secondary" onclick="toggleEdit('contacts')">Cancel</button>
+                        <button class="btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Information Section -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>🏥</span>
+                    <span>Medical Information</span>
+                </div>
+                <button class="edit-btn" onclick="toggleEdit('medical')">Edit All</button>
+            </div>
+            <div class="section-content">
+                <div class="medical-info-grid" id="medical-view">
+                    <div class="info-item">
+                        <span class="info-label">Blood Type</span>
+                        <span class="info-value" style="color: #cbd5e0;">Not specified</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Allergies</span>
+                        <span class="info-value" style="color: #cbd5e0;">None listed</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Medical Conditions</span>
+                        <span class="info-value" style="color: #cbd5e0;">None listed</span>
+                    </div>
+                </div>
+
+                <!-- Edit Mode for Medical Info -->
+                <div id="medical-edit" style="display: none;">
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label>Blood Type</label>
+                            <select>
+                                <option value="">Select blood type</option>
+                                <option>A+</option>
+                                <option>A-</option>
+                                <option>B+</option>
+                                <option>B-</option>
+                                <option>AB+</option>
+                                <option>AB-</option>
+                                <option>O+</option>
+                                <option>O-</option>
+                            </select>
+                        </div>
+                        <div class="input-field">
+                            <label>Allergies</label>
+                            <textarea rows="3" placeholder="List any allergies (medications, foods, environmental, etc.)"></textarea>
+                        </div>
+                        <div class="input-field">
+                            <label>Medical Conditions</label>
+                            <textarea rows="3" placeholder="List any medical conditions (diabetes, heart disease, etc.)"></textarea>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-secondary" onclick="toggleEdit('medical')">Cancel</button>
+                        <button class="btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medications Section -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>💊</span>
+                    <span>Current Medications</span>
+                </div>
+                <button class="edit-btn" onclick="toggleEdit('medications')">Edit All</button>
+            </div>
+            <div class="section-content">
+                <div id="medications-view">
+                    <div class="medication-list">
+                        <div class="medication-item">
+                            <div class="medication-name">Lisinopril</div>
+                            <div class="medication-details">10mg - Once daily - For blood pressure</div>
+                        </div>
+                        <button class="add-contact-btn">
+                            <span>+</span>
+                            <span>Add Medication</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Edit Mode for Medications -->
+                <div id="medications-edit" style="display: none;">
+                    <div class="contact-card editing-mode" style="margin-bottom: 16px;">
+                        <div class="input-group">
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label>Medication Name *</label>
+                                    <input type="text" value="Lisinopril" placeholder="Enter medication name">
+                                </div>
+                                <div class="input-field">
+                                    <label>Dosage *</label>
+                                    <input type="text" value="10mg" placeholder="e.g., 10mg, 2 tablets">
+                                </div>
+                            </div>
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label>Frequency *</label>
+                                    <input type="text" value="Once daily" placeholder="e.g., Twice daily, As needed">
+                                </div>
+                                <div class="input-field">
+                                    <label>Purpose</label>
+                                    <input type="text" value="For blood pressure" placeholder="What it's for">
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end;">
+                                <button class="delete-btn">Remove Medication</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="add-contact-btn">
+                        <span>+</span>
+                        <span>Add Another Medication</span>
+                    </button>
+
+                    <div class="action-buttons">
+                        <button class="btn-secondary" onclick="toggleEdit('medications')">Cancel</button>
+                        <button class="btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleEdit(section) {
+            const viewMode = document.getElementById(section + '-view');
+            const editMode = document.getElementById(section + '-edit');
+            const btn = event.target;
+            
+            if (viewMode.style.display === 'none') {
+                viewMode.style.display = 'block';
+                editMode.style.display = 'none';
+                btn.textContent = 'Edit All';
+                btn.classList.remove('editing');
+            } else {
+                viewMode.style.display = 'none';
+                editMode.style.display = 'block';
+                btn.textContent = 'Save All';
+                btn.classList.add('editing');
+            }
+        }
+    </script>
+</body>
+</html>
