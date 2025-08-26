@@ -1989,7 +1989,12 @@
                     encryptedWith: await sha256Hash(currentKey + password)
                 } : null;
 
-                const payload = { publicInfo, privateInfo, passwordHint: formData.passwordHint };
+                const payload = {
+                    publicInfo,
+                    privateInfo,
+                    passwordHint: formData.passwordHint,
+                    vault: window.healthApp.exportVault()
+                };
                 const encryptedData = await encrypt(JSON.stringify(payload), currentKey);
 
                 // Create data package
@@ -2048,7 +2053,15 @@
 
                 window.currentQRUrl = qrUrl;
 
-                currentBlob = { version: 'v2', created, name: formData.name, criticalInfo: formData.criticalInfo, publicInfo, privateInfo };
+                currentBlob = {
+                    version: 'v2',
+                    created,
+                    name: formData.name,
+                    criticalInfo: formData.criticalInfo,
+                    publicInfo,
+                    privateInfo,
+                    vault: window.healthApp.exportVault()
+                };
 
                 // Show success
                 document.getElementById('create-form').style.display = 'none';

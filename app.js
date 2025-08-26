@@ -7,18 +7,31 @@ class UnifiedHealthApp extends EmergencyQRApp {
     super();
     this.vaultUnlocked = false;
     this.attachments = new Map();
-    this.phvData = {};
+    this.phvData = { sections: {}, attachments: [] };
   }
 
   async createAttachment(data, type) {
     // Placeholder for attachment creation and upload.
     const guid = self.crypto.randomUUID();
     this.attachments.set(guid, { data, type });
+    this.phvData.attachments.push({ guid, type });
     return guid;
+  }
+
+  exportVault() {
+    return this.phvData;
+  }
+
+  importVault(vaultData) {
+    if (!vaultData) return;
+    this.phvData = vaultData;
   }
 
   async loadVault(password) {
     // Placeholder for password verification and vault loading.
+    if (window.currentBlob && window.currentBlob.vault) {
+      this.importVault(window.currentBlob.vault);
+    }
     this.vaultUnlocked = true;
     return true;
   }
