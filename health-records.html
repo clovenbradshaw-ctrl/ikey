@@ -3275,24 +3275,28 @@
                     const salt = window.crypto.getRandomValues(new Uint8Array(16));
                     const iv = window.crypto.getRandomValues(new Uint8Array(12));
                     const key = await this.deriveKey(password, salt);
-                    
+
                     const encrypted = await window.crypto.subtle.encrypt(
                         { name: 'AES-GCM', iv: iv },
                         key,
                         encoder.encode(JSON.stringify(data))
                     );
-                    
+
                     return {
-                        salt: Array.from(salt),
-                        iv: Array.from(iv),
-                        data: Array.from(new Uint8Array(encrypted))
+                        salt: btoa(String.fromCharCode(...salt)),
+                        iv: btoa(String.fromCharCode(...iv)),
+                        data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
                     };
                 },
-                
+
                 async decrypt(encryptedData, password) {
-                    const salt = new Uint8Array(encryptedData.salt);
-                    const iv = new Uint8Array(encryptedData.iv);
-                    const data = new Uint8Array(encryptedData.data);
+                    const parseB64 = (value) =>
+                        typeof value === 'string'
+                            ? Uint8Array.from(atob(value), c => c.charCodeAt(0))
+                            : new Uint8Array(value);
+                    const salt = parseB64(encryptedData.salt);
+                    const iv = parseB64(encryptedData.iv);
+                    const data = parseB64(encryptedData.data);
                     const key = await this.deriveKey(password, salt);
                     
                     try {
