@@ -939,6 +939,105 @@
             margin-bottom: 10px;
         }
 
+        /* Redesigned dashboard */
+        .dashboard-container {
+            padding: 20px;
+        }
+        .dashboard-header {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .progress-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .progress-text .percent {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .section-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+        }
+        .section-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .section-card.complete {
+            opacity: 0.7;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .section-icon {
+            font-size: 20px;
+        }
+        .mini-progress {
+            flex: 1;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            position: relative;
+        }
+        .mini-progress .progress-bar {
+            height: 100%;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        .field-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.875rem;
+        }
+        .field-row.missing .field-value {
+            color: #667eea;
+        }
+        .quick-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+        .action-btn.primary {
+            background: #667eea;
+            color: #fff;
+        }
+        .badge {
+            background: #fff;
+            color: #667eea;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+            font-size: 0.75rem;
+        }
+        .security-status .level-excellent { color: #38a169; }
+        .security-status .level-good { color: #48bb78; }
+        .security-status .level-fair { color: #ed8936; }
+        .security-status .level-basic { color: #e53e3e; }
+
         @media (max-width: 480px) {
             .lang-button {
                 padding: 4px 8px;
@@ -1873,19 +1972,29 @@
 
         function logoutOwner() {
             ownerPassword = null;
+
             document.querySelector('.vault-btn').style.display = 'none';
             document.querySelector('.dashboard-btn').style.display = 'none';
+            document.querySelector('.health-records-btn').style.display = 'none';
             document.querySelector('.logout-btn').style.display = 'none';
             document.querySelector('.login-btn').style.display = 'inline-block';
-            document.getElementById('main-content').innerHTML = '';
-            currentMode = null;
+
+            localStorage.removeItem('ikey_last_view');
+
             if (sessionTimeoutHandle) {
                 clearTimeout(sessionTimeoutHandle);
                 sessionTimeoutHandle = null;
             }
-            if (currentBlob) {
-                displayFullInfo(currentBlob);
+
+            if (currentGUID && currentKey) {
+                displayEmergencyInfo(currentBlob);
+            } else {
+                showCreationForm();
             }
+
+            document.getElementById('healthRecordsTab').style.display = 'none';
+            document.getElementById('text911Tab').style.display = 'none';
+            document.getElementById('qrTab').style.display = 'block';
         }
 
         function startSessionTimer() {
@@ -1927,40 +2036,163 @@
         }
 
         function showOwnerDashboard() {
-            if (!currentBlob) return;
             currentMode = 'dashboard';
             const container = document.getElementById('main-content');
-            const publicInfo = currentBlob.publicInfo || {};
-            const name = currentBlob.name || publicInfo.name || '';
-            const bloodType = publicInfo.bloodType || '';
-            const allergies = publicInfo.allergies || '';
-            const contactName = publicInfo.contact?.name || '';
-            const contactPhone = publicInfo.contact?.phone || '';
-            const lastSaved = currentBlob.metadata?.updated || currentBlob.created || '';
+
+            const fields = {
+                basic: {
+                    name: currentBlob.name,
+                    criticalInfo: currentBlob.criticalInfo
+                },
+                emergency: {
+                    bloodType: currentBlob.publicInfo?.bloodType,
+                    allergies: currentBlob.publicInfo?.allergies,
+                    medications: currentBlob.publicInfo?.medications
+                },
+                contacts: {
+                    primary: currentBlob.publicInfo?.contact,
+                    secondary: currentBlob.publicInfo?.secondaryContact
+                },
+                private: {
+                    ssn: currentBlob.privateInfo?.ssn,
+                    insurance: currentBlob.privateInfo?.insurance,
+                    medicalNotes: currentBlob.privateInfo?.notes
+                },
+                vault: {
+                    records: currentBlob.vault?.records?.length || 0
+                }
+            };
+
+            let totalFields = 0;
+            let filledFields = 0;
+
+            const checkField = (value) => {
+                totalFields++;
+                if (value && value !== '' && value !== '-') {
+                    filledFields++;
+                    return true;
+                }
+                return false;
+            };
+
+            const sections = {
+                basic: { filled: 0, total: 2 },
+                emergency: { filled: 0, total: 3 },
+                contacts: { filled: 0, total: 2 },
+                private: { filled: 0, total: 3 },
+                vault: { filled: 0, total: 1 }
+            };
+
+            if (checkField(fields.basic.name)) sections.basic.filled++;
+            if (checkField(fields.basic.criticalInfo)) sections.basic.filled++;
+            if (checkField(fields.emergency.bloodType)) sections.emergency.filled++;
+            if (checkField(fields.emergency.allergies)) sections.emergency.filled++;
+            if (checkField(fields.emergency.medications)) sections.emergency.filled++;
+            if (checkField(fields.contacts.primary?.name)) sections.contacts.filled++;
+            if (checkField(fields.contacts.secondary?.name)) sections.contacts.filled++;
+            if (checkField(fields.private.ssn)) sections.private.filled++;
+            if (checkField(fields.private.insurance)) sections.private.filled++;
+            if (checkField(fields.private.medicalNotes)) sections.private.filled++;
+            if (fields.vault.records > 0) sections.vault.filled++;
+
+            const completionPercent = Math.round((filledFields / totalFields) * 100);
+            const securityLevel =
+                completionPercent >= 80 ? 'Excellent' :
+                completionPercent >= 60 ? 'Good' :
+                completionPercent >= 40 ? 'Fair' : 'Basic';
+
             container.innerHTML = `
-                <div class="owner-dashboard">
-                    <div class="owner-status">👤 Owner Mode</div>
-                    <div class="dashboard-qr"><div id="owner-qr"></div></div>
-                    <div class="summary-cards">
-                        <div class="dashboard-card"><strong>Basic</strong><br>${name}<br>${currentBlob.criticalInfo || ''}</div>
-                        <div class="dashboard-card"><strong>Emergency</strong><br>Blood: ${bloodType || '-'}<br>Allergies: ${allergies || '-'}</div>
-                        <div class="dashboard-card"><strong>Contact</strong><br>${contactName}<br>${contactPhone}</div>
-                        <div class="dashboard-card"><strong>Last Archived</strong><br>${lastSaved}</div>
+                <div class="dashboard-container">
+                    <div class="dashboard-header">
+                        <div class="progress-ring">
+                            <svg width="120" height="120">
+                                <circle cx="60" cy="60" r="54" fill="none" stroke="#e0e0e0" stroke-width="8"/>
+                                <circle cx="60" cy="60" r="54" fill="none" stroke="#667eea" stroke-width="8"
+                                        stroke-dasharray="${339 * completionPercent / 100} 339"
+                                        transform="rotate(-90 60 60)"/>
+                            </svg>
+                            <div class="progress-text">
+                                <div class="percent">${completionPercent}%</div>
+                                <div class="label">Complete</div>
+                            </div>
+                        </div>
+                        <div class="profile-summary">
+                            <h2>${fields.basic.name || 'Your iKey'}</h2>
+                            <p class="security-status">Security Level: <span class="level-${securityLevel.toLowerCase()}">${securityLevel}</span></p>
+                            <p class="last-updated">Last updated: ${currentBlob.metadata?.updated || 'Never'}</p>
+                        </div>
                     </div>
-                    <div class="action-panel">
-                        <button onclick="showUpdateForm(ownerPassword)">Edit Emergency Info</button>
-                        <button onclick="displayFullInfo(currentBlob)">View Full Details</button>
-                        <button onclick="showVaultTab()">Access Health Vault</button>
-                        <button onclick="downloadQR()">Download QR</button>
+
+                    <div class="section-cards">
+                        ${renderSectionCard('Basic Info', '👤', sections.basic, [
+                            { label: 'Name', value: fields.basic.name, required: true },
+                            { label: 'Critical Info', value: fields.basic.criticalInfo }
+                        ])}
+
+                        ${renderSectionCard('Emergency', '🚨', sections.emergency, [
+                            { label: 'Blood Type', value: fields.emergency.bloodType },
+                            { label: 'Allergies', value: fields.emergency.allergies },
+                            { label: 'Medications', value: fields.emergency.medications, missing: true }
+                        ])}
+
+                        ${renderSectionCard('Contacts', '📞', sections.contacts, [
+                            { label: 'Primary', value: fields.contacts.primary?.name },
+                            { label: 'Secondary', value: fields.contacts.secondary?.name, missing: true }
+                        ])}
+
+                        ${renderSectionCard('Private', '🔒', sections.private, [
+                            { label: 'SSN', value: fields.private.ssn, masked: true },
+                            { label: 'Insurance', value: fields.private.insurance, missing: true },
+                            { label: 'Notes', value: fields.private.medicalNotes }
+                        ])}
+
+                        ${renderSectionCard('Health Vault', '🏥', sections.vault, [
+                            { label: 'Records', value: fields.vault.records + ' documents' }
+                        ])}
+                    </div>
+
+                    <div class="quick-actions">
+                        <button onclick="editSection('emergency')" class="action-btn primary">
+                            <span>Add Missing Info</span>
+                            <span class="badge">+${totalFields - filledFields}</span>
+                        </button>
+                        <button onclick="downloadQRFixed()" class="action-btn">Download QR</button>
+                        <button onclick="shareQR()" class="action-btn">Share</button>
                     </div>
                 </div>
             `;
-            const qrContainer = document.getElementById('owner-qr');
-            if (qrContainer && window.currentQRUrl) {
-                qrContainer.innerHTML = '';
-                new QRCode(qrContainer, { text: window.currentQRUrl, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.M });
-            }
+
+            localStorage.setItem('ikey_last_view', 'dashboard');
+            localStorage.setItem('ikey_current_guid', currentGUID);
+
             startSessionTimer();
+        }
+
+        function renderSectionCard(title, icon, progress, fields) {
+            const percent = Math.round((progress.filled / progress.total) * 100);
+            return `
+                <div class="section-card ${percent === 100 ? 'complete' : ''}">
+                    <div class="section-header">
+                        <span class="section-icon">${icon}</span>
+                        <h3>${title}</h3>
+                        <div class="mini-progress">
+                            <div class="progress-bar" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                    <div class="section-fields">
+                        ${fields.map(f => `
+                            <div class="field-row ${f.missing ? 'missing' : ''}">
+                                <span class="field-label">${f.label}</span>
+                                <span class="field-value">
+                                    ${f.missing ? '➕ Add' :
+                                      f.masked ? '••••' :
+                                      f.value || '—'}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
         }
 
         async function showUpdateForm(password) {
@@ -2206,7 +2438,7 @@
                             </p>
                             <div id="qrcode"></div>
                             <div class="action-buttons">
-                                <button class="btn" onclick="downloadQR()">💾 <span data-i18n="download">Download</span></button>
+                                <button class="btn" onclick="downloadQRFixed()">💾 <span data-i18n="download">Download</span></button>
                                 <button class="btn" onclick="testQR()">🔍 <span data-i18n="test">Test</span></button>
                             </div>
                             <div class="status-message status-info" style="margin-top: 15px;">
@@ -2575,14 +2807,48 @@
             };
         }
 
-        function downloadQR() {
-            const canvas = document.querySelector('#qrcode canvas');
-            if (canvas) {
+        function downloadQRFixed() {
+            const canvas = document.querySelector('#qrcode canvas, #owner-qr canvas');
+            if (!canvas) {
+                const tempDiv = document.createElement('div');
+                new QRCode(tempDiv, {
+                    text: window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${btoa(JSON.stringify({
+                        n: currentBlob.name,
+                        b: currentBlob.publicInfo?.bloodType,
+                        a: currentBlob.publicInfo?.allergies,
+                        t: currentBlob.created
+                    }))}`,
+                    width: 256,
+                    height: 256
+                });
+                setTimeout(() => {
+                    const newCanvas = tempDiv.querySelector('canvas');
+                    if (newCanvas) {
+                        const link = document.createElement('a');
+                        link.download = `ikey-${currentBlob.name || 'emergency'}.png`;
+                        link.href = newCanvas.toDataURL();
+                        link.click();
+                    }
+                }, 100);
+            } else {
                 const link = document.createElement('a');
-                link.download = 'ikey.png';
+                link.download = `ikey-${currentBlob.name || 'emergency'}.png`;
                 link.href = canvas.toDataURL();
                 link.click();
             }
+        }
+
+        function shareQR() {
+            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
+            if (navigator.share && url) {
+                navigator.share({ title: 'iKey', url }).catch(() => {});
+            } else if (url) {
+                prompt('QR URL', url);
+            }
+        }
+
+        function editSection(section) {
+            showUpdateForm(ownerPassword);
         }
         
         function testQR() {
