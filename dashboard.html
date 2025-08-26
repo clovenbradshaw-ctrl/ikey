@@ -72,15 +72,26 @@
             background: #f0f2f5;
             border-radius: 12px;
         }
-        
-        .btn-911 {
+
+        .access-911 {
             background: #ef4444;
             color: white;
             border: none;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: bold;
+            padding: 10px 16px;
+            border-radius: 8px;
             cursor: pointer;
+        }
+
+        .access-911:active {
+            opacity: 0.9;
+        }
+
+        .emergency-card {
+            padding: 16px;
+            background: #fff5f5;
+            border: 2px dashed #ef4444;
+            border-radius: 12px;
+            margin-bottom: 20px;
         }
         
         /* Main Container */
@@ -351,7 +362,6 @@
             </div>
             <div class="nav-right">
                 <span class="session-timer">42m remaining</span>
-                <button class="btn-911">📍 911</button>
                 <button class="btn btn-secondary">Share Profile</button>
             </div>
         </nav>
@@ -459,6 +469,13 @@
 
             <!-- Side Panel -->
             <div>
+                <!-- Emergency Access -->
+                <div class="card emergency-card">
+                    <h3 class="card-title">🚨 Emergency Services</h3>
+                    <p style="margin-bottom:12px;">Double-click to open</p>
+                    <button class="access-911" ondblclick="confirmEmergencyAccess()" title="Double-click to activate">Access Emergency Services</button>
+                </div>
+
                 <!-- Quick Access -->
                 <div class="card">
                     <h3 class="card-title">⚡ Quick Access</h3>
@@ -495,5 +512,12 @@
             </div>
         </div>
     </div>
+    <script>
+    function confirmEmergencyAccess() {
+        if (confirm('Open Emergency Services?')) {
+            window.location.href = 'text911.html';
+        }
+    }
+    </script>
 </body>
 </html>
