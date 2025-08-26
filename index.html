@@ -949,46 +949,14 @@ body.rtl .info-icon {
 </head>
 <body>
     <div class="language-selector">
-        <div class="primary-languages">
-            <button class="lang-btn active" data-lang="en">
-                <span class="lang-native">English</span>
-            </button>
-            <button class="lang-btn" data-lang="es">
-                <span class="lang-native">Español</span>
-            </button>
-            <button class="lang-btn" data-lang="ar">
-                <span class="lang-native">العربية</span>
-            </button>
-            <button class="lang-btn" data-lang="ku">
-                <span class="lang-native">کوردی</span>
-            </button>
-        </div>
+        <div class="primary-languages"></div>
 
         <button class="more-languages-btn" onclick="toggleMoreLanguages()">
             <span class="globe-icon">🌍</span>
             <span class="plus-icon">+</span>
         </button>
 
-        <div class="secondary-languages" style="display: none;">
-            <button class="lang-btn" data-lang="vi">
-                <span class="lang-native">Tiếng Việt</span>
-            </button>
-            <button class="lang-btn" data-lang="zh">
-                <span class="lang-native">中文</span>
-            </button>
-            <button class="lang-btn" data-lang="so">
-                <span class="lang-native">Soomaali</span>
-            </button>
-            <button class="lang-btn" data-lang="my">
-                <span class="lang-native">မြန်မာ</span>
-            </button>
-            <button class="lang-btn" data-lang="ne">
-                <span class="lang-native">नेपाली</span>
-            </button>
-            <button class="lang-btn" data-lang="am">
-                <span class="lang-native">አማርኛ</span>
-            </button>
-        </div>
+        <div class="secondary-languages" style="display: none;"></div>
     </div>
     <div class="container">
         <div id="main-content">
@@ -1033,15 +1001,87 @@ body.rtl .info-icon {
         const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
 
+        const LANGUAGE_NAMES = {
+          en: 'English',
+          es: 'Español',
+          ar: 'العربية',
+          ku: 'کوردی',
+          vi: 'Tiếng Việt',
+          zh: '中文',
+          so: 'Soomaali',
+          my: 'မြန်မာ',
+          ne: 'नेपाली',
+          am: 'አማርኛ',
+          bn: 'বাংলা',
+          de: 'Deutsch',
+          el: 'Ελληνικά',
+          fa: 'فارسی',
+          fr: 'Français',
+          gu: 'ગુજરાતી',
+          he: 'עברית',
+          hi: 'हिन्दी',
+          ht: 'Kreyòl Ayisyen',
+          it: 'Italiano',
+          ja: '日本語',
+          ko: '한국어',
+          lo: 'ລາວ',
+          pa: 'ਪੰਜਾਬੀ',
+          pl: 'Polski',
+          pt: 'Português',
+          ru: 'Русский',
+          sw: 'Kiswahili',
+          ta: 'தமிழ்',
+          te: 'తెలుగు',
+          th: 'ไทย',
+          tl: 'Tagalog',
+          tr: 'Türkçe',
+          uk: 'Українська',
+          ur: 'اردو'
+        };
+
+        const PRIMARY_LANGS = ['en', 'es', 'ar', 'ku'];
+        const RTL_LANGS = ['ar', 'ku', 'fa', 'he', 'ur'];
+
         let translations = {};
 
         let currentLanguage = 'en';
+
+        function createLangButton(code) {
+          const btn = document.createElement('button');
+          btn.className = 'lang-btn';
+          btn.dataset.lang = code;
+          const span = document.createElement('span');
+          span.className = 'lang-native';
+          span.textContent = LANGUAGE_NAMES[code] || code;
+          btn.appendChild(span);
+          btn.addEventListener('click', () => setLanguage(code));
+          return btn;
+        }
+
+        function buildLanguageButtons() {
+          const primary = document.querySelector('.primary-languages');
+          const secondary = document.querySelector('.secondary-languages');
+          primary.innerHTML = '';
+          secondary.innerHTML = '';
+
+          PRIMARY_LANGS.forEach(code => {
+            if (translations[code]) {
+              primary.appendChild(createLangButton(code));
+            }
+          });
+
+          Object.keys(translations)
+            .filter(code => !PRIMARY_LANGS.includes(code))
+            .forEach(code => {
+              secondary.appendChild(createLangButton(code));
+            });
+        }
 
         function setLanguage(langCode) {
           currentLanguage = langCode;
           localStorage.setItem('preferredLanguage', langCode);
 
-            const t = translations[langCode] || translations.en || {};
+          const t = translations[langCode] || translations.en || {};
           document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if (t[key]) el.textContent = t[key];
@@ -1051,8 +1091,7 @@ body.rtl .info-icon {
             if (t[key]) el.placeholder = t[key];
           });
 
-          const rtlLanguages = ['ar', 'ku'];
-          document.body.classList.toggle('rtl', rtlLanguages.includes(langCode));
+          document.body.classList.toggle('rtl', RTL_LANGS.includes(langCode));
 
           document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.lang === langCode);
@@ -1137,15 +1176,13 @@ body.rtl .info-icon {
                 console.error('Failed to load translations:', error);
             }
 
+            buildLanguageButtons();
+
             const savedLang =
                 localStorage.getItem('preferredLanguage') ||
                 navigator.language.substring(0, 2) ||
                 'en';
-            currentLanguage = savedLang;
             setLanguage(savedLang);
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
-            });
 
             await parseUrlParameters();
         });
