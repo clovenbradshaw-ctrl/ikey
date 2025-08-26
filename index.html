@@ -1108,7 +1108,8 @@
         let currentMode = null;
         let currentCreated = null;
         let currentName = null;
-        let currentCriticalInfo = null;
+        let currentBloodType = null;
+        let currentAllergies = null;
         let ownerPassword = null;
         let uploadCheckInterval = null;
 
@@ -1132,13 +1133,15 @@
             currentMode = 'view';
             const embedded = JSON.parse(atob(embeddedStr));
             currentName = embedded.n;
-            currentCriticalInfo = embedded.c;
+            currentBloodType = embedded.b || null;
+            currentAllergies = embedded.a || null;
             currentCreated = embedded.t || null;
 
             // Show embedded data immediately
             displayBasicInfo({
                 name: currentName,
-                criticalInfo: currentCriticalInfo
+                bloodType: currentBloodType,
+                allergies: currentAllergies
             });
 
             // Attempt to load full data (non-blocking)
@@ -1147,10 +1150,13 @@
                 .then(async data => {
                     const full = JSON.parse(await decrypt(data.data, key));
                     displayFullInfo({
+                        ...full,
                         name: currentName,
-                        criticalInfo: currentCriticalInfo,
-                        publicInfo: full.publicInfo,
-                        privateInfo: full.privateInfo
+                        publicInfo: {
+                            ...full.publicInfo,
+                            bloodType: currentBloodType || full.publicInfo?.bloodType,
+                            allergies: currentAllergies || full.publicInfo?.allergies
+                        }
                     });
                 })
                 .catch(() => {
@@ -1158,7 +1164,7 @@
                 });
         }
 
-        function displayBasicInfo({ name, criticalInfo }) {
+        function displayBasicInfo({ name, bloodType, allergies }) {
             const container = document.getElementById('main-content');
             container.innerHTML = `
                 <div class="emergency-card">
@@ -1174,7 +1180,8 @@
                                     <div class="info-value">${name || 'Unknown'}</div>
                                 </div>
                             </div>
-                            ${criticalInfo ? `<div class="info-item"><span class="info-icon">⚠️</span><div class="info-content"><div class="info-label" data-i18n="criticalInfo">Critical Information</div><div class="info-value">${criticalInfo}</div></div></div>` : ''}
+                            ${bloodType ? `<div class="info-item"><span class="info-icon">🩸</span><div class="info-content"><div class="info-label" data-i18n="bloodType">Blood Type</div><div class="info-value">${bloodType}</div></div></div>` : ''}
+                            ${allergies ? `<div class="info-item"><span class="info-icon">⚠️</span><div class="info-content"><div class="info-label" data-i18n="allergies">Allergies</div><div class="info-value">${allergies}</div></div></div>` : ''}
                         </div>
                         <div class="status-message status-info" id="loading-message">Loading additional information...</div>
                     </div>
@@ -1210,10 +1217,13 @@
                     clearInterval(uploadCheckInterval);
                     uploadCheckInterval = null;
                     displayFullInfo({
+                        ...full,
                         name: currentName,
-                        criticalInfo: currentCriticalInfo,
-                        publicInfo: full.publicInfo,
-                        privateInfo: full.privateInfo
+                        publicInfo: {
+                            ...full.publicInfo,
+                            bloodType: currentBloodType || full.publicInfo?.bloodType,
+                            allergies: currentAllergies || full.publicInfo?.allergies
+                        }
                     });
                 } catch (error) {
                     const el = document.getElementById('loading-message');
@@ -1316,10 +1326,7 @@
             const publicInfo = {
                 name: embedded.n,
                 bloodType: embedded.b || 'Loading...',
-                allergies: embedded.a || 'Loading...',
-                contact: embedded.c
-                    ? JSON.parse(atob(embedded.c))
-                    : { name: 'Loading...', phone: 'Loading...' }
+                allergies: embedded.a || 'Loading...'
             };
             await displayEmergencyInfo(
                 { publicInfo },
@@ -1333,8 +1340,6 @@
                 const merged = { ...cloudData };
                 if (embedded.b) merged.publicInfo.bloodType = embedded.b;
                 if (embedded.a) merged.publicInfo.allergies = embedded.a;
-                if (embedded.c)
-                    merged.publicInfo.contact = JSON.parse(atob(embedded.c));
                 await displayEmergencyInfo(merged);
             } catch (error) {
                 console.log('Cloud fetch failed, using embedded data only');
@@ -2044,11 +2049,14 @@
                 localStorage.setItem(`auth_${currentGUID}`, auth);
 
                 // Only generate QR after successful upload
-                const embedded = btoa(JSON.stringify({
-                    n: formData.name,
-                    c: formData.criticalInfo?.substring(0, 100),
-                    t: created
-                }));
+                const embedded = btoa(
+                    JSON.stringify({
+                        n: formData.name,
+                        b: formData.bloodType,
+                        a: formData.allergies?.substring(0, 2000), // limit embedded allergies to 2000 chars
+                        t: created
+                    })
+                );
 
                 const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${embedded}`;
                 window.location.hash = `v2:${currentGUID}:${currentKey}:${embedded}`;
@@ -2060,7 +2068,7 @@
                     text: qrUrl,
                     width: 256,
                     height: 256,
-                    correctLevel: QRCode.CorrectLevel.H
+                    correctLevel: QRCode.CorrectLevel.M
                 });
 
                 window.currentQRUrl = qrUrl;
