@@ -1028,36 +1028,6 @@ body.rtl .info-icon {
           plusIcon.textContent = isVisible ? '+' : '×';
         }
 
-
-        const SECURITY_STEPS = [
-            {
-                title: "Creating Your Encryption",
-                message: "Generating a unique key with 115 quattuorvigintillion combinations",
-                icon: "🔐"
-            },
-            {
-                title: "Zero-Knowledge Security",
-                message: "Your key exists only in this QR code - we can never access it",
-                icon: "🔒"
-            },
-            {
-                title: "Dual-Layer Protection",
-                message: "Emergency info stays accessible, private details need your password",
-                icon: "🛡️"
-            },
-            {
-                title: "Uploading to Archive.org",
-                message: "Sending encrypted data - meaningless without your QR code",
-                icon: "☁️"
-            },
-            {
-                title: "Complete",
-                message: "Your QR code is now the only key in existence",
-                icon: "✅"
-            }
-        ];
-
-
         // State
         let currentGUID = null;
         let currentKey = null;
@@ -1066,7 +1036,6 @@ body.rtl .info-icon {
         let currentMode = null;
         let currentCreated = null;
         let currentName = null;
-        let securityInterval = null;
         let ownerPassword = null;
 
         async function parseAndDisplay() {
@@ -1573,17 +1542,36 @@ body.rtl .info-icon {
 
         async function showUpdateForm(password) {
             try {
+                // Retrieve stored auth
+                let originalAuth = localStorage.getItem(`auth_${currentGUID}`);
+
+                if (!originalAuth) {
+                    // Fallback: fetch from Archive
+                    const response = await fetch(`${ARCHIVE_BASE}${currentGUID}.json`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        originalAuth = data.auth;
+                        localStorage.setItem(`auth_${currentGUID}`, originalAuth);
+                    }
+                }
+
+                if (!originalAuth) {
+                    throw new Error("Cannot retrieve authentication data");
+                }
+
                 // Generate update token
                 const updateToken = await generateUpdateToken(password, currentGUID);
 
-                // Validate password against stored hash
-                if (currentBlob.privateInfo) {
-                    const hash = await sha256Hash(currentKey + password);
-                    if (hash !== currentBlob.privateInfo.encryptedWith) {
-                        alert("Incorrect password!");
-                        return;
-                    }
+                // Verify it matches
+                const testAuth = await sha256Hash(updateToken);
+                if (testAuth !== originalAuth) {
+                    throw new Error("Password verification failed");
                 }
+
+                // Continue with form setup...
+                // Store auth for update handler
+                window.currentUpdateAuth = originalAuth;
+                window.currentUpdateToken = updateToken;
 
                 // Show update form (reuse creation form with pre-filled data)
                 showCreationForm();
@@ -1609,7 +1597,7 @@ body.rtl .info-icon {
 
                 // Change form handler to update instead of create
                 document.getElementById('create-form').removeEventListener('submit', handleCreateForm);
-                document.getElementById('create-form').addEventListener('submit', (e) => handleUpdateForm(e, password, updateToken));
+                document.getElementById('create-form').addEventListener('submit', (e) => handleUpdateForm(e, password));
 
                 // Change button text
                 document.querySelector('#create-form button[type="submit"]').innerHTML = '<span>Update QR</span>';
@@ -1620,15 +1608,22 @@ body.rtl .info-icon {
             }
         }
 
-        async function handleUpdateForm(e, password, updateToken) {
+        async function handleUpdateForm(e, password) {
             e.preventDefault();
 
             const button = e.target.querySelector('button[type="submit"]');
             button.disabled = true;
             button.innerHTML = '<span>Updating...</span>';
-            startSecurityAnimation();
 
             try {
+                // Use stored auth and token
+                const auth = window.currentUpdateAuth;
+                const updateToken = window.currentUpdateToken;
+
+                if (!auth || !updateToken) {
+                    throw new Error("Authentication data missing");
+                }
+
                 // Collect updated form data
                 const publicInfo = {
                     bloodType: document.getElementById('blood-type').value,
@@ -1645,50 +1640,39 @@ body.rtl .info-icon {
                     encryptedWith: await sha256Hash(currentKey + password)
                 } : null;
 
-                const payload = {
-                    publicInfo,
-                    privateInfo
-                };
-
+                const payload = { publicInfo, privateInfo };
                 const encryptedBlob = await encrypt(JSON.stringify(payload), currentKey);
-                const auth = await sha256Hash(updateToken);
-                const updatedData = {
-                    id: currentGUID,
-                    data: encryptedBlob,
-                    auth
+
+                const updatePayload = {
+                    guid: currentGUID,
+                    updateToken: updateToken,
+                    auth: auth,
+                    encryptedData: encryptedBlob,
+                    metadata: {
+                        updated: new Date().toISOString(),
+                        version: 'v2'
+                    }
                 };
 
-                // Send PUT request to webhook
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'PUT',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        guid: currentGUID,
-                        updateToken: updateToken,
-                        data: updatedData
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatePayload)
                 });
 
-                const result = await response.json();
-
-                if (response.ok && (result.success || result.status === 'success')) {
-                    currentData = updatedData;
-                    currentBlob = { ...currentBlob, publicInfo, privateInfo };
-                    showStatus('✅ Successfully updated!', 'success');
-                    stopSecurityAnimation(true);
-
-                    // Show the updated QR view
-                    await displayFullInfo(currentBlob);
-                } else {
-                    throw new Error(result.error || result.message || 'Update failed');
+                if (!response.ok) {
+                    throw new Error('Update failed');
                 }
+
+                currentData = { id: currentGUID, data: encryptedBlob, auth };
+                currentBlob = { ...currentBlob, publicInfo, privateInfo };
+                showStatus('✅ Successfully updated!', 'success');
+
+                // Show the updated QR view
+                await displayFullInfo(currentBlob);
 
             } catch (error) {
                 showStatus('Error: ' + error.message, 'error');
-                stopSecurityAnimation(false);
             } finally {
                 button.disabled = false;
                 button.innerHTML = '<span>Update QR</span>';
@@ -1798,12 +1782,19 @@ body.rtl .info-icon {
                     <div id="qr-result" style="display: none;">
                         <div class="qr-display">
                             <h3>✅ Your Emergency QR Code</h3>
+                            <p style="color: #666; font-size: 14px; margin: 10px 0;">
+                                ✓ Encrypted with zero-knowledge security<br>
+                                ✓ Backed up to Archive.org<br>
+                                ✓ Only this QR can decrypt your data
+                            </p>
                             <div id="qrcode"></div>
                             <div class="action-buttons">
                                 <button class="btn" onclick="downloadQR()">💾 <span data-i18n="download">Download</span></button>
                                 <button class="btn" onclick="testQR()">🔍 <span data-i18n="test">Test</span></button>
                             </div>
-                            <button class="btn-secondary" onclick="uploadToArchive()">☁️ <span data-i18n="saveOnline">Save Online</span></button>
+                            <div class="status-message status-info" style="margin-top: 15px;">
+                                <strong>Important:</strong> Save this QR code! It contains the only key to your data.
+                            </div>
                         </div>
                     </div>
 
@@ -1839,11 +1830,11 @@ body.rtl .info-icon {
         // Handle form submission
         async function handleCreateForm(e) {
             e.preventDefault();
-            
+
             const button = e.target.querySelector('button[type="submit"]');
             button.disabled = true;
-            button.innerHTML = '<span>Creating...</span>';
-            
+            button.innerHTML = '<span>Creating & Uploading...</span>';
+
             try {
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('password-confirm').value;
@@ -1857,10 +1848,11 @@ body.rtl .info-icon {
                 if (password !== confirmPassword) {
                     throw new Error('Passwords do not match');
                 }
-                
-                // Generate unique identifiers
+
+                // Generate identifiers and keys
                 currentGUID = generateGUID();
                 currentKey = generateKey();
+                const created = new Date().toISOString();
 
                 // Collect form data
                 const formData = {
@@ -1871,14 +1863,15 @@ body.rtl .info-icon {
                     contactName: document.getElementById('contact-name').value,
                     contactPhone: document.getElementById('contact-phone').value,
                     ssn: document.getElementById('ssn').value,
-                    notes: document.getElementById('medical-notes').value
+                    notes: document.getElementById('medical-notes').value,
+                    passwordHint: document.getElementById('password-hint')?.value || ''
                 };
 
-                const embedded = btoa(JSON.stringify({
-                    n: formData.name,
-                    c: formData.criticalInfo?.substring(0, 100)
-                }));
+                // Create auth hash
+                const updateToken = await generateUpdateToken(password, currentGUID);
+                const auth = await sha256Hash(updateToken);
 
+                // Prepare encrypted data
                 const publicInfo = {
                     bloodType: formData.bloodType,
                     allergies: formData.allergies,
@@ -1891,50 +1884,75 @@ body.rtl .info-icon {
                     encryptedWith: await sha256Hash(currentKey + password)
                 } : null;
 
-                const payload = { publicInfo, privateInfo };
+                const payload = { publicInfo, privateInfo, passwordHint: formData.passwordHint };
                 const encryptedData = await encrypt(JSON.stringify(payload), currentKey);
+
+                // Create data package
+                currentData = {
+                    id: currentGUID,
+                    data: encryptedData,
+                    auth: auth
+                };
+
+                // Store auth for future updates
+                localStorage.setItem(`auth_${currentGUID}`, auth);
+
+                // IMMEDIATELY upload to server
+                showStatus('⏳ Securing your data online...', 'info');
+
+                const uploadPayload = {
+                    guid: currentGUID,
+                    filename: `${currentGUID}.json`,
+                    data: currentData,
+                    auth: auth,
+                    metadata: {
+                        created: created,
+                        type: 'emergency_qr',
+                        version: 'v2'
+                    }
+                };
+
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(uploadPayload)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save online. Please try again.');
+                }
+
+                // Only generate QR after successful upload
+                const embedded = btoa(JSON.stringify({
+                    n: formData.name,
+                    c: formData.criticalInfo?.substring(0, 100)
+                }));
 
                 const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${embedded}`;
 
-                const created = new Date().toISOString();
-                const updateToken = await generateUpdateToken(password, currentGUID);
-                const auth = await sha256Hash(updateToken);
-
-                currentData = { id: currentGUID, data: encryptedData, auth };
-                currentBlob = { version: "v2", created, name: formData.name, criticalInfo: formData.criticalInfo, publicInfo, privateInfo };
-
+                // Generate QR code
                 const qrContainer = document.getElementById('qrcode');
                 qrContainer.innerHTML = '';
-
                 new QRCode(qrContainer, {
                     text: qrUrl,
                     width: 256,
                     height: 256,
-                    colorDark: '#000000',
-                    colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.H
                 });
 
                 window.currentQRUrl = qrUrl;
 
-                // Store fallback data locally for short-term access
-                const fallbackData = {
-                    version: "v2",
-                    created,
-                    name: formData.name,
-                    criticalInfo: formData.criticalInfo,
-                    publicInfo
-                };
-                localStorage.setItem('pending_' + currentGUID, JSON.stringify(fallbackData));
-                
-                // Show QR display
+                currentBlob = { version: 'v2', created, name: formData.name, criticalInfo: formData.criticalInfo, publicInfo, privateInfo };
+
+                // Show success
                 document.getElementById('create-form').style.display = 'none';
                 document.getElementById('qr-result').style.display = 'block';
-                
-                showStatus('✅ QR code created successfully!', 'success');
-                
+                showStatus('✅ QR code created and backed up online!', 'success');
+
             } catch (error) {
                 showStatus('Error: ' + error.message, 'error');
+                // Don't create QR if upload failed
             } finally {
                 button.disabled = false;
                 button.innerHTML = '<span data-i18n="createQR">Create QR</span>';
@@ -1943,305 +1961,6 @@ body.rtl .info-icon {
         }
 
 
-        function startSecurityAnimation() {
-            const overlay = document.createElement('div');
-            overlay.id = 'upload-overlay';
-            overlay.className = 'upload-overlay';
-            overlay.innerHTML = `
-                <div class="security-container">
-                    <img src="https://archive.org/images/ia-logo.png" alt="Archive.org" class="archive-logo">
-                    <div class="security-progress">
-                        <div class="progress-bar" id="progress-bar"></div>
-                    </div>
-                    <div class="security-step">
-                        <div class="step-icon" id="step-icon">${SECURITY_STEPS[0].icon}</div>
-                        <h3 id="step-title">${SECURITY_STEPS[0].title}</h3>
-                        <p id="step-message">${SECURITY_STEPS[0].message}</p>
-                    </div>
-                    <div class="step-indicators">
-                        ${SECURITY_STEPS.map((_, i) => `<span class="indicator ${i === 0 ? 'active' : ''}" data-step="${i}"></span>`).join('')}
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-
-            setTimeout(() => {
-                overlay.querySelector('.archive-logo').style.opacity = '1';
-            }, 100);
-
-            let currentStep = 0;
-            const totalDuration = 20000;
-            const stepDuration = totalDuration / SECURITY_STEPS.length;
-
-            const progressBar = document.getElementById('progress-bar');
-            progressBar.style.transition = `width ${totalDuration}ms linear`;
-            progressBar.style.width = '100%';
-
-            securityInterval = setInterval(() => {
-                currentStep++;
-                if (currentStep < SECURITY_STEPS.length) {
-                    updateSecurityStep(currentStep);
-                } else {
-                    clearInterval(securityInterval);
-                }
-            }, stepDuration);
-        }
-
-        function updateSecurityStep(stepIndex) {
-            const step = SECURITY_STEPS[stepIndex];
-            const container = document.querySelector('.security-step');
-            container.style.opacity = '0';
-
-            setTimeout(() => {
-                document.getElementById('step-icon').textContent = step.icon;
-                document.getElementById('step-title').textContent = step.title;
-                document.getElementById('step-message').textContent = step.message;
-                document.querySelectorAll('.indicator').forEach((ind, i) => {
-                    ind.classList.toggle('active', i <= stepIndex);
-                });
-                container.style.opacity = '1';
-            }, 300);
-        }
-
-        function stopSecurityAnimation(success) {
-            if (securityInterval) {
-                clearInterval(securityInterval);
-                securityInterval = null;
-            }
-            const overlay = document.getElementById('upload-overlay');
-            if (!overlay) return;
-
-            if (success) {
-                const stepIcon = document.getElementById('step-icon');
-                const stepTitle = document.getElementById('step-title');
-                const stepMessage = document.getElementById('step-message');
-                if (stepIcon && stepTitle && stepMessage) {
-                    stepIcon.textContent = '✅';
-                    stepTitle.textContent = 'Upload Complete';
-                    stepMessage.textContent = 'Your data is now safely backed up. The QR code is your only key.';
-                }
-                setTimeout(() => {
-                    overlay.style.opacity = '0';
-                    setTimeout(() => overlay.remove(), 500);
-                }, 2000);
-            } else {
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.remove(), 500);
-            }
-        }
-
-
-        // Upload to Archive.org
-        async function uploadToArchive() {
-            const button = event.target;
-            button.disabled = true;
-            button.innerHTML = '⏳ Uploading...';
-
-            // Create the upload visualization overlay
-            const overlay = document.createElement('div');
-            overlay.id = 'upload-overlay';
-            overlay.className = 'upload-overlay';
-            overlay.innerHTML = `
-                <div class="upload-card">
-                    <div class="upload-header">
-                        <div class="spinner"></div>
-                        <h2 id="upload-title">Securing Your Emergency Data</h2>
-                    </div>
-                    <div class="upload-content" id="upload-content">
-                        <p id="upload-message">Initializing encryption...</p>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress-fill"></div>
-                    </div>
-                    <div id="upload-error" style="display:none; margin-top:20px;">
-                        <button onclick="retryUpload()" class="btn">Retry Upload</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-
-            // Animation sequence
-            const narrativeSteps = [
-                // ... your narrative steps array stays the same ...
-                {
-                    title: "Your Emergency Data",
-                    duration: 2000,
-                    progress: 15,
-                    content: () => `
-                        <div class="data-preview">
-                            <h3>Here's your emergency information:</h3>
-                            <div class="data-item">👤 Name: <strong>${currentBlob.name}</strong></div>
-                            <div class="data-item">⚠️ Critical: <strong>${currentBlob.criticalInfo || 'None'}</strong></div>
-                            <div class="data-item">🩸 Blood Type: <strong>${currentBlob.publicInfo.bloodType || 'Not specified'}</strong></div>
-                            <div class="data-item">⚠️ Allergies: <strong>${currentBlob.publicInfo.allergies || 'None'}</strong></div>
-                            <div class="data-item">📞 Contact: <strong>${currentBlob.publicInfo.contact.name}</strong></div>
-                            <div class="data-item locked">🔒 Private: <strong>SSN, Medical Notes - Password Protected</strong></div>
-                        </div>
-                    `
-                },
-                {
-                    title: "Creating Your Unique Encryption Key",
-                    duration: 3000,
-                    progress: 30,
-                    content: () => `
-                        <div class="key-generation">
-                            <p>Generating a 256-bit encryption key...</p>
-                            <div class="key-display">
-                                <code>${currentKey.substring(0, 32)}...</code>
-                            </div>
-                            <div class="key-strength">
-                                <p><strong>This key has 2^256 possible combinations</strong></p>
-                                <p class="huge-number">115,792,089,237,316,195,423,570,985,008,687,907,853...</p>
-                                <p class="comparison">Even with every quantum computer on Earth,<br> it would take <strong>millions of times longer than the age of the universe</strong> to guess.</p>
-                            </div>
-                        </div>
-                    `
-                },
-                {
-                    title: "Encryption in Progress",
-                    duration: 3000,
-                    progress: 45,
-                    content: () => `
-                        <div class="encryption-visual">
-                            <div class="data-transform">
-                                <div class="before">
-                                    <label>Before:</label>
-                                    <code>{"name":"${currentBlob.name}","blood":"${currentBlob.publicInfo.bloodType}"...}</code>
-                                </div>
-                                <div class="arrow">↓ AES-256-GCM Encryption ↓</div>
-                                <div class="after">
-                                    <label>After:</label>
-                                      <code>${currentData.data.substring(0, 50)}...</code>
-                                </div>
-                            </div>
-                        </div>
-                    `
-                },
-                {
-                    title: "Uploading to Archive.org",
-                    duration: 0,
-                    progress: 75,
-                    content: () => `
-                        <div class="uploading-info">
-                            <p>Encrypting your data and uploading it to a secure archive...</p>
-                        </div>
-                    `
-                },
-                {
-                    title: "Finalizing",
-                    duration: 2000,
-                    progress: 90,
-                    content: () => `
-                        <div class="finalizing">
-                            <p>Wrapping up...</p>
-                        </div>
-                    `
-                }
-            ];
-
-            async function runNarrative() {
-                for (let i = 0; i < narrativeSteps.length; i++) {
-                    const step = narrativeSteps[i];
-
-                    document.getElementById('upload-title').textContent = step.title;
-                    document.getElementById('upload-content').innerHTML = step.content();
-                    document.getElementById('progress-fill').style.width = step.progress + '%';
-
-                    if (step.title === "Uploading to Archive.org") {
-                        try {
-                            const payload = {
-                                guid: currentGUID,
-                                filename: `${currentGUID}.json`,
-                                data: currentData,
-                                metadata: {
-                                    created: currentBlob.created,
-                                    type: 'emergency_qr',
-                                    version: currentBlob.version
-                                }
-                            };
-
-                            const response = await fetch(WEBHOOK_URL, {
-                                method: 'POST',
-                                mode: 'cors',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload)
-                            });
-
-                            let result;
-                            const contentType = response.headers.get("content-type");
-                            if (contentType && contentType.includes("application/json")) {
-                                result = await response.json();
-                            } else {
-                                const text = await response.text();
-                                if (text.includes("Uploaded to archive.org") || text.includes("encrypted")) {
-                                    result = { success: true, message: text };
-                                } else {
-                                    result = { success: false, message: text };
-                                }
-                            }
-
-                            if (!response.ok || result.success === false) {
-                                throw new Error(result.message || result.error || 'Upload failed');
-                            }
-
-                            continue;
-                        } catch (error) {
-                            document.getElementById('upload-title').textContent = '❌ Upload Failed';
-                            document.getElementById('upload-content').innerHTML = `
-                                <div class="error-message">
-                                    <p><strong>Upload interrupted, but don't worry:</strong></p>
-                                    <ul>
-                                        <li>✓ Your encryption is complete</li>
-                                        <li>✓ Your QR code works locally for 30 minutes</li>
-                                        <li>⚠️ Retry upload to ensure long-term backup</li>
-                                    </ul>
-                                    <p class="error-details">Error: ${error.message}</p>
-                                </div>
-                            `;
-                            document.getElementById('upload-error').style.display = 'block';
-                            document.getElementById('progress-fill').style.background = '#ff4757';
-                            return false;
-                        }
-                    } else if (step.duration > 0) {
-                        await new Promise(resolve => setTimeout(resolve, step.duration));
-                    }
-                }
-
-                document.getElementById('upload-title').textContent = '✅ Complete!';
-                document.getElementById('progress-fill').style.width = '100%';
-                document.getElementById('upload-content').innerHTML = `
-                    <div class="success-summary">
-                        <!-- Your success content here -->
-                    </div>
-                `;
-
-                return true;
-            }
-
-            runNarrative().then(success => {
-                if (success) {
-                    button.innerHTML = '✅ Saved Online!';
-                    showStatus('Successfully backed up to Archive.org', 'success');
-                    localStorage.removeItem('pending_' + currentGUID);
-                    setTimeout(() => overlay.remove(), 5000);
-                } else {
-                    button.innerHTML = '❌ Failed - Retry';
-                }
-
-                setTimeout(() => {
-                    button.disabled = false;
-                    if (!success) button.innerHTML = '☁️ ' + (translations[currentLanguage]?.saveOnline || translations.en.saveOnline);
-                }, 3000);
-            });
-        }
-
-
-        // Helper function for retry
-        window.retryUpload = function() {
-            document.getElementById('upload-overlay').remove();
-            uploadToArchive();
-        };
-        
         // Utility functions
         function generateGUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
