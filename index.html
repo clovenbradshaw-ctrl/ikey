@@ -1033,138 +1033,7 @@ body.rtl .info-icon {
         const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
 
-        const translations = {
-          en: {
-            emergencyInfo: "EMERGENCY INFORMATION",
-            name: "Name",
-            bloodType: "Blood Type",
-            allergies: "Allergies",
-            emergencyContact: "Emergency Contact",
-            privateInfo: "Private Information",
-            enterPassword: "Enter password",
-            unlock: "Unlock",
-            createQR: "Create Emergency QR",
-            download: "Download",
-            test: "Test"
-          },
-          es: {
-            emergencyInfo: "INFORMACIÓN DE EMERGENCIA",
-            name: "Nombre",
-            bloodType: "Tipo de Sangre",
-            allergies: "Alergias",
-            emergencyContact: "Contacto de Emergencia",
-            privateInfo: "Información Privada",
-            enterPassword: "Ingrese contraseña",
-            unlock: "Desbloquear",
-            createQR: "Crear QR de Emergencia",
-            download: "Descargar",
-            test: "Probar"
-          },
-          ar: {
-            emergencyInfo: "معلومات الطوارئ",
-            name: "الاسم",
-            bloodType: "فصيلة الدم",
-            allergies: "الحساسية",
-            emergencyContact: "جهة اتصال الطوارئ",
-            privateInfo: "معلومات خاصة",
-            enterPassword: "أدخل كلمة المرور",
-            unlock: "فتح",
-            createQR: "إنشاء رمز QR للطوارئ",
-            download: "تحميل",
-            test: "اختبار"
-          },
-          ku: {
-            emergencyInfo: "زانیاری فریاکەوتن",
-            name: "ناو",
-            bloodType: "جۆری خوێن",
-            allergies: "هەستیاری",
-            emergencyContact: "پەیوەندی فریاکەوتن",
-            privateInfo: "زانیاری تایبەت",
-            enterPassword: "وشەی تێپەڕ بنووسە",
-            unlock: "کردنەوە",
-            createQR: "دروستکردنی QR فریاکەوتن",
-            download: "داگرتن",
-            test: "تاقیکردنەوە"
-          },
-          vi: {
-            emergencyInfo: "THÔNG TIN KHẨN CẤP",
-            name: "Tên",
-            bloodType: "Nhóm Máu",
-            allergies: "Dị Ứng",
-            emergencyContact: "Liên Hệ Khẩn Cấp",
-            privateInfo: "Thông Tin Riêng Tư",
-            enterPassword: "Nhập mật khẩu",
-            unlock: "Mở khóa",
-            createQR: "Tạo QR Khẩn Cấp",
-            download: "Tải xuống",
-            test: "Kiểm tra"
-          },
-          zh: {
-            emergencyInfo: "紧急信息",
-            name: "姓名",
-            bloodType: "血型",
-            allergies: "过敏",
-            emergencyContact: "紧急联系人",
-            privateInfo: "私人信息",
-            enterPassword: "输入密码",
-            unlock: "解锁",
-            createQR: "创建紧急二维码",
-            download: "下载",
-            test: "测试"
-          },
-          so: {
-            emergencyInfo: "MACLUUMAADKA DEGDEGGA",
-            name: "Magaca",
-            bloodType: "Nooca Dhiigga",
-            allergies: "Xasaasiyad",
-            emergencyContact: "Xiriirka Degdegga",
-            privateInfo: "Macluumaadka Gaarka",
-            enterPassword: "Geli furaha",
-            unlock: "Fur",
-            createQR: "Samee QR Degdegga",
-            download: "Soo deji",
-            test: "Tijaabi"
-          },
-          my: {
-            emergencyInfo: "အရေးပေါ် အချက်အလက်",
-            name: "အမည်",
-            bloodType: "သွေးအုပ်စု",
-            allergies: "ဓာတ်မတည့်မှု",
-            emergencyContact: "အရေးပေါ်ဆက်သွယ်ရန်",
-            privateInfo: "သီးသန့်အချက်အလက်",
-            enterPassword: "စကားဝှက်ထည့်ပါ",
-            unlock: "ဖွင့်ပါ",
-            createQR: "အရေးပေါ် QR ဖန်တီးပါ",
-            download: "ဒေါင်းလုတ်",
-            test: "စမ်းသပ်"
-          },
-          ne: {
-            emergencyInfo: "आपतकालीन जानकारी",
-            name: "नाम",
-            bloodType: "रक्त समूह",
-            allergies: "एलर्जी",
-            emergencyContact: "आपतकालीन सम्पर्क",
-            privateInfo: "निजी जानकारी",
-            enterPassword: "पासवर्ड प्रविष्ट गर्नुहोस्",
-            unlock: "अनलक गर्नुहोस्",
-            createQR: "आपतकालीन QR सिर्जना",
-            download: "डाउनलोड",
-            test: "परीक्षण"
-          },
-          am: {
-            emergencyInfo: "የአደጋ መረጃ",
-            name: "ስም",
-            bloodType: "የደም ዓይነት",
-            allergies: "አለርጂዎች",
-            emergencyContact: "የአደጋ ጊዜ ግንኙነት",
-            privateInfo: "የግል መረጃ",
-            enterPassword: "የይለፍ ቃል ያስገቡ",
-            unlock: "ክፈት",
-            createQR: "የአደጋ QR ፍጠር",
-            download: "አውርድ",
-            test: "ሙከራ"
-          }
-        };
+        let translations = {};
 
         let currentLanguage = 'en';
 
@@ -1172,7 +1041,7 @@ body.rtl .info-icon {
           currentLanguage = langCode;
           localStorage.setItem('preferredLanguage', langCode);
 
-          const t = translations[langCode] || translations.en;
+            const t = translations[langCode] || translations.en || {};
           document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if (t[key]) el.textContent = t[key];
@@ -1260,6 +1129,14 @@ body.rtl .info-icon {
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('translations.json');
+                const data = await response.json();
+                translations = data.translations || data;
+            } catch (error) {
+                console.error('Failed to load translations:', error);
+            }
+
             const savedLang =
                 localStorage.getItem('preferredLanguage') ||
                 navigator.language.substring(0, 2) ||
