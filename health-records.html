@@ -936,7 +936,8 @@
                     <input type="password" id="modalConfirmPassword" placeholder="Confirm password">
                 </div>
                 <p style="font-size: 0.75rem; color: #64748b; margin-top: 10px;">
-                    Use a strong password to protect your medical information. This password cannot be recovered if lost.
+                    Use a strong password to protect your medical information. For security, use a password different from other accounts.
+                    This password cannot be recovered if lost.
                     <br><strong>Note:</strong> Session auto-locks after 45 minutes of inactivity.
                 </p>
             </div>
@@ -1495,16 +1496,19 @@
                 this.setupEventListeners();
                 this.setupSectionToggles();
                 this.trackActivity();
-                
-                // Show first time modal if needed
+
+                // Start in a locked state and prompt for password
+                this.lockFile();
                 if (this.isFirstTime) {
                     document.getElementById('firstTimeModal').classList.add('active');
                     localStorage.setItem('phvFirstTime', 'false');
+                } else {
+                    this.showPasswordModal('Set Password for Encryption', true, 'unlock');
                 }
-                
+
                 // Update save status
                 this.updateSaveStatus();
-                
+
                 // Ensure emergency content starts locked
                 document.getElementById('emergencyContent').classList.remove('unlocked');
             }
@@ -1536,6 +1540,7 @@
                 document.getElementById('modalCancel').addEventListener('click', () => this.closeModal());
                 document.getElementById('firstTimeClose').addEventListener('click', () => {
                     document.getElementById('firstTimeModal').classList.remove('active');
+                    this.showPasswordModal('Set Password for Encryption', true, 'unlock');
                 });
                 
                 // Password field events
@@ -1826,18 +1831,21 @@
                 const modal = document.getElementById('passwordModal');
                 const modalTitle = document.getElementById('modalTitle');
                 const confirmField = document.getElementById('confirmPasswordField');
-                
+
+                // Ensure modal appears at the top of the viewport
+                window.scrollTo(0, 0);
+
                 modalTitle.textContent = title;
                 confirmField.style.display = showConfirm ? 'block' : 'none';
-                
+
                 // Clear fields
                 document.getElementById('modalPassword').value = '';
                 document.getElementById('modalConfirmPassword').value = '';
                 document.getElementById('passwordStrength').style.display = 'none';
-                
+
                 modal.classList.add('active');
                 document.getElementById('modalPassword').focus();
-                
+
                 // Store callback
                 modal.dataset.action = showConfirm ? 'setPassword' : 'decrypt';
                 modal.dataset.callback = callback || '';
@@ -1918,8 +1926,10 @@
                         this.sessionPassword = password;
                         alert('Password changed successfully. Remember to save to archive.');
                         this.markAsChanged();
+                    } else if (callback === 'unlock') {
+                        this.completeUnlock();
                     }
-                    
+
                     this.closeModal();
                     this.trackActivity();
                 } else if (action === 'decrypt') {
