@@ -902,11 +902,9 @@
         </div>
         <div class="action-buttons">
             <button class="btn btn-lock" id="lockBtn" style="display: none;">🔓 Lock</button>
-            <button class="btn btn-secondary" id="loadBtn">Load File</button>
             <button class="btn btn-secondary" id="exportBtn">Export/Print</button>
             <button class="btn btn-secondary" id="changePasswordBtn" style="display: none;">Change Password</button>
             <button class="btn btn-save" id="saveBtn">Save to Archive.org</button>
-            <input type="file" id="fileInput" accept=".phv" style="display: none;">
             <div id="session-timer" class="session-timer">
                 <span id="session-countdown"></span>
             </div>
@@ -1538,7 +1536,6 @@
                 
                 // Buttons
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveData());
-                document.getElementById('loadBtn').addEventListener('click', () => this.loadData());
                 document.getElementById('exportBtn').addEventListener('click', () => this.exportPDF());
                 document.getElementById('lockBtn').addEventListener('click', () => this.toggleLock());
                 document.getElementById('changePasswordBtn').addEventListener('click', () => this.changePassword());
@@ -1568,9 +1565,6 @@
                 document.getElementById('modalConfirmPassword').addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') this.handleModalSubmit();
                 });
-                
-                // File input
-                document.getElementById('fileInput').addEventListener('change', (e) => this.handleFileLoad(e));
                 
                 // Track changes on form inputs
                 document.addEventListener('input', (e) => {
@@ -1786,14 +1780,13 @@
                     el.style.userSelect = 'none';
                 });
                 
-                // Disable all buttons except unlock, load, and navigation tabs
+                // Disable all buttons except unlock and navigation tabs
                 document.querySelectorAll('button').forEach(btn => {
                     const isTab = btn.classList.contains('tab');
                     const isLockBtn = btn.id === 'lockBtn';
-                    const isLoadBtn = btn.id === 'loadBtn';
                     const isModalBtn = btn.closest('.modal');
-                    
-                    if (!isTab && !isLockBtn && !isLoadBtn && !isModalBtn) {
+
+                    if (!isTab && !isLockBtn && !isModalBtn) {
                         btn.disabled = true;
                     }
                 });
@@ -1982,10 +1975,6 @@
                         document.getElementById('changePasswordBtn').style.display = 'inline-block';
                         this.completeUnlock();
                         this.closeModal();
-                    } else if (window.pendingFileData) {
-                        // File load
-                        this.closeModal();
-                        setTimeout(() => this.processFileData(window.pendingFileData, password), 100);
                     }
                 }
             }
@@ -2069,83 +2058,6 @@
                     } else {
                         console.error('Auto-save failed', error);
                     }
-                }
-            }
-            
-            loadData() {
-                document.getElementById('fileInput').click();
-            }
-            
-            async handleFileLoad(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        const fileData = JSON.parse(e.target.result);
-                        
-                        if (!fileData.encrypted) {
-                            alert('This file is not encrypted. For security, only encrypted files are supported.');
-                            return;
-                        }
-                        
-                        // Store file data globally
-                        window.pendingFileData = fileData;
-                        
-                        // Show password modal
-                        this.showPasswordModal('Enter Password to Decrypt', false);
-                        
-                    } catch (error) {
-                        alert('Error loading file: ' + error.message);
-                    }
-                };
-                
-                reader.readAsText(file);
-                
-                // Reset file input
-                event.target.value = '';
-            }
-            
-            async processFileData(fileData, password) {
-                try {
-                    if (fileData.guid) {
-                        this.guid = fileData.guid;
-                    }
-                    const decrypted = await this.crypto.decrypt(fileData.data, password);
-                    if (decrypted.guid) {
-                        this.guid = decrypted.guid;
-                    }
-
-                    this.loadFormData(decrypted);
-                    
-                    // Update UI
-                    if (decrypted.lastUpdated) {
-                        document.getElementById('lastUpdated').textContent = decrypted.lastUpdated;
-                    }
-                    
-                    // Store session password
-                    this.sessionPassword = password;
-                    document.getElementById('lockBtn').style.display = 'inline-block';
-                    document.getElementById('changePasswordBtn').style.display = 'inline-block';
-                    
-                    // Reset save status
-                    this.hasUnsavedChanges = false;
-                    this.lastSaveTime = new Date();
-                    this.updateSaveStatus();
-                    
-                    // Start activity tracking
-                    this.trackActivity();
-                    if (!this.timerInterval) {
-                        this.timerInterval = setInterval(() => this.updateLockTimer(), 1000);
-                    }
-                    
-                    alert('Data loaded successfully');
-                    
-                    // Clear pending data
-                    delete window.pendingFileData;
-                } catch (error) {
-                    alert('Failed to decrypt: ' + error.message);
                 }
             }
             
