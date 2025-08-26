@@ -1036,7 +1036,9 @@ body.rtl .info-icon {
         let currentMode = null;
         let currentCreated = null;
         let currentName = null;
+        let currentCriticalInfo = null;
         let ownerPassword = null;
+        let uploadCheckInterval = null;
 
         async function parseAndDisplay() {
             const hash = window.location.hash.substring(1);
@@ -1057,11 +1059,14 @@ body.rtl .info-icon {
             currentKey = key;
             currentMode = 'view';
             const embedded = JSON.parse(atob(embeddedStr));
+            currentName = embedded.n;
+            currentCriticalInfo = embedded.c;
+            currentCreated = embedded.t || null;
 
             // Show embedded data immediately
             displayBasicInfo({
-                name: embedded.n,
-                criticalInfo: embedded.c
+                name: currentName,
+                criticalInfo: currentCriticalInfo
             });
 
             // Attempt to load full data (non-blocking)
@@ -1070,8 +1075,8 @@ body.rtl .info-icon {
                 .then(async data => {
                     const full = JSON.parse(await decrypt(data.data, key));
                     displayFullInfo({
-                        name: embedded.n,
-                        criticalInfo: embedded.c,
+                        name: currentName,
+                        criticalInfo: currentCriticalInfo,
                         publicInfo: full.publicInfo,
                         privateInfo: full.privateInfo
                     });
@@ -1110,9 +1115,39 @@ body.rtl .info-icon {
             displayEmergencyInfo(full);
         }
 
+        function buildUploadMessage() {
+            if (currentCreated) {
+                const ageMinutes = Math.floor((Date.now() - new Date(currentCreated).getTime()) / 60000);
+                return `⏳ Data still uploading... (${ageMinutes} min old, usually ready in 5-30 min)`;
+            }
+            return '⏳ Data still uploading... (usually ready in 5-30 min)';
+        }
+
         function addOfflineNotice() {
             const el = document.getElementById('loading-message');
-            if (el) el.textContent = 'Additional information requires internet';
+            if (el) el.textContent = buildUploadMessage();
+            if (!uploadCheckInterval) {
+                startUploadStatusPolling();
+            }
+        }
+
+        function startUploadStatusPolling() {
+            uploadCheckInterval = setInterval(async () => {
+                try {
+                    const full = await fetchFromArchive(currentGUID, currentKey);
+                    clearInterval(uploadCheckInterval);
+                    uploadCheckInterval = null;
+                    displayFullInfo({
+                        name: currentName,
+                        criticalInfo: currentCriticalInfo,
+                        publicInfo: full.publicInfo,
+                        privateInfo: full.privateInfo
+                    });
+                } catch (error) {
+                    const el = document.getElementById('loading-message');
+                    if (el) el.textContent = buildUploadMessage();
+                }
+            }, 10000);
         }
 
         function handleLegacyFormat(hash) {
@@ -1919,7 +1954,8 @@ body.rtl .info-icon {
                 // Only generate QR after successful upload
                 const embedded = btoa(JSON.stringify({
                     n: formData.name,
-                    c: formData.criticalInfo?.substring(0, 100)
+                    c: formData.criticalInfo?.substring(0, 100),
+                    t: created
                 }));
 
                 const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${embedded}`;
