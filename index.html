@@ -838,6 +838,15 @@
             font-size: 14px;
         }
 
+        .dashboard-btn, .logout-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 14px;
+            display: none;
+        }
+
         .vault-btn {
             background: none;
             border: none;
@@ -865,6 +874,49 @@
               margin-right: 0;
           }
 
+        .owner-dashboard {
+            padding: 20px;
+        }
+        .owner-status {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .dashboard-qr {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .dashboard-card {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .action-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .action-panel button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #667eea;
+            color: #fff;
+            cursor: pointer;
+        }
+        .locked-field {
+            opacity: 0.6;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 480px) {
             .lang-button {
                 padding: 4px 8px;
@@ -872,6 +924,11 @@
             }
 
             .login-btn {
+                font-size: 12px;
+            }
+
+            .dashboard-btn,
+            .logout-btn {
                 font-size: 12px;
             }
 
@@ -940,7 +997,9 @@
                 <div class="lang-dropdown"></div>
             </div>
             <button class="vault-btn" style="display:none;" onclick="showVaultTab()">Vault</button>
+            <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
+            <button class="logout-btn" style="display:none;" onclick="logoutOwner()">Logout</button>
         </div>
     </div>
     <div id="qrTab">
@@ -1112,6 +1171,8 @@
         let currentAllergies = null;
         let ownerPassword = null;
         let uploadCheckInterval = null;
+        let sessionTimeoutHandle = null;
+        const SESSION_DURATION = 15 * 60 * 1000;
 
         async function parseAndDisplay() {
             const hash = window.location.hash.substring(1);
@@ -1649,63 +1710,168 @@
             }
             let password = ownerPassword || document.getElementById('vault-password')?.value;
             if (!password) {
-                password = prompt('Please enter your password to update this emergency QR.');
+                password = prompt('Please enter your password to access owner features.');
                 if (!password) {
                     return;
                 }
             }
-            const success = await showUpdateForm(password);
-            if (success) {
+            const verified = await verifyOwnerPassword(password);
+            if (verified) {
                 ownerPassword = password;
                 document.querySelector('.vault-btn').style.display = 'inline-block';
+                document.querySelector('.login-btn').style.display = 'none';
+                document.querySelector('.dashboard-btn').style.display = 'inline-block';
+                document.querySelector('.logout-btn').style.display = 'inline-block';
+                showOwnerDashboard();
+                startSessionTimer();
+            }
+        }
+
+        function logoutOwner() {
+            ownerPassword = null;
+            document.querySelector('.vault-btn').style.display = 'none';
+            document.querySelector('.dashboard-btn').style.display = 'none';
+            document.querySelector('.logout-btn').style.display = 'none';
+            document.querySelector('.login-btn').style.display = 'inline-block';
+            document.getElementById('main-content').innerHTML = '';
+            currentMode = null;
+            if (sessionTimeoutHandle) {
+                clearTimeout(sessionTimeoutHandle);
+                sessionTimeoutHandle = null;
+            }
+            if (currentBlob) {
+                displayFullInfo(currentBlob);
+            }
+        }
+
+        function startSessionTimer() {
+            if (sessionTimeoutHandle) {
+                clearTimeout(sessionTimeoutHandle);
+            }
+            sessionTimeoutHandle = setTimeout(() => {
+                alert('Session timed out');
+                logoutOwner();
+            }, SESSION_DURATION);
+        }
+
+        function verifyOwnerPassword(password) {
+            return (async () => {
+                try {
+                    let originalAuth = localStorage.getItem(`auth_${currentGUID}`);
+                    if (!originalAuth) {
+                        const response = await fetch(`${ARCHIVE_BASE}${currentGUID}.json?ts=${Date.now()}`, { mode: 'cors', cache: 'no-store' });
+                        if (response.ok) {
+                            const data = await response.json();
+                            originalAuth = data.auth;
+                            localStorage.setItem(`auth_${currentGUID}`, originalAuth);
+                        }
+                    }
+                    if (!originalAuth) {
+                        throw new Error('Cannot retrieve authentication data');
+                    }
+                    const updateToken = await generateUpdateToken(password, currentGUID);
+                    const testAuth = await sha256Hash(updateToken);
+                    if (testAuth !== originalAuth) {
+                        throw new Error('Password verification failed');
+                    }
+                    return true;
+                } catch (e) {
+                    alert('Failed to authenticate: ' + e.message);
+                    return false;
+                }
+            })();
+        }
+
+        function showOwnerDashboard() {
+            if (!currentBlob) return;
+            currentMode = 'dashboard';
+            const container = document.getElementById('main-content');
+            const publicInfo = currentBlob.publicInfo || {};
+            const name = currentBlob.name || publicInfo.name || '';
+            const bloodType = publicInfo.bloodType || '';
+            const allergies = publicInfo.allergies || '';
+            const contactName = publicInfo.contact?.name || '';
+            const contactPhone = publicInfo.contact?.phone || '';
+            const lastUpdated = currentBlob.metadata?.updated || currentBlob.created || '';
+            container.innerHTML = `
+                <div class="owner-dashboard">
+                    <div class="owner-status">👤 Owner Mode</div>
+                    <div class="dashboard-qr"><div id="owner-qr"></div></div>
+                    <div class="summary-cards">
+                        <div class="dashboard-card"><strong>Basic</strong><br>${name}<br>${currentBlob.criticalInfo || ''}</div>
+                        <div class="dashboard-card"><strong>Emergency</strong><br>Blood: ${bloodType || '-'}<br>Allergies: ${allergies || '-'}</div>
+                        <div class="dashboard-card"><strong>Contact</strong><br>${contactName}<br>${contactPhone}</div>
+                        <div class="dashboard-card"><strong>Last Updated</strong><br>${lastUpdated}</div>
+                    </div>
+                    <div class="action-panel">
+                        <button onclick="showUpdateForm(ownerPassword)">Edit Emergency Info</button>
+                        <button onclick="displayFullInfo(currentBlob)">View Full Details</button>
+                        <button onclick="showVaultTab()">Access Health Vault</button>
+                        <button onclick="downloadQR()">Download QR</button>
+                        <button onclick="shareQR()">Share QR</button>
+                    </div>
+                </div>
+            `;
+            const qrContainer = document.getElementById('owner-qr');
+            if (qrContainer && window.currentQRUrl) {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, { text: window.currentQRUrl, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.M });
+            }
+            startSessionTimer();
+        }
+
+        async function shareQR() {
+            if (navigator.share && window.currentQRUrl) {
+                try {
+                    await navigator.share({ title: 'Emergency QR', url: window.currentQRUrl });
+                } catch (e) {}
+            } else {
+                alert('Sharing not supported on this device');
             }
         }
 
         async function showUpdateForm(password) {
             try {
-                // Retrieve stored auth
-                let originalAuth = localStorage.getItem(`auth_${currentGUID}`);
+                const verified = await verifyOwnerPassword(password);
+                if (!verified) return false;
 
-                if (!originalAuth) {
-                    // Fallback: fetch from Archive
-                    const response = await fetch(`${ARCHIVE_BASE}${currentGUID}.json?ts=${Date.now()}`, { mode: 'cors', cache: 'no-store' });
-                    if (response.ok) {
-                        const data = await response.json();
-                        originalAuth = data.auth;
-                        localStorage.setItem(`auth_${currentGUID}`, originalAuth);
-                    }
-                }
-
-                if (!originalAuth) {
-                    throw new Error("Cannot retrieve authentication data");
-                }
-
-                // Generate update token
-                const updateToken = await generateUpdateToken(password, currentGUID);
-
-                // Verify it matches
-                const testAuth = await sha256Hash(updateToken);
-                if (testAuth !== originalAuth) {
-                    throw new Error("Password verification failed");
-                }
-
-                // Continue with form setup...
-
-                // Show update form (reuse creation form with pre-filled data)
                 showCreationForm();
 
-                // Pre-fill form with current data
+                const form = document.getElementById('create-form');
+                const nameGroup = document.getElementById('name').parentElement;
+                const critGroup = document.getElementById('critical-info').parentElement;
+                nameGroup.style.display = 'none';
+                critGroup.style.display = 'none';
+                const locked = document.createElement('div');
+                locked.className = 'info-section';
+                locked.innerHTML = `
+                    <div class="info-item"><span class="info-icon">🔒</span><div class="info-content"><div class="info-label">Name</div><div class="info-value">${currentBlob.name || ''}</div></div></div>
+                    <div class="info-item"><span class="info-icon">🔒</span><div class="info-content"><div class="info-label">Critical Info</div><div class="info-value">${currentBlob.criticalInfo || ''}</div></div></div>
+                `;
+                form.insertBefore(locked, form.firstChild);
+
                 const publicInfo = currentBlob.publicInfo || {};
 
-                document.getElementById('name').value = currentBlob.name || publicInfo.name || '';
-                document.getElementById('name').disabled = true;
-                document.getElementById('critical-info').value = currentBlob.criticalInfo || '';
-                document.getElementById('critical-info').disabled = true;
-                document.querySelector('#critical-info + .field-info .char-counter').textContent = `${(currentBlob.criticalInfo || '').length}/100`;
                 document.getElementById('blood-type').value = publicInfo.bloodType || '';
                 document.getElementById('allergies').value = publicInfo.allergies || '';
                 document.getElementById('contact-name').value = publicInfo.contact?.name || '';
                 document.getElementById('contact-phone').value = publicInfo.contact?.phone || '';
+
+                const preview = document.createElement('div');
+                preview.id = 'update-preview';
+                preview.className = 'info-section';
+                form.appendChild(preview);
+                function updatePreview() {
+                    preview.innerHTML = `
+                        <div class="info-item"><div class="info-label">Blood Type</div><div class="info-value">${document.getElementById('blood-type').value}</div></div>
+                        <div class="info-item"><div class="info-label">Allergies</div><div class="info-value">${document.getElementById('allergies').value}</div></div>
+                        <div class="info-item"><div class="info-label">Contact</div><div class="info-value">${document.getElementById('contact-name').value} ${document.getElementById('contact-phone').value}</div></div>
+                    `;
+                }
+                ['blood-type','allergies','contact-name','contact-phone'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', updatePreview);
+                });
+                updatePreview();
 
                 if (currentBlob.privateInfo) {
                     const privateInfo = currentBlob.privateInfo;
@@ -1713,13 +1879,11 @@
                     document.getElementById('medical-notes').value = privateInfo.notes || '';
                 }
 
-                // Change form handler to update instead of create
                 document.getElementById('create-form').removeEventListener('submit', handleCreateForm);
                 document.getElementById('create-form').addEventListener('submit', (e) => handleUpdateForm(e, password));
 
-                // Change button text
                 document.querySelector('#create-form button[type="submit"]').innerHTML = '<span>Update QR</span>';
-
+                startSessionTimer();
                 return true;
 
             } catch (error) {
@@ -1786,11 +1950,9 @@
                 }
 
                 currentData = { id: currentGUID, data: encryptedBlob, auth };
-                currentBlob = { ...currentBlob, publicInfo, privateInfo };
+                currentBlob = { ...currentBlob, publicInfo, privateInfo, metadata: { ...(currentBlob.metadata || {}), updated: new Date().toISOString() } };
                 showStatus('✅ Successfully updated!', 'success');
-
-                // Show the updated QR view
-                await displayFullInfo(currentBlob);
+                showOwnerDashboard();
 
             } catch (error) {
                 showStatus('Error: ' + error.message, 'error');
