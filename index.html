@@ -1786,6 +1786,23 @@
             applyTextSize(savedSize);
 
             await parseAndDisplay();
+
+            const storedPassword = sessionStorage.getItem('ownerPassword');
+            if (storedPassword) {
+                const expiry = parseInt(sessionStorage.getItem('ownerSessionExpires'), 10);
+                if (expiry && expiry > Date.now()) {
+                    ownerPassword = storedPassword;
+                    document.querySelector('.login-btn').style.display = 'none';
+                    document.querySelector('.dashboard-btn').style.display = 'inline-block';
+                    document.querySelector('.logout-btn').style.display = 'inline-block';
+                    document.querySelector('.health-records-btn').style.display = 'inline-block';
+                    showOwnerDashboard();
+                    startSessionTimer(expiry - Date.now());
+                } else {
+                    sessionStorage.removeItem('ownerPassword');
+                    sessionStorage.removeItem('ownerSessionExpires');
+                }
+            }
         });
 
         async function loadEmergencyInfo(guid, key, permanentDataStr) {
@@ -2176,6 +2193,7 @@
         function logoutOwner() {
             ownerPassword = null;
             sessionStorage.removeItem('ownerPassword');
+            sessionStorage.removeItem('ownerSessionExpires');
 
             document.querySelector('.dashboard-btn').style.display = 'none';
             document.querySelector('.health-records-btn').style.display = 'none';
@@ -2200,14 +2218,16 @@
             document.getElementById('qrTab').style.display = 'block';
         }
 
-        function startSessionTimer() {
+        function startSessionTimer(remaining) {
             if (sessionTimeoutHandle) {
                 clearTimeout(sessionTimeoutHandle);
             }
+            const duration = remaining !== undefined ? remaining : SESSION_DURATION;
+            sessionStorage.setItem('ownerSessionExpires', Date.now() + duration);
             sessionTimeoutHandle = setTimeout(() => {
                 alert('Session timed out');
                 logoutOwner();
-            }, SESSION_DURATION);
+            }, duration);
         }
 
         function verifyOwnerPassword(password) {
