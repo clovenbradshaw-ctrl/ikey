@@ -77,7 +77,6 @@
                 grid-template-columns: none;
             }
 
-            .vault-btn,
             .dashboard-btn,
             .health-records-btn {
                 display: none !important;
@@ -1340,7 +1339,6 @@
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
             </div>
-            <button class="vault-btn" style="display:none;" onclick="showVaultTab()">Vault</button>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">Health Records</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
@@ -2013,7 +2011,6 @@
             const verified = await verifyOwnerPassword(password);
             if (verified) {
                 ownerPassword = password;
-                document.querySelector('.vault-btn').style.display = 'inline-block';
                 document.querySelector('.login-btn').style.display = 'none';
                 document.querySelector('.dashboard-btn').style.display = 'inline-block';
                 document.querySelector('.logout-btn').style.display = 'inline-block';
@@ -2026,7 +2023,6 @@
         function logoutOwner() {
             ownerPassword = null;
 
-            document.querySelector('.vault-btn').style.display = 'none';
             document.querySelector('.dashboard-btn').style.display = 'none';
             document.querySelector('.health-records-btn').style.display = 'none';
             document.querySelector('.logout-btn').style.display = 'none';
