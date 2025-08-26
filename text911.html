@@ -12,35 +12,15 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+            background: transparent;
         }
         .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-            max-width: 700px;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            max-width: none;
             width: 100%;
             overflow: visible;
-        }
-        .header {
-            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        .header h1 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        .header p {
-            font-size: 13px;
-            opacity: 0.95;
         }
         .emergency-buttons {
             display: grid;
@@ -270,10 +250,6 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🚨 Emergency 911 Location</h1>
-            <p>Your exact location for emergency services</p>
-        </div>
         <div class="emergency-buttons" id="emergencyButtons" style="display:none;">
             <a href="tel:911" class="btn-911 btn-call">
                 <span class="icon">📞</span>
@@ -337,6 +313,15 @@
         };
         const textingDataPromise=fetch('911-texting.json').then(r=>r.json());
 
+        function sendHeight(){
+            if(window.parent){
+                const h=document.body.scrollHeight;
+                window.parent.postMessage({type:'text911Height',height:h},'*');
+            }
+        }
+        window.addEventListener('load',sendHeight);
+        window.addEventListener('resize',sendHeight);
+
         function encodePlusCode(latitude,longitude){
             latitude=Math.max(-90,Math.min(90,latitude));
             longitude=Math.max(-180,Math.min(180,longitude));
@@ -360,8 +345,9 @@
             document.getElementById('loading').style.display='none';
             document.getElementById('content').style.display='block';
             document.getElementById('error').style.display='none';
+            sendHeight();
         }
-        function showError(error){let message='';switch(error.code){case error.PERMISSION_DENIED:message="Location access denied. Please enable it and refresh.";break;case error.POSITION_UNAVAILABLE:message="Location unavailable. Please try again.";break;case error.TIMEOUT:message="Location request timed out. Please refresh.";break;default:message="Unable to get location. Please refresh.";}document.getElementById('errorMessage').textContent=message;document.getElementById('loading').style.display='none';document.getElementById('content').style.display='none';document.getElementById('emergencyButtons').style.display='none';document.getElementById('error').style.display='block';}
+        function showError(error){let message='';switch(error.code){case error.PERMISSION_DENIED:message="Location access denied. Please enable it and refresh.";break;case error.POSITION_UNAVAILABLE:message="Location unavailable. Please try again.";break;case error.TIMEOUT:message="Location request timed out. Please refresh.";break;default:message="Unable to get location. Please refresh.";}document.getElementById('errorMessage').textContent=message;document.getElementById('loading').style.display='none';document.getElementById('content').style.display='none';document.getElementById('emergencyButtons').style.display='none';document.getElementById('error').style.display='block';sendHeight();}
         function getLocation(){if(navigator.geolocation){navigator.geolocation.getCurrentPosition(updateDisplay,showError,{enableHighAccuracy:true,timeout:15000,maximumAge:0});navigator.geolocation.watchPosition(updateDisplay,()=>{},{enableHighAccuracy:true,maximumAge:10000});}else{showError({code:0,message:"Geolocation not supported"});}}
         window.onload=function(){getLocation();};
     </script>
