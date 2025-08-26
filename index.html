@@ -836,7 +836,15 @@
             color: #667eea;
             cursor: pointer;
             font-size: 14px;
-          }
+        }
+
+        .vault-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 14px;
+        }
 
           body.rtl {
               direction: rtl;
@@ -931,6 +939,7 @@
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
             </div>
+            <button class="vault-btn" onclick="showVaultTab()">Vault</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
         </div>
     </div>
@@ -970,6 +979,8 @@
     <!-- QR Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+    <script src="app.js"></script>
 
     <script>
         // Configuration
@@ -1978,7 +1989,12 @@
                     encryptedWith: await sha256Hash(currentKey + password)
                 } : null;
 
-                const payload = { publicInfo, privateInfo, passwordHint: formData.passwordHint };
+                const payload = {
+                    publicInfo,
+                    privateInfo,
+                    passwordHint: formData.passwordHint,
+                    vault: window.healthApp.exportVault()
+                };
                 const encryptedData = await encrypt(JSON.stringify(payload), currentKey);
 
                 // Create data package
@@ -2037,7 +2053,15 @@
 
                 window.currentQRUrl = qrUrl;
 
-                currentBlob = { version: 'v2', created, name: formData.name, criticalInfo: formData.criticalInfo, publicInfo, privateInfo };
+                currentBlob = {
+                    version: 'v2',
+                    created,
+                    name: formData.name,
+                    criticalInfo: formData.criticalInfo,
+                    publicInfo,
+                    privateInfo,
+                    vault: window.healthApp.exportVault()
+                };
 
                 // Show success
                 document.getElementById('create-form').style.display = 'none';
@@ -2461,21 +2485,37 @@
          let location911Enabled = false;
 
          function show911Tab() {
-             // Hide QR tab
              document.getElementById('qrTab').style.display = 'none';
-             // Show 911 tab
+             document.getElementById('vaultTab').style.display = 'none';
              document.getElementById('text911Tab').style.display = 'block';
 
-             // Only load if not already loaded
              if (!location911Enabled) {
                  document.getElementById('location-permission-prompt').style.display = 'block';
                  document.getElementById('location-content').style.display = 'none';
              }
          }
 
+         async function showVaultTab() {
+             const password = prompt('Enter vault password');
+             if (!password) return;
+             try {
+                 await window.healthApp.loadVault(password);
+                 document.getElementById('qrTab').style.display = 'none';
+                 document.getElementById('text911Tab').style.display = 'none';
+                 const frame = document.getElementById('vaultFrame');
+                 if (!frame.src) {
+                     frame.src = 'EHR-module';
+                 }
+                 document.getElementById('vaultTab').style.display = 'block';
+             } catch (e) {
+                 alert('Unable to unlock vault');
+             }
+         }
+
          function showQRTab() {
              document.getElementById('qrTab').style.display = 'block';
              document.getElementById('text911Tab').style.display = 'none';
+             document.getElementById('vaultTab').style.display = 'none';
          }
 
          async function requestLocationAndLoad911() {
@@ -2542,7 +2582,10 @@
                 clickCount = 0;
             }, 500);
         });
-</script>
+    </script>
+    </div>
+    <div id="vaultTab" style="display:none;">
+        <iframe id="vaultFrame" style="border:none;width:100%;height:800px;"></iframe>
     </div>
     <div id="text911Tab" style="display:none;">
         <div class="container">
