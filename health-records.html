@@ -1512,13 +1512,27 @@
                 this.setupSectionToggles();
                 this.trackActivity();
 
-                // Start in a locked state and prompt for password
+                // Use password from main app if available
+                this.sessionPassword = (window.parent && window.parent.ownerPassword) ||
+                    sessionStorage.getItem('ownerPassword');
+
+                // Start in a locked state but auto-unlock if password exists
                 this.lockFile();
-                if (this.isFirstTime) {
-                    document.getElementById('firstTimeModal').classList.add('active');
-                    localStorage.setItem('phvFirstTime', 'false');
+                if (this.sessionPassword) {
+                    if (this.isFirstTime) {
+                        document.getElementById('firstTimeModal').classList.add('active');
+                        localStorage.setItem('phvFirstTime', 'false');
+                    }
+                    document.getElementById('lockBtn').style.display = 'inline-block';
+                    document.getElementById('changePasswordBtn').style.display = 'inline-block';
+                    this.completeUnlock();
                 } else {
-                    this.showPasswordModal('Set Password for Encryption', true, 'unlock');
+                    if (this.isFirstTime) {
+                        document.getElementById('firstTimeModal').classList.add('active');
+                        localStorage.setItem('phvFirstTime', 'false');
+                    } else {
+                        this.showPasswordModal('Set Password for Encryption', true, 'unlock');
+                    }
                 }
 
                 // Update save status
@@ -1554,7 +1568,9 @@
                 document.getElementById('modalCancel').addEventListener('click', () => this.closeModal());
                 document.getElementById('firstTimeClose').addEventListener('click', () => {
                     document.getElementById('firstTimeModal').classList.remove('active');
-                    this.showPasswordModal('Set Password for Encryption', true, 'unlock');
+                    if (!this.sessionPassword) {
+                        this.showPasswordModal('Set Password for Encryption', true, 'unlock');
+                    }
                 });
                 
                 // Password field events
