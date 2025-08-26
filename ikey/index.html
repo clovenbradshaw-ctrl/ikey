@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Redirecting...</title>
+  <script>
+    (function() {
+      const { pathname, search, hash } = window.location;
+      const base = pathname.replace(/\/ikey\/?$/, '/');
+      const target = base + (search || '') + (hash || '');
+      window.location.replace(target);
+    })();
+  </script>
+</head>
+<body>
+  Redirecting...
+</body>
+</html>
