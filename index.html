@@ -2072,6 +2072,7 @@
             const verified = await verifyOwnerPassword(password);
             if (verified) {
                 ownerPassword = password;
+                sessionStorage.setItem('ownerPassword', ownerPassword);
                 document.querySelector('.login-btn').style.display = 'none';
                 document.querySelector('.dashboard-btn').style.display = 'inline-block';
                 document.querySelector('.logout-btn').style.display = 'inline-block';
@@ -2083,6 +2084,7 @@
 
         function logoutOwner() {
             ownerPassword = null;
+            sessionStorage.removeItem('ownerPassword');
 
             document.querySelector('.dashboard-btn').style.display = 'none';
             document.querySelector('.health-records-btn').style.display = 'none';
@@ -3231,21 +3233,12 @@
          }
 
         async function showHealthRecordsTab() {
-            let password = ownerPassword;
-            if (!password) {
-                password = prompt('Enter health records password');
-                if (!password) return;
-                try {
-                    await window.healthApp.loadVault(password);
-                    ownerPassword = password;
-                    showOwnerDashboard();
-                } catch (e) {
-                    alert('Unable to unlock health records');
-                }
-                return;
+            if (!ownerPassword) {
+                await ownerLogin();
+                if (!ownerPassword) return;
             }
             try {
-                await window.healthApp.loadVault(password);
+                await window.healthApp.loadVault(ownerPassword);
                 document.getElementById('qrTab').style.display = 'none';
                 document.getElementById('text911Tab').style.display = 'none';
                 const frame = document.getElementById('healthRecordsFrame');
