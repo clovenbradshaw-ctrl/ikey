@@ -532,26 +532,38 @@
         .modal {
             display: none;
             position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: auto;
+            height: auto;
+            z-index: 2000;
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal::before {
+            content: "";
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
+            z-index: -1;
         }
-        
-        .modal.active {
-            display: flex;
-        }
-        
+
         .modal-content {
             background: white;
             padding: 30px;
             border-radius: 8px;
             max-width: 400px;
-            width: 90%;
+            width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
         }
         
         .modal-header {
@@ -1838,7 +1850,7 @@
                 const confirmField = document.getElementById('confirmPasswordField');
 
                 // Ensure modal appears at the top of the viewport
-                window.scrollTo(0, 0);
+                // window.scrollTo(0, 0);
 
                 modalTitle.textContent = title;
                 confirmField.style.display = showConfirm ? 'block' : 'none';
