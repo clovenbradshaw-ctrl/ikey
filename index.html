@@ -2817,7 +2817,14 @@
             if (!password) {
                 password = prompt('Enter health records password');
                 if (!password) return;
-                ownerPassword = password;
+                try {
+                    await window.healthApp.loadVault(password);
+                    ownerPassword = password;
+                    showOwnerDashboard();
+                } catch (e) {
+                    alert('Unable to unlock health records');
+                }
+                return;
             }
             try {
                 await window.healthApp.loadVault(password);

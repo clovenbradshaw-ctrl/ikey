@@ -998,7 +998,7 @@
                 </div>
             </div>
             
-            <div class="grid-3">
+            <div class="grid-2">
                 <div class="field">
                     <label>Gender Identity</label>
                     <select class="form-data" data-field="genderIdentity">
@@ -1021,20 +1021,6 @@
                         <option>Male</option>
                         <option>Intersex</option>
                         <option>Prefer not to say</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Blood Type</label>
-                    <select class="form-data" data-field="bloodType">
-                        <option value="">Select...</option>
-                        <option>A+</option>
-                        <option>A-</option>
-                        <option>B+</option>
-                        <option>B-</option>
-                        <option>AB+</option>
-                        <option>AB-</option>
-                        <option>O+</option>
-                        <option>O-</option>
                     </select>
                 </div>
             </div>
@@ -1072,39 +1058,6 @@
             
             <div id="notes-container"></div>
             <button class="add-btn no-print" id="addNoteBtn">+ Add Note</button>
-        </div>
-
-        <!-- Emergency Contacts Section -->
-        <div class="section" id="emergency-section">
-            <div class="section-header">
-                <h2>🆘 Emergency Contacts & Preferences</h2>
-            </div>
-            
-            <div class="warning-box">
-                <strong>Emergency Medical Alert:</strong><br>
-                Patient uses <input type="text" class="form-data inline-input" data-field="emergencyPronouns1" style="display: inline; width: 150px;" /> and <input type="text" class="form-data inline-input" data-field="emergencyPronouns2" style="display: inline; width: 150px;" /> pronouns when conscious.<br>
-                Legal name <input type="text" class="form-data inline-input" data-field="emergencyLegalName" style="display: inline; width: 200px;" /> for insurance/records only.
-            </div>
-            
-            <h3>Emergency Contacts</h3>
-            <div id="emergency-contacts-container"></div>
-            <button class="add-btn no-print" id="addEmergencyBtn">+ Add Emergency Contact</button>
-            
-            <h3>Healthcare Preferences</h3>
-            <div class="grid-2">
-                <div class="field">
-                    <label>Preferred Hospital</label>
-                    <input type="text" class="form-data" data-field="preferredHospital" />
-                </div>
-                <div class="field">
-                    <label>Medical Power of Attorney</label>
-                    <input type="text" class="form-data" data-field="medicalPOA" />
-                </div>
-            </div>
-            <div class="field">
-                <label>Advance Directive Notes</label>
-                <textarea rows="3" class="form-data" data-field="advanceDirectiveNotes" placeholder="Document location, preferences, etc."></textarea>
-            </div>
         </div>
 
         <!-- Healthcare Providers Section -->
@@ -1434,8 +1387,7 @@
                     conditions: [],
                     surgeries: [],
                     pastSurgeries: [],
-                    notes: [],
-                    emergencyContacts: []
+                    notes: []
                 };
                 
                 this.init();
@@ -1480,7 +1432,6 @@
                 document.getElementById('addSurgeryBtn').addEventListener('click', () => this.addSurgery());
                 document.getElementById('addPastSurgeryBtn').addEventListener('click', () => this.addPastSurgery());
                 document.getElementById('addNoteBtn').addEventListener('click', () => this.addNote());
-                document.getElementById('addEmergencyBtn').addEventListener('click', () => this.addEmergencyContact());
                 
                 // Modal buttons
                 document.getElementById('modalSubmit').addEventListener('click', () => this.handleModalSubmit());
@@ -2058,7 +2009,7 @@
             
             collectFormData() {
                 const formData = {};
-                const inputs = document.querySelectorAll('.form-data:not(.dynamic-provider):not(.dynamic-medication):not(.dynamic-condition):not(.dynamic-surgery):not(.dynamic-past-surgery):not(.dynamic-note):not(.dynamic-emergency)');
+                const inputs = document.querySelectorAll('.form-data:not(.dynamic-provider):not(.dynamic-medication):not(.dynamic-condition):not(.dynamic-surgery):not(.dynamic-past-surgery):not(.dynamic-note)');
                 
                 inputs.forEach(input => {
                     const field = input.dataset.field;
@@ -2076,7 +2027,6 @@
                 formData.surgeries = this.collectDynamicData('surgery');
                 formData.pastSurgeries = this.collectDynamicData('past-surgery');
                 formData.notes = this.collectDynamicData('note');
-                formData.emergencyContacts = this.collectDynamicData('emergency');
 
                 // Save section collapse state
                 formData.collapsedSections = {};
@@ -2116,7 +2066,7 @@
             }
             
             loadFormData(data) {
-                const inputs = document.querySelectorAll('.form-data:not(.dynamic-provider):not(.dynamic-medication):not(.dynamic-condition):not(.dynamic-surgery):not(.dynamic-past-surgery):not(.dynamic-note):not(.dynamic-emergency)');
+                const inputs = document.querySelectorAll('.form-data:not(.dynamic-provider):not(.dynamic-medication):not(.dynamic-condition):not(.dynamic-surgery):not(.dynamic-past-surgery):not(.dynamic-note)');
                 
                 inputs.forEach(input => {
                     const field = input.dataset.field;
@@ -2136,7 +2086,6 @@
                 this.loadDynamicData('surgeries', data.surgeries || []);
                 this.loadDynamicData('pastSurgeries', data.pastSurgeries || []);
                 this.loadDynamicData('notes', data.notes || []);
-                this.loadDynamicData('emergencyContacts', data.emergencyContacts || []);
 
                 // Restore section collapse state
                 if (data.collapsedSections) {
@@ -2158,8 +2107,7 @@
                     'conditions': 'conditions-container',
                     'surgeries': 'surgeries-container',
                     'pastSurgeries': 'past-surgeries-container',
-                    'notes': 'notes-container',
-                    'emergencyContacts': 'emergency-contacts-container'
+                    'notes': 'notes-container'
                 };
                 
                 const container = document.getElementById(containerMap[type]);
@@ -2179,8 +2127,7 @@
                         'conditions': () => this.addCondition(),
                         'surgeries': () => this.addSurgery(),
                         'pastSurgeries': () => this.addPastSurgery(),
-                        'notes': () => this.addNote(),
-                        'emergencyContacts': () => this.addEmergencyContact()
+                        'notes': () => this.addNote()
                     };
                     
                     addMethod[type]();
@@ -2198,8 +2145,7 @@
                         conditions: 'condition',
                         surgeries: 'surgery',
                         pastSurgeries: 'past-surgery',
-                        notes: 'note',
-                        emergencyContacts: 'emergency'
+                        notes: 'note'
                     };
                     const prefix = prefixMap[type] || type;
                     const selector = `[data-${prefix}-id="${lastAdded.id}"]`;
@@ -2399,79 +2345,6 @@
                         select.value = currentValue;
                     }
                 });
-            }
-            
-            addEmergencyContact() {
-                const container = document.getElementById('emergency-contacts-container');
-                const contactId = `emergency_${Date.now()}`;
-                
-                this.dynamicData.emergencyContacts.push({ id: contactId });
-                
-                const contactHtml = `
-                    <div class="list-item" data-emergency-id="${contactId}">
-                        <button class="delete-btn no-print" data-emergency-id="${contactId}">Remove</button>
-                        <div class="grid-2">
-                            <div class="field">
-                                <label>Contact Name</label>
-                                <input type="text" class="form-data dynamic-emergency" data-emergency-id="${contactId}" data-field="name" />
-                            </div>
-                            <div class="field">
-                                <label>Relationship</label>
-                                <input type="text" class="form-data dynamic-emergency" data-emergency-id="${contactId}" data-field="relationship" />
-                            </div>
-                        </div>
-                        <div class="grid-2">
-                            <div class="field">
-                                <label>Phone Number</label>
-                                <input type="tel" class="form-data dynamic-emergency" data-emergency-id="${contactId}" data-field="phone" />
-                            </div>
-                            <div class="field">
-                                <label>Alternate Phone</label>
-                                <input type="tel" class="form-data dynamic-emergency" data-emergency-id="${contactId}" data-field="altPhone" />
-                            </div>
-                        </div>
-                        <div class="grid-3">
-                            <div class="field">
-                                <label>They know me as (name)</label>
-                                <input type="text" class="form-data dynamic-emergency" data-emergency-id="${contactId}" data-field="knowsAs" />
-                            </div>
-                            <div class="field">
-                                <label>They use these pronouns for me</label>
-                                <input type="text" class="form-data dynamic-emergency" data-emergency-id="${contactId}" data-field="pronouns" />
-                            </div>
-                            <div class="field">
-                                <label>What they know about my medical info</label>
-                                <input type="text" class="form-data dynamic-emergency" data-emergency-id="${contactId}" data-field="medicalKnowledge" placeholder="e.g., Everything, Basic info only" />
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label>Address</label>
-                            <textarea rows="2" class="form-data dynamic-emergency" data-emergency-id="${contactId}" data-field="address"></textarea>
-                        </div>
-                        <div class="field">
-                            <label>Notes</label>
-                            <textarea rows="2" class="form-data dynamic-emergency" data-emergency-id="${contactId}" data-field="notes"></textarea>
-                        </div>
-                    </div>
-                `;
-                
-                container.insertAdjacentHTML('beforeend', contactHtml);
-                
-                // Add event listener
-                if (container.lastElementChild) {
-                    container.lastElementChild.querySelector('.delete-btn').addEventListener('click', () => this.removeEmergencyContact(contactId));
-                }
-                
-                this.markAsChanged();
-            }
-            
-            removeEmergencyContact(contactId) {
-                if (confirm('Are you sure you want to remove this emergency contact?')) {
-                    const element = document.querySelector(`[data-emergency-id="${contactId}"]`);
-                    element.remove();
-                    this.dynamicData.emergencyContacts = this.dynamicData.emergencyContacts.filter(c => c.id !== contactId);
-                    this.markAsChanged();
-                }
             }
             
             addMedication() {
@@ -3047,38 +2920,18 @@
                     <div class="pdf-grid">
                         <div class="pdf-grid-row">
                             <div class="pdf-grid-cell">${formatField('Date of Birth', formatDate(data.dateOfBirth))}</div>
-                            <div class="pdf-grid-cell">${formatField('Blood Type', data.bloodType)}</div>
-                        </div>
-                        <div class="pdf-grid-row">
                             <div class="pdf-grid-cell">${formatField('Phone', data.phone)}</div>
-                            <div class="pdf-grid-cell">${formatField('Email', data.email)}</div>
                         </div>
                         <div class="pdf-grid-row">
+                            <div class="pdf-grid-cell">${formatField('Email', data.email)}</div>
                             <div class="pdf-grid-cell">${formatField('Gender Identity', data.genderIdentity)}</div>
+                        </div>
+                        <div class="pdf-grid-row">
                             <div class="pdf-grid-cell">${formatField('Sex Assigned at Birth', data.sexAssignedAtBirth)}</div>
                         </div>
                     </div>
                     ${data.address ? formatField('Address', data.address.replace(/\n/g, ', ')) : ''}
                 </div>`;
-                
-                // Emergency Contacts
-                if (data.emergencyContacts && data.emergencyContacts.length > 0) {
-                    html += `<div class="pdf-section">
-                        <div class="pdf-section-title">Emergency Contacts</div>`;
-                    
-                    data.emergencyContacts.forEach((contact, index) => {
-                        if (contact.name) {
-                            html += `<div class="pdf-subsection">
-                                <strong>Contact ${index + 1}: ${contact.name}</strong> (${contact.relationship || 'Relationship not specified'})<br>
-                                Phone: ${contact.phone || 'Not provided'} ${contact.altPhone ? `| Alt: ${contact.altPhone}` : ''}<br>
-                                ${contact.knowsAs ? `Knows me as: ${contact.knowsAs}` : ''}
-                                ${contact.pronouns ? ` using ${contact.pronouns} pronouns` : ''}
-                            </div>`;
-                        }
-                    });
-                    
-                    html += `</div>`;
-                }
                 
                 // Healthcare Providers
                 const activeProviders = (data.providers || []).filter(p => p.active !== false && p.name);
