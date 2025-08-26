@@ -775,6 +775,7 @@
             padding: 6px 10px;
             cursor: pointer;
             font-size: 14px;
+            direction: ltr;
         }
 
         .lang-dropdown {
@@ -791,6 +792,8 @@
             overflow-y: auto;
             min-width: 160px;
             z-index: 1000;
+            direction: ltr;
+            text-align: left;
         }
 
         .lang-option {
@@ -963,6 +966,7 @@ body.rtl .info-icon {
           item.className = 'lang-option';
           item.dataset.lang = code;
           item.textContent = `${code.toUpperCase()} ${LANGUAGE_NAMES[code] || code}`;
+          item.setAttribute('dir', 'auto');
           item.addEventListener('click', () => {
             setLanguage(code);
             toggleLangDropdown(false);
@@ -985,6 +989,9 @@ body.rtl .info-icon {
         function setLanguage(langCode) {
           currentLanguage = langCode;
           localStorage.setItem('preferredLanguage', langCode);
+
+          document.documentElement.lang = langCode;
+          document.documentElement.dir = RTL_LANGS.includes(langCode) ? 'rtl' : 'ltr';
 
           const t = translations[langCode] || translations.en || {};
           document.querySelectorAll('[data-i18n]').forEach(el => {
