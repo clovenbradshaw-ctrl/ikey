@@ -16,7 +16,9 @@
       "required": "Required",
       "optional": "Optional",
       "saveOnline": "Save Online",
-      "uploadComplete": "Upload Complete"
+      "uploadComplete": "Upload Complete",
+      "createYourEmergencyQR": "Create Your Emergency QR",
+      "emergencyQRTagline": "Your emergency QR: Public enough to save your life, private enough to protect your identity"
     },
     "es": {
       "emergencyInfo": "INFORMACIÓN DE EMERGENCIA",
@@ -34,7 +36,9 @@
       "required": "Obligatorio",
       "optional": "Opcional",
       "saveOnline": "Guardar en Línea",
-      "uploadComplete": "Carga Completa"
+      "uploadComplete": "Carga Completa",
+      "createYourEmergencyQR": "Crea tu QR de emergencia",
+      "emergencyQRTagline": "Su QR de emergencia: lo suficientemente público como para salvar su vida, lo suficientemente privado como para proteger su identidad"
     },
     "ar": {
       "emergencyInfo": "معلومات الطوارئ",
@@ -52,7 +56,9 @@
       "required": "مطلوب",
       "optional": "اختياري",
       "saveOnline": "حفظ عبر الإنترنت",
-      "uploadComplete": "اكتمل التحميل"
+      "uploadComplete": "اكتمل التحميل",
+      "createYourEmergencyQR": "قم بإنشاء QR في حالات الطوارئ",
+      "emergencyQRTagline": "QR في حالة الطوارئ: عام بما يكفي لإنقاذ حياتك ، خاصة بما يكفي لحماية هويتك"
     },
     "ku": {
       "emergencyInfo": "زانیارییەکانی فریاکەوتن",
@@ -70,7 +76,9 @@
       "required": "پێویست",
       "optional": "هەڵبژاردەیی",
       "saveOnline": "خەزنکردن لە ئۆنلاین",
-      "uploadComplete": "بارکردن کۆتایی هات"
+      "uploadComplete": "بارکردن کۆتایی هات",
+      "createYourEmergencyQR": "QR ya awarte xwe biafirînin",
+      "emergencyQRTagline": "QR ya awarte: QR giştî ye ku hûn jiyana xwe xilas bikin, têra xwe têra xwe ji bo parastina nasnameya xwe"
     },
     "vi": {
       "emergencyInfo": "THÔNG TIN KHẨN CẤP",
@@ -88,7 +96,9 @@
       "required": "Bắt Buộc",
       "optional": "Tùy Chọn",
       "saveOnline": "Lưu Trực Tuyến",
-      "uploadComplete": "Tải Lên Hoàn Tất"
+      "uploadComplete": "Tải Lên Hoàn Tất",
+      "createYourEmergencyQR": "Tạo QR khẩn cấp của bạn",
+      "emergencyQRTagline": "QR khẩn cấp của bạn: Đủ công khai để cứu mạng bạn, đủ riêng tư để bảo vệ danh tính của bạn"
     },
     "zh": {
       "emergencyInfo": "紧急信息",
@@ -106,7 +116,9 @@
       "required": "必填",
       "optional": "可选",
       "saveOnline": "在线保存",
-      "uploadComplete": "上传完成"
+      "uploadComplete": "上传完成",
+      "createYourEmergencyQR": "创建紧急QR",
+      "emergencyQRTagline": "您的紧急QR：公开足以挽救您的生命，足够私人以保护您的身份"
     },
     "so": {
       "emergencyInfo": "MACLUUMAAD DEGDEG AH",
@@ -124,7 +136,9 @@
       "required": "Waa lagama maarmaan",
       "optional": "Ikhtiyaari",
       "saveOnline": "Kaydi Onlayn",
-      "uploadComplete": "Soo gelintu waa dhammaatay"
+      "uploadComplete": "Soo gelintu waa dhammaatay",
+      "createYourEmergencyQR": "Abuur xaaladaada degdegga ah ee QR",
+      "emergencyQRTagline": "Xaaladda degdegga ah ee QR: Dadweynaha oo ku filan in lagu badbaadiyo noloshaada, gaar ahaan si aad u ilaaliso aqoonsigaaga"
     },
     "my": {
       "emergencyInfo": "အရေးပေါ် အချက်အလက်",
@@ -142,7 +156,9 @@
       "required": "လိုအပ်သည်",
       "optional": "ရွေးချယ်နိုင်သည်",
       "saveOnline": "အွန်လိုင်းတွင် သိမ်းဆည်းပါ",
-      "uploadComplete": "တင်ပြီးပါပြီ"
+      "uploadComplete": "တင်ပြီးပါပြီ",
+      "createYourEmergencyQR": "သင့်ရဲ့အရေးပေါ် QR ကိုဖန်တီးပါ",
+      "emergencyQRTagline": "သင်၏အရေးပေါ် QR - သင်၏ဘ 0 ကိုကယ်တင်ရန်သင့်ဘဝကိုကယ်တင်ရန်လုံလောက်သောလူသိရှင်ကြား"
     },
     "ne": {
       "emergencyInfo": "आपतकालीन जानकारी",
@@ -160,7 +176,9 @@
       "required": "आवश्यक",
       "optional": "वैकल्पिक",
       "saveOnline": "अनलाइन बचत गर्नुहोस्",
-      "uploadComplete": "अपलोड सम्पन्न भयो"
+      "uploadComplete": "अपलोड सम्पन्न भयो",
+      "createYourEmergencyQR": "तपाईंको आपतकालीन QR सिर्जना गर्नुहोस्",
+      "emergencyQRTagline": "तपाईंको आपतकालीन QR: तपाईंको जीवन बचाउन पर्याप्त सार्वजनिक, तपाईंको पहिचानको रक्षा गर्न निजी, निजी"
     },
     "am": {
       "emergencyInfo": "የአደጋ መረጃ",
@@ -178,7 +196,9 @@
       "required": "አስፈላጊ",
       "optional": "አማራጭ",
       "saveOnline": "በመስመር ላይ አስቀምጥ",
-      "uploadComplete": "መጫን ተጠናቀቀ"
+      "uploadComplete": "መጫን ተጠናቀቀ",
+      "createYourEmergencyQR": "የአደጋ ጊዜ QR ፍጠር",
+      "emergencyQRTagline": "የአደጋ ጊዜ QR: ህይወትዎን ለማዳን የሚቻል, ማንነትዎን ለመጠበቅ የበለጠ በቂ ነው"
     },
     "ko": {
       "emergencyInfo": "응급 정보",
@@ -196,7 +216,9 @@
       "required": "필수",
       "optional": "선택",
       "saveOnline": "온라인 저장",
-      "uploadComplete": "업로드 완료"
+      "uploadComplete": "업로드 완료",
+      "createYourEmergencyQR": "비상 QR을 만듭니다",
+      "emergencyQRTagline": "응급 QR : 생명을 구하기에 충분히 공개, 신원을 보호하기에 충분히 사적"
     },
     "tl": {
       "emergencyInfo": "IMPORMASYON NG EMERHENSYA",
@@ -214,7 +236,9 @@
       "required": "Kailangan",
       "optional": "Opsyonal",
       "saveOnline": "I-save Online",
-      "uploadComplete": "Tapos na ang Pag-upload"
+      "uploadComplete": "Tapos na ang Pag-upload",
+      "createYourEmergencyQR": "Lumikha ng iyong emergency QR",
+      "emergencyQRTagline": "Ang iyong Emergency QR: Sapat na Pampubliko upang I -save ang Iyong Buhay, Sapat na Pribado Upang Protektahan ang Iyong Pagkakakilanlan"
     },
     "fr": {
       "emergencyInfo": "INFORMATIONS D'URGENCE",
@@ -232,7 +256,9 @@
       "required": "Requis",
       "optional": "Optionnel",
       "saveOnline": "Sauvegarder en Ligne",
-      "uploadComplete": "Téléversement Terminé"
+      "uploadComplete": "Téléversement Terminé",
+      "createYourEmergencyQR": "Créez votre QR d'urgence",
+      "emergencyQRTagline": "Votre QR d'urgence: suffisamment public pour vous sauver la vie, suffisamment privé pour protéger votre identité"
     },
     "ht": {
       "emergencyInfo": "ENFÒMASYON IJANS",
@@ -250,7 +276,9 @@
       "required": "Obligatwa",
       "optional": "Opsyonèl",
       "saveOnline": "Sove sou Entènèt",
-      "uploadComplete": "Telechajman Fini"
+      "uploadComplete": "Telechajman Fini",
+      "createYourEmergencyQR": "Kreye QR Ijans ou an",
+      "emergencyQRTagline": "QR ijans ou: piblik ase pou konsève pou lavi ou, prive ase yo pwoteje idantite ou"
     },
     "pt": {
       "emergencyInfo": "INFORMAÇÕES DE EMERGÊNCIA",
@@ -268,7 +296,9 @@
       "required": "Obrigatório",
       "optional": "Opcional",
       "saveOnline": "Salvar Online",
-      "uploadComplete": "Upload Concluído"
+      "uploadComplete": "Upload Concluído",
+      "createYourEmergencyQR": "Crie seu QR de emergência",
+      "emergencyQRTagline": "Seu QR de emergência: público o suficiente para salvar sua vida, privado o suficiente para proteger sua identidade"
     },
     "ru": {
       "emergencyInfo": "ЭКСТРЕННАЯ ИНФОРМАЦИЯ",
@@ -286,7 +316,9 @@
       "required": "Обязательно",
       "optional": "Необязательно",
       "saveOnline": "Сохранить онлайн",
-      "uploadComplete": "Загрузка завершена"
+      "uploadComplete": "Загрузка завершена",
+      "createYourEmergencyQR": "Создайте свой экстренный QR",
+      "emergencyQRTagline": "Ваш экстренный QR: достаточно общественный, чтобы спасти свою жизнь, достаточно частная, чтобы защитить вашу личность"
     },
     "de": {
       "emergencyInfo": "NOTFALLINFORMATIONEN",
@@ -304,7 +336,9 @@
       "required": "Erforderlich",
       "optional": "Optional",
       "saveOnline": "Online speichern",
-      "uploadComplete": "Upload abgeschlossen"
+      "uploadComplete": "Upload abgeschlossen",
+      "createYourEmergencyQR": "Erstellen Sie Ihren Notfall -QR",
+      "emergencyQRTagline": "Ihr Notfall QR: Öffentlich genug, um Ihr Leben zu retten, privat genug, um Ihre Identität zu schützen"
     },
     "hi": {
       "emergencyInfo": "आपातकालीन जानकारी",
@@ -322,7 +356,9 @@
       "required": "आवश्यक",
       "optional": "वैकल्पिक",
       "saveOnline": "ऑनलाइन सहेजें",
-      "uploadComplete": "अपलोड पूर्ण"
+      "uploadComplete": "अपलोड पूर्ण",
+      "createYourEmergencyQR": "अपना आपातकालीन QR बनाएं",
+      "emergencyQRTagline": "आपका आपातकालीन QR: अपने जीवन को बचाने के लिए पर्याप्त सार्वजनिक, अपनी पहचान की रक्षा के लिए पर्याप्त निजी"
     },
     "te": {
       "emergencyInfo": "అత్యవసర సమాచారం",
@@ -340,7 +376,9 @@
       "required": "తప్పనిసరి",
       "optional": "ఐచ్చికం",
       "saveOnline": "ఆన్‌లైన్‌లో సేవ్ చేయండి",
-      "uploadComplete": "అప్లోడ్ పూర్తయింది"
+      "uploadComplete": "అప్లోడ్ పూర్తయింది",
+      "createYourEmergencyQR": "మీ అత్యవసర QR ని సృష్టించండి",
+      "emergencyQRTagline": "మీ అత్యవసర QR: మీ ప్రాణాలను కాపాడటానికి తగినంత పబ్లిక్, మీ గుర్తింపును కాపాడటానికి ప్రైవేట్"
     },
     "gu": {
       "emergencyInfo": "કટોકટીની માહિતી",
@@ -358,7 +396,9 @@
       "required": "જરૂરી",
       "optional": "વૈકલ્પિક",
       "saveOnline": "ઑનલાઇન સેવ કરો",
-      "uploadComplete": "અપલોડ પૂર્ણ થયું"
+      "uploadComplete": "અપલોડ પૂર્ણ થયું",
+      "createYourEmergencyQR": "તમારી ઇમરજન્સી ક્યૂઆર બનાવો",
+      "emergencyQRTagline": "તમારી ઇમરજન્સી ક્યૂઆર: તમારી જીવન બચાવવા માટે પૂરતી જાહેર, તમારી ઓળખને સુરક્ષિત રાખવા માટે પૂરતી ખાનગી"
     },
     "ta": {
       "emergencyInfo": "அவசரகால தகவல்",
@@ -376,7 +416,9 @@
       "required": "தேவையானது",
       "optional": "விருப்பத்தேர்வு",
       "saveOnline": "ஆன்லைனில் சேமிக்கவும்",
-      "uploadComplete": "பதிவேற்றம் முடிந்தது"
+      "uploadComplete": "பதிவேற்றம் முடிந்தது",
+      "createYourEmergencyQR": "உங்கள் அவசர QR ஐ உருவாக்கவும்",
+      "emergencyQRTagline": "உங்கள் அவசர QR: உங்கள் உயிரைக் காப்பாற்றும் அளவுக்கு பொது, உங்கள் அடையாளத்தைப் பாதுகாக்கும் அளவுக்கு தனிப்பட்டது"
     },
     "ur": {
       "emergencyInfo": "ہنگامی معلومات",
@@ -394,7 +436,9 @@
       "required": "ضروری",
       "optional": "اختیاری",
       "saveOnline": "آن لائن محفوظ کریں",
-      "uploadComplete": "اپ لوڈ مکمل ہوا"
+      "uploadComplete": "اپ لوڈ مکمل ہوا",
+      "createYourEmergencyQR": "اپنی ایمرجنسی کیو آر بنائیں",
+      "emergencyQRTagline": "آپ کی ایمرجنسی کیو آر: آپ کی زندگی کو بچانے کے ل enough کافی عوامی ، آپ کی شناخت کے تحفظ کے لئے کافی نجی ہے"
     },
     "bn": {
       "emergencyInfo": "জরুরি তথ্য",
@@ -412,7 +456,9 @@
       "required": "প্রয়োজনীয়",
       "optional": "ঐচ্ছিক",
       "saveOnline": "অনলাইনে সংরক্ষণ করুন",
-      "uploadComplete": "আপলোড সম্পন্ন"
+      "uploadComplete": "আপলোড সম্পন্ন",
+      "createYourEmergencyQR": "আপনার জরুরী কিউআর তৈরি করুন",
+      "emergencyQRTagline": "আপনার জরুরী কিউআর: আপনার জীবন বাঁচাতে যথেষ্ট জনসাধারণ, আপনার পরিচয় রক্ষার জন্য যথেষ্ট ব্যক্তিগত"
     },
     "ja": {
       "emergencyInfo": "緊急情報",
@@ -430,7 +476,9 @@
       "required": "必須",
       "optional": "任意",
       "saveOnline": "オンライン保存",
-      "uploadComplete": "アップロード完了"
+      "uploadComplete": "アップロード完了",
+      "createYourEmergencyQR": "緊急QRを作成します",
+      "emergencyQRTagline": "あなたの緊急QR：あなたの命を救うのに十分なほど一般の人々、あなたの身元を守るのに十分なプライベート"
     },
     "fa": {
       "emergencyInfo": "اطلاعات اضطراری",
@@ -448,7 +496,9 @@
       "required": "الزامی",
       "optional": "اختیاری",
       "saveOnline": "ذخیره آنلاین",
-      "uploadComplete": "بارگذاری کامل شد"
+      "uploadComplete": "بارگذاری کامل شد",
+      "createYourEmergencyQR": "QR اضطراری خود را ایجاد کنید",
+      "emergencyQRTagline": "QR اضطراری شما: به اندازه کافی عمومی برای نجات جان خود ، به اندازه کافی خصوصی برای محافظت از هویت شما"
     },
     "pl": {
       "emergencyInfo": "INFORMACJE AWARYJNE",
@@ -466,7 +516,9 @@
       "required": "Wymagane",
       "optional": "Opcjonalne",
       "saveOnline": "Zapisz online",
-      "uploadComplete": "Przesyłanie zakończone"
+      "uploadComplete": "Przesyłanie zakończone",
+      "createYourEmergencyQR": "Utwórz swój awaryjny QR",
+      "emergencyQRTagline": "Twoja awaryjna QR: Wystarczająco publiczna, aby uratować ci życie, na tyle prywatne, aby chronić twoją tożsamość"
     },
     "it": {
       "emergencyInfo": "INFORMAZIONI DI EMERGENZA",
@@ -484,7 +536,9 @@
       "required": "Obbligatorio",
       "optional": "Opzionale",
       "saveOnline": "Salva Online",
-      "uploadComplete": "Caricamento Completato"
+      "uploadComplete": "Caricamento Completato",
+      "createYourEmergencyQR": "Crea il tuo QR di emergenza",
+      "emergencyQRTagline": "Il tuo QR di emergenza: abbastanza pubblico da salvarti la vita, abbastanza privato da proteggere la tua identità"
     },
     "he": {
       "emergencyInfo": "מידע חירום",
@@ -502,7 +556,9 @@
       "required": "חובה",
       "optional": "רשות",
       "saveOnline": "שמור באינטרנט",
-      "uploadComplete": "ההעלאה הושלמה"
+      "uploadComplete": "ההעלאה הושלמה",
+      "createYourEmergencyQR": "צור את QR החירום שלך",
+      "emergencyQRTagline": "QR החירום שלך: ציבורי מספיק כדי להציל את חייך, פרטיים מספיק כדי להגן על זהותך"
     },
     "el": {
       "emergencyInfo": "ΠΛΗΡΟΦΟΡΙΕΣ ΕΚΤΑΚΤΗΣ ΑΝΑΓΚΗΣ",
@@ -520,7 +576,9 @@
       "required": "Απαιτείται",
       "optional": "Προαιρετικό",
       "saveOnline": "Αποθήκευση Online",
-      "uploadComplete": "Η μεταφόρτωση ολοκληρώθηκε"
+      "uploadComplete": "Η μεταφόρτωση ολοκληρώθηκε",
+      "createYourEmergencyQR": "Δημιουργήστε το qr έκτακτης ανάγκης",
+      "emergencyQRTagline": "Το qr σας qr: αρκετά δημόσιο για να σώσει τη ζωή σας, αρκετά ιδιωτικό για να προστατεύσει την ταυτότητά σας"
     },
     "uk": {
       "emergencyInfo": "ЕКСТРЕНА ІНФОРМАЦІЯ",
@@ -538,7 +596,9 @@
       "required": "Обов'язково",
       "optional": "Необов'язково",
       "saveOnline": "Зберегти онлайн",
-      "uploadComplete": "Завантаження завершено"
+      "uploadComplete": "Завантаження завершено",
+      "createYourEmergencyQR": "Створіть свій аварійний QR",
+      "emergencyQRTagline": "Ваш екстрений QR: Досить громадськість, щоб врятувати своє життя, достатньо приватне, щоб захистити свою особу"
     },
     "th": {
       "emergencyInfo": "ข้อมูลฉุกเฉิน",
@@ -556,7 +616,9 @@
       "required": "จำเป็น",
       "optional": "ไม่บังคับ",
       "saveOnline": "บันทึกออนไลน์",
-      "uploadComplete": "อัปโหลดเสร็จสิ้น"
+      "uploadComplete": "อัปโหลดเสร็จสิ้น",
+      "createYourEmergencyQR": "สร้าง QR ฉุกเฉินของคุณ",
+      "emergencyQRTagline": "QR ฉุกเฉินของคุณ: สาธารณะมากพอที่จะช่วยชีวิตคุณเป็นส่วนตัวพอที่จะปกป้องตัวตนของคุณ"
     },
     "lo": {
       "emergencyInfo": "ຂໍ້ມູນສຸກເສີນ",
@@ -574,7 +636,9 @@
       "required": "ຈຳເປັນ",
       "optional": "ເສດຖະ",
       "saveOnline": "ບັນທຶກອອນໄລນ໌",
-      "uploadComplete": "ອັບໂຫລດສຳເລັດ"
+      "uploadComplete": "ອັບໂຫລດສຳເລັດ",
+      "createYourEmergencyQR": "ສ້າງ QR ສຸກເສີນຂອງທ່ານ",
+      "emergencyQRTagline": "QR ສຸກເສີນຂອງທ່ານ: ສາທາລະນະພຽງພໍທີ່ຈະຊ່ວຍຊີວິດຂອງທ່ານ, ສ່ວນຕົວພຽງພໍເພື່ອປົກປ້ອງຕົວຕົນຂອງທ່ານ"
     },
     "pa": {
       "emergencyInfo": "ਐਮਰਜੈਂਸੀ ਜਾਣਕਾਰੀ",
@@ -592,7 +656,9 @@
       "required": "ਲੋੜੀਂਦਾ",
       "optional": "ਵਿਕਲਪਿਕ",
       "saveOnline": "ਔਨਲਾਈਨ ਸੇਵ ਕਰੋ",
-      "uploadComplete": "ਅੱਪਲੋਡ ਪੂਰਾ ਹੋਇਆ"
+      "uploadComplete": "ਅੱਪਲੋਡ ਪੂਰਾ ਹੋਇਆ",
+      "createYourEmergencyQR": "ਆਪਣਾ ਐਮਰਜੈਂਸੀ QR ਬਣਾਓ",
+      "emergencyQRTagline": "ਤੁਹਾਡੀ ਐਮਰਜੈਂਸੀ QR: ਆਪਣੀ ਜ਼ਿੰਦਗੀ ਬਚਾਉਣ ਲਈ ਜਨਤਕ ਤੌਰ ਤੇ ਜਨਤਕ, ਆਪਣੀ ਪਛਾਣ ਦੀ ਰੱਖਿਆ ਲਈ ਕਾਫ਼ੀ"
     },
     "tr": {
       "emergencyInfo": "ACİL DURUM BİLGİSİ",
@@ -610,7 +676,9 @@
       "required": "Zorunlu",
       "optional": "İsteğe Bağlı",
       "saveOnline": "Çevrimiçi Kaydet",
-      "uploadComplete": "Yükleme Tamamlandı"
+      "uploadComplete": "Yükleme Tamamlandı",
+      "createYourEmergencyQR": "Acil QR'nizi oluşturun",
+      "emergencyQRTagline": "Acil QR'niz: Hayatınızı kurtaracak kadar halka açık, kimliğinizi koruyacak kadar özel"
     },
     "sw": {
       "emergencyInfo": "TAARIFA ZA DHARURA",
@@ -628,7 +696,9 @@
       "required": "Inahitajika",
       "optional": "Hiari",
       "saveOnline": "Hifadhi Mtandaoni",
-      "uploadComplete": "Upakiaji Umekamilika"
+      "uploadComplete": "Upakiaji Umekamilika",
+      "createYourEmergencyQR": "Unda qr yako ya dharura",
+      "emergencyQRTagline": "QR yako ya dharura: Umma wa kutosha kuokoa maisha yako, faragha ya kutosha kulinda kitambulisho chako"
     }
   }
 }
