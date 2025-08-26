@@ -12,6 +12,10 @@ The QR code itself is static and never changes. When information needs to be rev
 
 This repository contains the iKey web application and related assets.
 
+## Dashboard
+
+`dashboard.html` provides a streamlined owner view. After login, the full profile is visible right away and the Health Vault remains behind an additional password for sensitive records.
+
 ## Three-Layer Encryption
 
 The iKey vault uses a three-layer design to protect data:
