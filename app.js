@@ -86,15 +86,16 @@ class ThreeLayerEncryption {
   }
 
   // Build encrypted record and return GUID + qrKey
-  static async buildRecord(emergencyInfo, privateInfo, healthRecords, profilePassword, vaultPassword) {
+  // Build encrypted record using a single password for both profile and vault
+  static async buildRecord(emergencyInfo, privateInfo, healthRecords, password) {
     const guid = self.crypto.randomUUID();
     const qrKey = this.generateQrKey();
 
     const profileSalt = self.crypto.getRandomValues(new Uint8Array(16));
-    const profileKey = await this.deriveKey(qrKey + profilePassword, profileSalt, 100000);
+    const profileKey = await this.deriveKey(qrKey + password, profileSalt, 100000);
 
     const vaultSalt = self.crypto.getRandomValues(new Uint8Array(16));
-    const vaultKey = await this.deriveKey(vaultPassword, vaultSalt, 200000);
+    const vaultKey = await this.deriveKey(password, vaultSalt, 200000);
 
     const publicData = await this.encryptObject(emergencyInfo, qrKey);
     const privateData = await this.encryptObject(privateInfo, profileKey);
@@ -120,20 +121,22 @@ class ThreeLayerEncryption {
     return await this.decryptObject(storedData.publicData, qrKey);
   }
 
-  static async unlockPrivate(storedData, qrKey, profilePassword) {
+  // Unlock both private info and wrapped vault using a single password
+  static async unlockPrivate(storedData, qrKey, password) {
     const profileSalt = new Uint8Array(this.base64ToArrayBuffer(storedData.profileSalt));
-    const profileKey = await this.deriveKey(qrKey + profilePassword, profileSalt, 100000);
+    const profileKey = await this.deriveKey(qrKey + password, profileSalt, 100000);
     const privateInfo = await this.decryptObject(storedData.privateData, profileKey);
     const vaultWrapper = await this.decryptObject(storedData.vault, profileKey);
     return { privateInfo, vault: vaultWrapper };
   }
 
-  static async unlockVault(storedData, qrKey, profilePassword, vaultPassword) {
+  // Fully unlock the health vault using the same password
+  static async unlockVault(storedData, qrKey, password) {
     const profileSalt = new Uint8Array(this.base64ToArrayBuffer(storedData.profileSalt));
-    const profileKey = await this.deriveKey(qrKey + profilePassword, profileSalt, 100000);
+    const profileKey = await this.deriveKey(qrKey + password, profileSalt, 100000);
     const vaultWrapper = await this.decryptObject(storedData.vault, profileKey);
     const vaultSalt = new Uint8Array(this.base64ToArrayBuffer(vaultWrapper.salt));
-    const vaultKey = await this.deriveKey(vaultPassword, vaultSalt, 200000);
+    const vaultKey = await this.deriveKey(password, vaultSalt, 200000);
     return await this.decryptObject({ iv: vaultWrapper.iv, data: vaultWrapper.data }, vaultKey);
   }
 }
