@@ -327,11 +327,28 @@
             border-top: 2px solid #e0e0e0;
             font-weight: 600;
         }
-        
+
         .section-title:first-of-type {
             margin-top: 0;
             padding-top: 0;
             border-top: none;
+        }
+
+        .section-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        .section-status.complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .section-status.incomplete {
+            background: #fee2e2;
+            color: #991b1b;
         }
         
         .btn {
@@ -1334,19 +1351,49 @@
         }
 
         .blood-type-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 12px 0;
         }
-        .blood-type-grid label {
-            border: 1px solid #cbd5e0;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
+        .blood-type-btn {
+            position: relative;
+            min-height: 48px;
+            min-width: 48px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .blood-type-btn:hover,
+        .blood-type-btn:focus {
+            border-color: #6366f1;
+            background: #eef2ff;
+        }
+        .blood-type-btn.selected {
+            background: #6366f1;
+            color: white;
+            border-color: #6366f1;
+        }
+        .blood-type-btn input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .unknown-option {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+        }
+        #add-secondary-contact {
+            width: 100%;
         }
         .search-dropdown {
             position: absolute;
@@ -2612,7 +2659,7 @@
 
                 <div class="content">
                       <form id="create-form">
-                          <div class="section-title" data-i18n="emergencyInfo">Personal Information</div>
+                          <div class="section-title" data-i18n="emergencyInfo">Personal Information <span class="section-status incomplete" id="personal-status">Incomplete</span></div>
 
                           <div class="form-group">
                               <label for="name"><span data-i18n="name">Name</span> *</label>
@@ -2642,16 +2689,16 @@
                           <div class="form-group">
                               <label data-i18n="bloodType">Blood Type (Optional)</label>
                               <div class="blood-type-grid" id="blood-type">
-                                  <label><input type="radio" name="blood-type" value="A+">A+</label>
-                                  <label><input type="radio" name="blood-type" value="A-">A-</label>
-                                  <label><input type="radio" name="blood-type" value="B+">B+</label>
-                                  <label><input type="radio" name="blood-type" value="B-">B-</label>
-                                  <label><input type="radio" name="blood-type" value="AB+">AB+</label>
-                                  <label><input type="radio" name="blood-type" value="AB-">AB-</label>
-                                  <label><input type="radio" name="blood-type" value="O+">O+</label>
-                                  <label><input type="radio" name="blood-type" value="O-">O-</label>
-                                  <label><input type="radio" name="blood-type" value="">Unknown/Not Sure</label>
+                                  <label class="blood-type-btn"><input type="radio" name="blood-type" value="A+"><span>A+</span></label>
+                                  <label class="blood-type-btn"><input type="radio" name="blood-type" value="B+"><span>B+</span></label>
+                                  <label class="blood-type-btn"><input type="radio" name="blood-type" value="AB+"><span>AB+</span></label>
+                                  <label class="blood-type-btn"><input type="radio" name="blood-type" value="O+"><span>O+</span></label>
+                                  <label class="blood-type-btn"><input type="radio" name="blood-type" value="A-"><span>A-</span></label>
+                                  <label class="blood-type-btn"><input type="radio" name="blood-type" value="B-"><span>B-</span></label>
+                                  <label class="blood-type-btn"><input type="radio" name="blood-type" value="AB-"><span>AB-</span></label>
+                                  <label class="blood-type-btn"><input type="radio" name="blood-type" value="O-"><span>O-</span></label>
                               </div>
+                              <button type="button" class="unknown-option" id="blood-type-unknown">I don't know my blood type</button>
                           </div>
 
                           <div class="form-group">
@@ -2718,7 +2765,7 @@
                               </div>
                           </div>
 
-                          <div class="section-title" data-i18n="passwordProtected">Password Protected</div>
+                          <div class="section-title" data-i18n="passwordProtected">Password Protected <span class="section-status incomplete" id="password-status">Incomplete</span></div>
 
                           <div class="form-group">
                               <label for="ssn"><span data-i18n="ssn">Social Security Number</span></label>
@@ -2789,6 +2836,8 @@
 
             initMedicationField();
             initContactSection();
+            initBloodTypeSelector();
+            initSectionStatus();
 
             // Password strength meter
             document.getElementById('password').addEventListener('input', () => {
@@ -3004,10 +3053,92 @@
         function initContactSection() {
             const btn = document.getElementById('add-secondary-contact');
             const section = document.getElementById('secondary-contact');
-            if (!btn || !section) return;
-            btn.addEventListener('click', () => {
-                section.style.display = section.style.display === 'none' ? 'block' : 'none';
+            if (btn && section) {
+                btn.addEventListener('click', () => {
+                    section.style.display = section.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+            const primaryName = document.getElementById('contact-name');
+            const primaryPhone = document.getElementById('contact-phone');
+            if (primaryName) {
+                primaryName.value = '';
+                primaryName.placeholder = 'e.g., Jane Doe';
+            }
+            if (primaryPhone) {
+                primaryPhone.value = '';
+                primaryPhone.placeholder = '(555) 123-4567';
+            }
+        }
+
+        function initBloodTypeSelector() {
+            const buttons = document.querySelectorAll('.blood-type-btn');
+            const unknown = document.getElementById('blood-type-unknown');
+            if (!buttons.length || !unknown) return;
+
+            buttons.forEach(btn => {
+                const input = btn.querySelector('input');
+                btn.addEventListener('click', () => {
+                    buttons.forEach(b => b.classList.remove('selected'));
+                    unknown.classList.remove('selected');
+                    if (input) input.checked = true;
+                    btn.classList.add('selected');
+                });
             });
+
+            unknown.addEventListener('click', () => {
+                buttons.forEach(b => {
+                    const inp = b.querySelector('input');
+                    if (inp) inp.checked = false;
+                    b.classList.remove('selected');
+                });
+                unknown.classList.add('selected');
+            });
+        }
+
+        function initSectionStatus() {
+            const personalStatus = document.getElementById('personal-status');
+            const passwordStatus = document.getElementById('password-status');
+
+            function updatePersonal() {
+                const name = document.getElementById('name')?.value.trim();
+                const cName = document.getElementById('contact-name')?.value.trim();
+                const cPhone = document.getElementById('contact-phone')?.value.trim();
+                if (name && cName && cPhone) {
+                    personalStatus.textContent = 'Complete';
+                    personalStatus.classList.add('complete');
+                    personalStatus.classList.remove('incomplete');
+                } else {
+                    personalStatus.textContent = 'Incomplete';
+                    personalStatus.classList.add('incomplete');
+                    personalStatus.classList.remove('complete');
+                }
+            }
+
+            function updatePassword() {
+                const pwd = document.getElementById('password')?.value;
+                const pwd2 = document.getElementById('password-confirm')?.value;
+                if (pwd && pwd === pwd2 && isStrongPassword(pwd)) {
+                    passwordStatus.textContent = 'Complete';
+                    passwordStatus.classList.add('complete');
+                    passwordStatus.classList.remove('incomplete');
+                } else {
+                    passwordStatus.textContent = 'Incomplete';
+                    passwordStatus.classList.add('incomplete');
+                    passwordStatus.classList.remove('complete');
+                }
+            }
+
+            ['name', 'contact-name', 'contact-phone'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', updatePersonal);
+            });
+            ['password', 'password-confirm'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', updatePassword);
+            });
+
+            updatePersonal();
+            updatePassword();
         }
 
         async function encrypt(text, password) {
