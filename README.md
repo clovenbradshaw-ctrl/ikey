@@ -14,7 +14,7 @@ This repository contains the iKey web application and related assets.
 
 ## Dashboard
 
-`dashboard.html` provides a streamlined owner view. After login, the full profile is visible right away and the Health Vault remains behind an additional password for sensitive records.
+`dashboard.html` provides a streamlined owner view. After login, one password unlocks both the full profile and the Health Vault for sensitive records.
 
 ## Three-Layer Encryption
 
@@ -22,6 +22,6 @@ The iKey vault uses a three-layer design to protect data:
 
 1. **Public layer** – emergency information is encrypted using the QR code's 256-bit key.
 2. **Profile layer** – private details use a key derived from the QR key and profile password via PBKDF2.
-3. **Vault layer** – health records are encrypted with a vault password and then wrapped again with the profile key, leaving the vault unreadable even if profile access is compromised.
+3. **Vault layer** – health records are encrypted with a key derived from the same password and then wrapped again with the profile key, leaving the vault unreadable even if profile access is compromised.
 
 See `app.js` for the implementation of this architecture.
