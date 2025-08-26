@@ -1846,7 +1846,7 @@
             }
             let password = ownerPassword || document.getElementById('vault-password')?.value;
             if (!password) {
-                password = prompt('Please enter your password to update this iKey.');
+                password = prompt('Please enter your password to archive new data for this iKey.');
                 if (!password) {
                     return;
                 }
@@ -1929,7 +1929,7 @@
             const allergies = publicInfo.allergies || '';
             const contactName = publicInfo.contact?.name || '';
             const contactPhone = publicInfo.contact?.phone || '';
-            const lastUpdated = currentBlob.metadata?.updated || currentBlob.created || '';
+            const lastSaved = currentBlob.metadata?.updated || currentBlob.created || '';
             container.innerHTML = `
                 <div class="owner-dashboard">
                     <div class="owner-status">👤 Owner Mode</div>
@@ -1938,7 +1938,7 @@
                         <div class="dashboard-card"><strong>Basic</strong><br>${name}<br>${currentBlob.criticalInfo || ''}</div>
                         <div class="dashboard-card"><strong>Emergency</strong><br>Blood: ${bloodType || '-'}<br>Allergies: ${allergies || '-'}</div>
                         <div class="dashboard-card"><strong>Contact</strong><br>${contactName}<br>${contactPhone}</div>
-                        <div class="dashboard-card"><strong>Last Updated</strong><br>${lastUpdated}</div>
+                        <div class="dashboard-card"><strong>Last Archived</strong><br>${lastSaved}</div>
                     </div>
                     <div class="action-panel">
                         <button onclick="showUpdateForm(ownerPassword)">Edit Emergency Info</button>
@@ -2008,13 +2008,13 @@
                 document.getElementById('create-form').removeEventListener('submit', handleCreateForm);
                 document.getElementById('create-form').addEventListener('submit', (e) => handleUpdateForm(e, password));
 
-                document.querySelector('#create-form button[type="submit"]').innerHTML = '<span>Update QR</span>';
+                document.querySelector('#create-form button[type="submit"]').innerHTML = '<span>Save to Archive</span>';
                 startSessionTimer();
                 return true;
 
             } catch (error) {
-                console.error('Update error:', error);
-                alert('Failed to prepare update: ' + error.message);
+                console.error('Archive error:', error);
+                alert('Failed to prepare archive: ' + error.message);
                 if (currentBlob) {
                     displayFullInfo(currentBlob);
                 }
@@ -2027,7 +2027,7 @@
 
             const button = e.target.querySelector('button[type="submit"]');
             button.disabled = true;
-            button.innerHTML = '<span>Updating...</span>';
+            button.innerHTML = '<span>Archiving...</span>';
 
             try {
                 // Generate update token and auth
@@ -2069,22 +2069,22 @@
                 });
 
                 if (response.status === 403) {
-                    throw new Error('Invalid password - update denied');
+                    throw new Error('Invalid password - archive denied');
                 }
                 if (!response.ok) {
-                    throw new Error('Update failed');
+                    throw new Error('Archive failed');
                 }
 
                 currentData = { id: currentGUID, data: encryptedBlob, auth };
                 currentBlob = { ...currentBlob, publicInfo, privateInfo, metadata: { ...(currentBlob.metadata || {}), updated: new Date().toISOString() } };
-                showStatus('✅ Successfully updated!', 'success');
+                showStatus('✅ Data archived!', 'success');
                 showOwnerDashboard();
 
             } catch (error) {
                 showStatus('Error: ' + error.message, 'error');
             } finally {
                 button.disabled = false;
-                button.innerHTML = '<span>Update iKey</span>';
+                button.innerHTML = '<span>Save to Archive</span>';
             }
         }
         
@@ -2177,7 +2177,7 @@
                         </div>
 
                         <div class="hint" id="password-req" data-i18n="passwordRequirements">
-                            A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot update details or modify protected content.
+                            A strong password is required to create your code. It must be at least 8 characters and include upper and lower case letters, a number, and a special character. Without it you cannot save changes or modify protected content.
                         </div>
 
                         <div class="hint" data-i18n="passwordWarning">
@@ -2259,7 +2259,7 @@
                     throw new Error('Passwords do not match');
                 }
 
-                alert('Store this password somewhere safe. Without it, you cannot update this code or modify the protected content.');
+                alert('Store this password somewhere safe. Without it, you cannot archive new data or modify the protected content.');
 
                 // Generate identifiers and keys
                 currentGUID = generateGUID();
