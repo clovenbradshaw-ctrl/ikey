@@ -65,8 +65,8 @@ class SessionManager {
     }
 
     attachListeners() {
-        const activity = (type) => {
-            this.duration = type === 'scroll' ? 60 * 60 * 1000 : this.defaultDuration;
+        const activity = () => {
+            this.duration = this.defaultDuration;
             this.reset();
             resetIdle();
         };
@@ -75,9 +75,9 @@ class SessionManager {
             this.idleTimer = setTimeout(() => this.showIdleReminder(), 5 * 60 * 1000);
         };
         ['mousemove', 'keydown', 'click', 'touchstart'].forEach(evt =>
-            document.addEventListener(evt, () => activity('input'))
+            document.addEventListener(evt, activity)
         );
-        document.addEventListener('scroll', () => activity('scroll'), { passive: true });
+        document.addEventListener('scroll', activity, { passive: true });
         resetIdle();
     }
 
