@@ -848,7 +848,7 @@
             font-size: 14px;
         }
 
-        .vault-btn {
+        .health-records-btn {
             background: none;
             border: none;
             color: #667eea;
@@ -952,7 +952,7 @@
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
             </div>
-            <button class="vault-btn" style="display:none;" onclick="showVaultTab()">Vault</button>
+            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">Health Records</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
         </div>
     </div>
@@ -1691,7 +1691,7 @@
             const success = await showUpdateForm(password);
             if (success) {
                 ownerPassword = password;
-                document.querySelector('.vault-btn').style.display = 'inline-block';
+                document.querySelector('.health-records-btn').style.display = 'inline-block';
             }
         }
 
@@ -2533,7 +2533,7 @@
 
          function show911Tab() {
              document.getElementById('qrTab').style.display = 'none';
-             document.getElementById('vaultTab').style.display = 'none';
+             document.getElementById('healthRecordsTab').style.display = 'none';
              document.getElementById('text911Tab').style.display = 'block';
 
              if (!location911Enabled) {
@@ -2542,10 +2542,10 @@
              }
          }
 
-        async function showVaultTab() {
+        async function showHealthRecordsTab() {
             let password = ownerPassword;
             if (!password) {
-                password = prompt('Enter vault password');
+                password = prompt('Enter health records password');
                 if (!password) return;
                 ownerPassword = password;
             }
@@ -2553,20 +2553,20 @@
                 await window.healthApp.loadVault(password);
                 document.getElementById('qrTab').style.display = 'none';
                 document.getElementById('text911Tab').style.display = 'none';
-                const frame = document.getElementById('vaultFrame');
+                const frame = document.getElementById('healthRecordsFrame');
                 if (!frame.src) {
-                    frame.src = 'EHR-module';
+                    frame.src = 'health-records.html';
                 }
-                document.getElementById('vaultTab').style.display = 'block';
+                document.getElementById('healthRecordsTab').style.display = 'block';
             } catch (e) {
-                alert('Unable to unlock vault');
+                alert('Unable to unlock health records');
             }
         }
 
          function showQRTab() {
              document.getElementById('qrTab').style.display = 'block';
              document.getElementById('text911Tab').style.display = 'none';
-             document.getElementById('vaultTab').style.display = 'none';
+             document.getElementById('healthRecordsTab').style.display = 'none';
          }
 
          async function requestLocationAndLoad911() {
@@ -2635,8 +2635,8 @@
         });
     </script>
     </div>
-    <div id="vaultTab" style="display:none;">
-        <iframe id="vaultFrame" style="border:none;width:100%;height:800px;"></iframe>
+    <div id="healthRecordsTab" style="display:none;">
+        <iframe id="healthRecordsFrame" style="border:none;width:100%;height:800px;"></iframe>
     </div>
     <div id="text911Tab" style="display:none;">
         <div class="container">
