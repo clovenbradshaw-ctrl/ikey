@@ -1142,7 +1142,7 @@
             });
 
             // Attempt to load full data (non-blocking)
-            fetch(`${ARCHIVE_BASE}${guid}.json`)
+            fetch(`${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`, { mode: 'cors', cache: 'no-store' })
                 .then(r => r.json())
                 .then(async data => {
                     const full = JSON.parse(await decrypt(data.data, key));
@@ -1272,7 +1272,7 @@
             await displayEmergencyInfo(currentBlob);
 
             try {
-                const response = await fetch(`${ARCHIVE_BASE}${guid}.json`);
+                const response = await fetch(`${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`, { mode: 'cors', cache: 'no-store' });
                 if (response.ok) {
                     const archiveData = await response.json();
                     const decrypted = await decrypt(archiveData.editable, key);
@@ -1356,8 +1356,8 @@
         }
 
         async function fetchFromArchive(guid, key) {
-            const archiveUrl = `${ARCHIVE_BASE}${guid}.json`;
-            const response = await fetch(archiveUrl, { mode: 'cors' });
+            const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
+            const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
             if (!response.ok) throw new Error('Not found');
             const data = await response.json();
             const decrypted = await decrypt(data.data, key);
@@ -1405,10 +1405,10 @@
 
             try {
                 // Try to fetch from Archive.org
-                const archiveUrl = `${ARCHIVE_BASE}${guid}.json`;
+                const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
                 console.log('Fetching from Archive.org:', archiveUrl);
 
-                const response = await fetch(archiveUrl, { mode: 'cors' });
+                const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
                 console.log('Archive.org response status:', response.status);
 
                 if (response.ok) {
@@ -1663,7 +1663,7 @@
 
                 if (!originalAuth) {
                     // Fallback: fetch from Archive
-                    const response = await fetch(`${ARCHIVE_BASE}${currentGUID}.json`);
+                    const response = await fetch(`${ARCHIVE_BASE}${currentGUID}.json?ts=${Date.now()}`, { mode: 'cors', cache: 'no-store' });
                     if (response.ok) {
                         const data = await response.json();
                         originalAuth = data.auth;
@@ -2380,11 +2380,11 @@
                 return;
             }
             
-            const archiveUrl = `${ARCHIVE_BASE}${guid}.json`;
+            const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
             document.getElementById('dev-output').textContent = `Testing: ${archiveUrl}\n\nFetching...`;
-            
+
             try {
-                const response = await fetch(archiveUrl, { mode: 'cors' });
+                const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
                 if (response.ok) {
                     const data = await response.json();
                     document.getElementById('dev-output').textContent =
