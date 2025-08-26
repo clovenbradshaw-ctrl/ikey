@@ -1985,17 +1985,6 @@
                 `;
             }
             
-            if (currentBlob && currentBlob.privateInfo) {
-                html += `
-                        <div class="private-section">
-                            <h3><span class="info-icon">🔒</span><span data-i18n="privateInfo">Private Information</span></h3>
-                            <input type="password" class="password-input" id="vault-password" data-i18n-placeholder="enterPassword" placeholder="Enter password">
-                            <button class="btn" onclick="unlockPrivateInfo()" data-i18n="unlock">Unlock</button>
-                            <div id="private-content"></div>
-                        </div>
-                `;
-            }
-            
             html += `
                         <div class="help-link">
                             <a href="#" onclick="toggleHelp(); return false;">How It Works</a>
@@ -2004,70 +1993,9 @@
                     </div>
                 </div>
             `;
-            
+
             container.innerHTML = html;
             setLanguage(currentLanguage);
-
-            // Allow pressing Enter to unlock private information
-            const passwordInput = document.getElementById('vault-password');
-            if (passwordInput) {
-                passwordInput.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        unlockPrivateInfo();
-                    }
-                });
-            }
-        }
-        
-        // Unlock private information
-        async function unlockPrivateInfo() {
-            const password = document.getElementById('vault-password').value;
-            if (!password) return;
-
-            try {
-                const hash = await sha256Hash(currentKey + password);
-                if (!currentBlob.privateInfo || hash !== currentBlob.privateInfo.encryptedWith) {
-                    throw new Error('Incorrect password');
-                }
-                ownerPassword = password;
-
-                const privateInfo = currentBlob.privateInfo;
-                let html = '<div style="margin-top: 15px;">';
-
-                if (privateInfo.ssn) {
-                    html += `
-                        <div class="info-item">
-                            <span class="info-icon">🆔</span>
-                            <div class="info-content">
-                                <div class="info-label">SSN</div>
-                                <div class="info-value">${privateInfo.ssn}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                if (privateInfo.notes) {
-                    html += `
-                        <div class="info-item">
-                            <span class="info-icon">📝</span>
-                            <div class="info-content">
-                                <div class="info-label">Medical Notes</div>
-                                <div class="info-value">${privateInfo.notes}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                html += '</div>';
-
-                document.getElementById('private-content').innerHTML = html;
-                document.getElementById('vault-password').style.display = 'none';
-                document.querySelector('.private-section button').style.display = 'none';
-
-            } catch (error) {
-                alert('Incorrect password');
-            }
         }
 
         async function ownerLogin() {
@@ -2075,7 +2003,7 @@
                 alert('No QR code loaded. Please create or load one before logging in.');
                 return;
             }
-            let password = ownerPassword || document.getElementById('vault-password')?.value;
+            let password = ownerPassword;
             if (!password) {
                 password = prompt('Please enter your password to archive new data for this iKey.');
                 if (!password) {
