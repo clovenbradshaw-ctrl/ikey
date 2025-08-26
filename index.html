@@ -1569,9 +1569,6 @@ body.rtl .info-icon {
                 }
 
                 // Continue with form setup...
-                // Store auth for update handler
-                window.currentUpdateAuth = originalAuth;
-                window.currentUpdateToken = updateToken;
 
                 // Show update form (reuse creation form with pre-filled data)
                 showCreationForm();
@@ -1616,13 +1613,9 @@ body.rtl .info-icon {
             button.innerHTML = '<span>Updating...</span>';
 
             try {
-                // Use stored auth and token
-                const auth = window.currentUpdateAuth;
-                const updateToken = window.currentUpdateToken;
-
-                if (!auth || !updateToken) {
-                    throw new Error("Authentication data missing");
-                }
+                // Generate update token and auth
+                const updateToken = await generateUpdateToken(password, currentGUID);
+                const auth = await sha256Hash(updateToken);
 
                 // Collect updated form data
                 const publicInfo = {
@@ -1645,12 +1638,10 @@ body.rtl .info-icon {
 
                 const updatePayload = {
                     guid: currentGUID,
-                    updateToken: updateToken,
-                    auth: auth,
-                    encryptedData: encryptedBlob,
+                    auth: auth,  // Send unencrypted for verification
+                    data: encryptedBlob,  // New encrypted data
                     metadata: {
-                        updated: new Date().toISOString(),
-                        version: 'v2'
+                        updated: new Date().toISOString()
                     }
                 };
 
@@ -1660,6 +1651,9 @@ body.rtl .info-icon {
                     body: JSON.stringify(updatePayload)
                 });
 
+                if (response.status === 403) {
+                    throw new Error('Invalid password - update denied');
+                }
                 if (!response.ok) {
                     throw new Error('Update failed');
                 }
@@ -1834,7 +1828,7 @@ body.rtl .info-icon {
 
             const button = e.target.querySelector('button[type="submit"]');
             button.disabled = true;
-            button.innerHTML = '<span>Creating & Uploading...</span>';
+            button.innerHTML = '<span>Creating & Securing...</span>';
 
             try {
                 const password = document.getElementById('password').value;
@@ -1895,16 +1889,13 @@ body.rtl .info-icon {
                     auth: auth
                 };
 
-                // Store auth for future updates
-                localStorage.setItem(`auth_${currentGUID}`, auth);
-
                 // IMMEDIATELY upload to server
                 showStatus('⏳ Securing your data online...', 'info');
 
-                const uploadPayload = {
+                // Send to server with UNENCRYPTED auth hash
+                const serverPayload = {
                     guid: currentGUID,
-                    filename: `${currentGUID}.json`,
-                    data: currentData,
+                    data: encryptedData,
                     auth: auth,
                     metadata: {
                         created: created,
@@ -1915,14 +1906,16 @@ body.rtl .info-icon {
 
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
-                    mode: 'cors',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(uploadPayload)
+                    body: JSON.stringify(serverPayload)
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to save online. Please try again.');
+                    throw new Error('Failed to secure data online');
                 }
+
+                // Store auth for future updates
+                localStorage.setItem(`auth_${currentGUID}`, auth);
 
                 // Only generate QR after successful upload
                 const embedded = btoa(JSON.stringify({
