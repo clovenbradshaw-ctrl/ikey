@@ -75,6 +75,30 @@
                 display: flex;
                 justify-content: space-between;
                 grid-template-columns: none;
+                flex-wrap: wrap;
+                height: auto;
+                padding: 4px 10px;
+            }
+
+            .center-911 {
+                order: 2;
+                flex-basis: 100%;
+                display: flex;
+                justify-content: flex-start;
+                margin-top: 4px;
+            }
+
+            .logo-text-full {
+                display: none;
+            }
+
+            .logo-text-short {
+                display: inline;
+            }
+
+            .controls {
+                flex-wrap: wrap;
+                gap: 6px;
             }
 
             .dashboard-btn,
@@ -94,7 +118,8 @@
             }
 
             .section-cards {
-                display: block;
+                display: grid;
+                grid-template-columns: 1fr;
             }
 
             .section-card {
@@ -1028,8 +1053,20 @@
         }
         .section-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 15px;
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 640px) {
+            .section-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .section-cards {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
         .section-card {
             background: #f8f9fa;
