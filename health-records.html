@@ -1929,6 +1929,8 @@
             }
             
             async performSave(password) {
+                const scrollPosition = window.scrollY;
+
                 const formData = this.collectFormData();
                 const timestamp = new Date().toLocaleString();
                 
@@ -1976,8 +1978,10 @@
                     }
                     
                     alert('File saved successfully with encryption');
+                    window.scrollTo(0, scrollPosition);
                 } catch (error) {
                     alert('Error encrypting data: ' + error.message);
+                    window.scrollTo(0, scrollPosition);
                 }
             }
             
