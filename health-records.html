@@ -3248,7 +3248,20 @@
             const securityBar = document.querySelector('.security-bar');
             const navTabs = document.getElementById('navTabs');
             if (securityBar && navTabs) {
-                navTabs.style.top = securityBar.offsetHeight + 'px';
+                const securityHeight = securityBar.offsetHeight;
+                const navHeight = navTabs.offsetHeight;
+
+                // Position the navigation tabs just below the security bar
+                navTabs.style.top = securityHeight + 'px';
+
+                // Add space for both bars so content isn't hidden
+                const offset = securityHeight + navHeight + 20; // extra breathing room
+                document.body.style.paddingTop = offset + 'px';
+
+                // Ensure in-page navigation accounts for the fixed headers
+                document.querySelectorAll('.section').forEach(section => {
+                    section.style.scrollMarginTop = offset + 'px';
+                });
             }
         }
 
