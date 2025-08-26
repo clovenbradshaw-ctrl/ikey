@@ -939,7 +939,7 @@
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
             </div>
-            <button class="vault-btn" onclick="showVaultTab()">Vault</button>
+            <button class="vault-btn" style="display:none;" onclick="showVaultTab()">Vault</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
         </div>
     </div>
@@ -1637,7 +1637,11 @@
             }
         }
 
-        function ownerLogin() {
+        async function ownerLogin() {
+            if (!currentGUID) {
+                alert('No QR code loaded. Please create or load one before logging in.');
+                return;
+            }
             let password = ownerPassword || document.getElementById('vault-password')?.value;
             if (!password) {
                 password = prompt('Please enter your password to update this emergency QR.');
@@ -1645,7 +1649,11 @@
                     return;
                 }
             }
-            showUpdateForm(password);
+            const success = await showUpdateForm(password);
+            if (success) {
+                ownerPassword = password;
+                document.querySelector('.vault-btn').style.display = 'inline-block';
+            }
         }
 
         async function showUpdateForm(password) {
@@ -1707,9 +1715,12 @@
                 // Change button text
                 document.querySelector('#create-form button[type="submit"]').innerHTML = '<span>Update QR</span>';
 
+                return true;
+
             } catch (error) {
                 console.error('Update error:', error);
                 alert('Failed to prepare update: ' + error.message);
+                return false;
             }
         }
 
@@ -2040,6 +2051,7 @@
                 }));
 
                 const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${embedded}`;
+                window.location.hash = `v2:${currentGUID}:${currentKey}:${embedded}`;
 
                 // Generate QR code
                 const qrContainer = document.getElementById('qrcode');
@@ -2495,22 +2507,26 @@
              }
          }
 
-         async function showVaultTab() {
-             const password = prompt('Enter vault password');
-             if (!password) return;
-             try {
-                 await window.healthApp.loadVault(password);
-                 document.getElementById('qrTab').style.display = 'none';
-                 document.getElementById('text911Tab').style.display = 'none';
-                 const frame = document.getElementById('vaultFrame');
-                 if (!frame.src) {
-                     frame.src = 'EHR-module';
-                 }
-                 document.getElementById('vaultTab').style.display = 'block';
-             } catch (e) {
-                 alert('Unable to unlock vault');
-             }
-         }
+        async function showVaultTab() {
+            let password = ownerPassword;
+            if (!password) {
+                password = prompt('Enter vault password');
+                if (!password) return;
+                ownerPassword = password;
+            }
+            try {
+                await window.healthApp.loadVault(password);
+                document.getElementById('qrTab').style.display = 'none';
+                document.getElementById('text911Tab').style.display = 'none';
+                const frame = document.getElementById('vaultFrame');
+                if (!frame.src) {
+                    frame.src = 'EHR-module';
+                }
+                document.getElementById('vaultTab').style.display = 'block';
+            } catch (e) {
+                alert('Unable to unlock vault');
+            }
+        }
 
          function showQRTab() {
              document.getElementById('qrTab').style.display = 'block';
