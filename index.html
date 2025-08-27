@@ -1541,6 +1541,33 @@
         .access-911:active {
             opacity: 0.9;
         }
+
+        /* Floating links for Privacy and Notes */
+        .floating-links {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .floating-links a {
+            background: var(--primary);
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .floating-links {
+                bottom: 80px; /* avoid overlapping action bar */
+            }
+        }
     </style>
 </head>
 <body>
@@ -1573,7 +1600,12 @@
                 <!-- Content will be dynamically inserted here -->
             </div>
         </div>
-    
+
+    <div class="floating-links">
+        <a href="privacy.html">Privacy</a>
+        <a href="dashboard.html#place-notes">Notes</a>
+    </div>
+
     <!-- Dev Tools Panel -->
     <div class="dev-trigger" onclick="toggleDevTools()">🛠️</div>
     <div id="dev-panel" class="dev-panel">
