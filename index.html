@@ -1621,6 +1621,17 @@
 
         let currentLanguage = 'en';
 
+        function getRecordOrder(record) {
+            if (!record) return 0;
+            if (typeof record.id !== 'undefined') {
+                return Number(record.id) || 0;
+            }
+            if (record.created_at) {
+                return new Date(record.created_at).getTime();
+            }
+            return 0;
+        }
+
         function createLangButton(code) {
           const item = document.createElement('div');
           item.className = 'lang-option';
@@ -1748,9 +1759,9 @@
                 );
                 if (!response.ok) throw new Error('Not found');
                 const archiveData = await response.json();
-                const cacheTime = cache ? new Date(cache.created_at).getTime() : 0;
-                const archiveTime = new Date(archiveData.created_at).getTime();
-                const latest = !cache || archiveTime > cacheTime ? archiveData : cache;
+                const cacheOrder = getRecordOrder(cache);
+                const archiveOrder = getRecordOrder(archiveData);
+                const latest = !cache || archiveOrder > cacheOrder ? archiveData : cache;
                 const full = JSON.parse(await decrypt(latest.data, key));
                 displayFullInfo({
                     ...full,
@@ -2023,7 +2034,7 @@
 
             if (cache) {
                 chosen = cache;
-                chosenTime = new Date(cache.created_at).getTime();
+                chosenTime = getRecordOrder(cache);
                 console.log('Loaded from Xano cache');
             }
 
@@ -2032,10 +2043,10 @@
                 const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
                 if (response.ok) {
                     const archiveData = await response.json();
-                    const archiveTime = new Date(archiveData.created_at).getTime();
-                    if (!chosen || archiveTime > chosenTime) {
+                    const archiveOrder = getRecordOrder(archiveData);
+                    if (!chosen || archiveOrder > chosenTime) {
                         chosen = archiveData;
-                        chosenTime = archiveTime;
+                        chosenTime = archiveOrder;
                         console.log('Using newer data from Archive.org');
                     } else {
                         console.log('Xano cache is newer than Archive.org');
@@ -2114,10 +2125,10 @@
 
                 if (response.ok) {
                     const archiveData = await response.json();
-                    const cacheTime = data ? new Date(data.created_at).getTime() : 0;
-                    const archiveTime = new Date(archiveData.created_at).getTime();
+                    const cacheOrder = data ? getRecordOrder(data) : 0;
+                    const archiveOrder = getRecordOrder(archiveData);
 
-                    if (!data || archiveTime > cacheTime) {
+                    if (!data || archiveOrder > cacheOrder) {
                         data = archiveData;
                         console.log('Using newer data from Archive.org');
                     } else {
@@ -3516,7 +3527,7 @@
                 if (!resp.ok) return null;
                 const json = await resp.json();
                 const record = Array.isArray(json)
-                    ? json.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+                    ? json.sort((a, b) => getRecordOrder(b) - getRecordOrder(a))[0]
                     : json;
                 return record || null;
             } catch (e) {
@@ -3706,10 +3717,10 @@
                 const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
                 if (response.ok) {
                     const archiveData = await response.json();
-                    const cacheTime = cache ? new Date(cache.created_at).getTime() : 0;
-                    const archiveTime = new Date(archiveData.created_at).getTime();
-                    const latest = !cache || archiveTime > cacheTime ? archiveData : cache;
-                    const source = !cache || archiveTime > cacheTime ? 'Archive.org' : 'Xano backup';
+                    const cacheOrder = cache ? getRecordOrder(cache) : 0;
+                    const archiveOrder = getRecordOrder(archiveData);
+                    const latest = !cache || archiveOrder > cacheOrder ? archiveData : cache;
+                    const source = !cache || archiveOrder > cacheOrder ? 'Archive.org' : 'Xano backup';
                     document.getElementById('dev-output').textContent =
                         `Loaded from ${source}\n\nRaw JSON:\n${JSON.stringify(latest, null, 2)}`;
                     return;
