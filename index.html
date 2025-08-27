@@ -93,7 +93,8 @@
             }
 
             .dashboard-btn,
-            .health-records-btn {
+            .health-records-btn,
+            .resources-btn {
                 display: none !important;
             }
 
@@ -978,6 +979,14 @@
             font-size: 0.875rem;
         }
 
+        .resources-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
           body.rtl {
               direction: rtl;
               text-align: right;
@@ -1545,6 +1554,7 @@
             </div>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
+            <button class="resources-btn" onclick="showResourcesTab()">Resources</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
             <div id="session-timer" class="session-timer">
                 <span id="session-countdown"></span>
@@ -2416,6 +2426,7 @@
 
             document.getElementById('healthRecordsTab').style.display = 'none';
             document.getElementById('text911Tab').style.display = 'none';
+            document.getElementById('resourcesTab').style.display = 'none';
             document.getElementById('qrTab').style.display = 'block';
         }
 
@@ -2453,6 +2464,7 @@
             document.getElementById('qrTab').style.display = 'block';
             document.getElementById('text911Tab').style.display = 'none';
             document.getElementById('healthRecordsTab').style.display = 'none';
+            document.getElementById('resourcesTab').style.display = 'none';
 
             currentMode = 'dashboard';
             const container = document.getElementById('main-content');
@@ -3906,9 +3918,10 @@
         });
 
          function show911Tab() {
-             document.getElementById('qrTab').style.display = 'none';
-             document.getElementById('healthRecordsTab').style.display = 'none';
-             document.getElementById('text911Tab').style.display = 'block';
+            document.getElementById('qrTab').style.display = 'none';
+            document.getElementById('healthRecordsTab').style.display = 'none';
+            document.getElementById('resourcesTab').style.display = 'none';
+            document.getElementById('text911Tab').style.display = 'block';
 
              if (!location911Enabled) {
                  document.getElementById('location-permission-prompt').style.display = 'block';
@@ -3931,6 +3944,7 @@
                 await window.healthApp.loadVault(ownerPassword);
                 document.getElementById('qrTab').style.display = 'none';
                 document.getElementById('text911Tab').style.display = 'none';
+                document.getElementById('resourcesTab').style.display = 'none';
                 const frame = document.getElementById('healthRecordsFrame');
                 const setFrameHeight = () => {
                     frame.style.height = window.innerHeight + 'px';
@@ -3946,10 +3960,27 @@
             }
         }
 
+        function showResourcesTab() {
+            document.getElementById('qrTab').style.display = 'none';
+            document.getElementById('healthRecordsTab').style.display = 'none';
+            document.getElementById('text911Tab').style.display = 'none';
+            const frame = document.getElementById('resourcesFrame');
+            const setFrameHeight = () => {
+                frame.style.height = window.innerHeight + 'px';
+            };
+            setFrameHeight();
+            window.addEventListener('resize', setFrameHeight);
+            if (!frame.src) {
+                frame.src = 'https://wttin.org/';
+            }
+            document.getElementById('resourcesTab').style.display = 'block';
+        }
+
          function showQRTab() {
              document.getElementById('qrTab').style.display = 'block';
              document.getElementById('text911Tab').style.display = 'none';
              document.getElementById('healthRecordsTab').style.display = 'none';
+             document.getElementById('resourcesTab').style.display = 'none';
          }
 
         async function requestLocationAndLoad911() {
@@ -4022,6 +4053,9 @@
     </div>
     <div id="healthRecordsTab" style="display:none;">
         <iframe id="healthRecordsFrame" style="border:none;width:100%;height:100vh;"></iframe>
+    </div>
+    <div id="resourcesTab" style="display:none;">
+        <iframe id="resourcesFrame" style="border:none;width:100%;height:100vh;"></iframe>
     </div>
     <div id="text911Tab" style="display:none;">
         <div class="container">
