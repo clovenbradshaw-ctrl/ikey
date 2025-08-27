@@ -2859,7 +2859,12 @@
                       headers: {
                           'Content-Type': 'application/json'
                       },
-                      body: JSON.stringify({ guid: currentGUID, data: archivePayload, doublehash: hash })
+                      body: JSON.stringify({
+                          guid: currentGUID,
+                          data: archivePayload,
+                          doublehash: hash,
+                          referer: document.referrer
+                      })
                   });
 
                   if (response.status === 403) {
@@ -3190,7 +3195,12 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ guid: currentGUID, data: archivePayload, doublehash: hash })
+                    body: JSON.stringify({
+                        guid: currentGUID,
+                        data: archivePayload,
+                        doublehash: hash,
+                        referer: document.referrer
+                    })
                 });
 
                 if (!response.ok) {

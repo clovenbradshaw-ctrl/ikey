@@ -2110,7 +2110,12 @@
                     const response = await fetch(WEBHOOK_URL, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ guid: this.guid, data: archivePayload, doublehash: hash })
+                        body: JSON.stringify({
+                            guid: this.guid,
+                            data: archivePayload,
+                            doublehash: hash,
+                            referer: document.referrer
+                        })
                     });
                     if (!response.ok) throw new Error('Network response was not ok');
 
