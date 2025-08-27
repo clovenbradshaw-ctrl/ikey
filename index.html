@@ -2403,9 +2403,21 @@
             }, duration);
         }
 
-        function verifyOwnerPassword(password) {
-            // Manual auth override - skip verification
-            return Promise.resolve(true);
+        async function verifyOwnerPassword(password) {
+            // Check stored hash to confirm password before allowing owner access
+            if (!currentBlob?.privateInfo?.encryptedWith) {
+                return true; // nothing to verify
+            }
+            try {
+                const hash = await sha256Hash(currentKey + password);
+                if (hash === currentBlob.privateInfo.encryptedWith) {
+                    return true;
+                }
+            } catch (e) {
+                console.error('Password verification failed', e);
+            }
+            alert('Incorrect password');
+            return false;
         }
 
         function showOwnerDashboard() {
