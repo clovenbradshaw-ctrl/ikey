@@ -511,6 +511,39 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Place Notes -->
+                <section class="card">
+                    <h2>Add a Place Note</h2>
+
+                    <div style="margin:.5rem 0;">
+                        <label style="margin-right:1rem;">
+                            <input type="radio" name="placeMode" value="here" checked>
+                            Use my current location
+                        </label>
+                        <label>
+                            <input type="radio" name="placeMode" value="manual">
+                            Enter coordinates
+                        </label>
+                    </div>
+
+                    <div id="manualCoords" style="display:none; gap:.5rem; margin:.5rem 0;">
+                        <input id="latInput" type="number" step="any" placeholder="Latitude (e.g., 37.781122)" style="width:48%;">
+                        <input id="lngInput" type="number" step="any" placeholder="Longitude (e.g., -122.411009)" style="width:48%;">
+                    </div>
+
+                    <input id="titleInput" type="text" placeholder="Title (e.g., Evening sleep spot)" style="width:100%; padding:.5rem; margin:.5rem 0;">
+
+                    <textarea id="noteInput" rows="3" placeholder="Details (e.g., where to sit, who to ask, landmarks)"
+                              style="width:100%; padding:.5rem;"></textarea>
+
+                    <button id="savePlaceBtn" style="margin-top:.5rem;">Save Place Note</button>
+                </section>
+
+                <section class="card" style="margin-top:1rem;">
+                    <h2>My Place Notes</h2>
+                    <div id="placeList"></div>
+                </section>
             </div>
         </div>
     </div>

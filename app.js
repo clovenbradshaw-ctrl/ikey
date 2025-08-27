@@ -178,3 +178,170 @@ class UnifiedHealthApp extends IKeyApp {
 
 // Expose a global instance for current UI to interact with
 window.healthApp = new UnifiedHealthApp();
+
+// ----------------- helpers -----------------
+const state = { locations: [] }; // load from your decrypted vault on login
+
+const uid = (p = "loc") => `${p}_${Math.random().toString(36).slice(2,8)}${Date.now().toString(36)}`;
+
+const round6 = n => Math.round(Number(n) * 1e6) / 1e6;
+
+function validLatLng(lat, lng) {
+  const L = Number(lat), G = Number(lng);
+  return Number.isFinite(L) && Number.isFinite(G) && L >= -90 && L <= 90 && G >= -180 && G <= 180;
+}
+
+// Google Maps (no API key)
+const mapsOpen = ({ lat, lng }) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+const mapsEmbed = ({ lat, lng }) => `https://www.google.com/maps?q=${lat},${lng}&output=embed`;
+
+// ----------------- render -----------------
+function renderPlaces() {
+  const wrap = document.getElementById("placeList");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+
+  if (!state.locations.length) {
+    wrap.textContent = "No place notes yet.";
+    return;
+  }
+
+  state.locations.forEach(loc => {
+    const card = document.createElement("div");
+    card.style.border = "1px solid #ddd";
+    card.style.borderRadius = "12px";
+    card.style.padding = "12px";
+    card.style.marginBottom = "12px";
+
+    const h = document.createElement("div");
+    h.style.fontWeight = "700";
+    h.textContent = loc.title || "(Untitled place)";
+    card.appendChild(h);
+
+    const meta = document.createElement("div");
+    meta.style.fontSize = "12px";
+    meta.style.opacity = "0.8";
+    meta.textContent = `(${loc.coords.lat}, ${loc.coords.lng})`;
+    card.appendChild(meta);
+
+    if (loc.note) {
+      const p = document.createElement("div");
+      p.style.margin = "6px 0";
+      p.textContent = loc.note;
+      card.appendChild(p);
+    }
+
+    const iframe = document.createElement("iframe");
+    iframe.width = "100%";
+    iframe.height = "220";
+    iframe.style.border = "0";
+    iframe.loading = "lazy";
+    iframe.referrerPolicy = "no-referrer-when-downgrade";
+    iframe.src = mapsEmbed(loc.coords);
+    card.appendChild(iframe);
+
+    const a = document.createElement("a");
+    a.href = mapsOpen(loc.coords);
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "Open in Google Maps";
+    a.style.display = "inline-block";
+    a.style.marginTop = "8px";
+    card.appendChild(a);
+
+    wrap.appendChild(card);
+  });
+}
+
+// ----------------- save -----------------
+async function savePlaceNote(place) {
+  state.locations.unshift(place);
+
+  try {
+    localStorage.setItem("ikey.places.draft", JSON.stringify(state.locations));
+  } catch {}
+
+  // Encrypt & persist using existing pipeline
+  // await vaultSave("vault", "locations", state.locations);
+
+  renderPlaces();
+}
+
+// ----------------- init -----------------
+document.addEventListener("DOMContentLoaded", () => {
+  const modeRadios = Array.from(document.querySelectorAll('input[name="placeMode"]'));
+  const manualRow = document.getElementById("manualCoords");
+  const latInput = document.getElementById("latInput");
+  const lngInput = document.getElementById("lngInput");
+  const titleInput = document.getElementById("titleInput");
+  const noteInput = document.getElementById("noteInput");
+  const saveBtn = document.getElementById("savePlaceBtn");
+
+  if (!modeRadios.length || !manualRow || !saveBtn) return;
+
+  const updateModeUI = () => {
+    const mode = modeRadios.find(r => r.checked)?.value || "here";
+    manualRow.style.display = mode === "manual" ? "flex" : "none";
+  };
+  modeRadios.forEach(r => r.addEventListener("change", updateModeUI));
+  updateModeUI();
+
+  try {
+    const cached = JSON.parse(localStorage.getItem("ikey.places.draft") || "[]");
+    if (Array.isArray(cached)) state.locations = cached;
+  } catch {}
+
+  saveBtn.addEventListener("click", async () => {
+    const mode = modeRadios.find(r => r.checked)?.value || "here";
+    const title = (titleInput.value || "").trim();
+    const note = (noteInput.value || "").trim();
+
+    if (mode === "manual") {
+      const lat = parseFloat(latInput.value);
+      const lng = parseFloat(lngInput.value);
+      if (!validLatLng(lat, lng)) {
+        alert("Please enter valid coordinates:\n-90 ≤ latitude ≤ 90\n-180 ≤ longitude ≤ 180");
+        return;
+      }
+      const place = {
+        id: uid(),
+        title,
+        note,
+        type: "coords",
+        coords: { lat: round6(lat), lng: round6(lng) },
+        createdAt: Date.now()
+      };
+      await savePlaceNote(place);
+      titleInput.value = ""; noteInput.value = ""; latInput.value = ""; lngInput.value = "";
+      return;
+    }
+
+    if (!("geolocation" in navigator)) {
+      alert("Geolocation not available on this device/browser.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const lat = round6(pos.coords.latitude);
+      const lng = round6(pos.coords.longitude);
+      if (!validLatLng(lat, lng)) {
+        alert("Got invalid coordinates from the device.");
+        return;
+      }
+      const place = {
+        id: uid(),
+        title,
+        note,
+        type: "coords",
+        coords: { lat, lng },
+        createdAt: Date.now()
+      };
+      await savePlaceNote(place);
+      titleInput.value = ""; noteInput.value = "";
+    }, err => {
+      alert("Couldn't get your location. You can switch to 'Enter coordinates'.");
+      console.error(err);
+    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  });
+
+  renderPlaces();
+});
