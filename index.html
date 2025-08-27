@@ -1260,11 +1260,6 @@
             margin-left: 6px;
             font-size: 0.75rem;
         }
-        .security-status .level-excellent { color: #38a169; }
-        .security-status .level-good { color: #48bb78; }
-        .security-status .level-fair { color: #ed8936; }
-        .security-status .level-basic { color: #e53e3e; }
-
         @media (max-width: 480px) {
             .lang-button {
                 padding: 4px 8px;
@@ -2589,10 +2584,6 @@
             if (fields.vault.records > 0) sections.vault.filled++;
 
             const completionPercent = Math.round((filledFields / totalFields) * 100);
-            const securityLevel =
-                completionPercent >= 80 ? 'Excellent' :
-                completionPercent >= 60 ? 'Good' :
-                completionPercent >= 40 ? 'Fair' : 'Basic';
 
             container.innerHTML = `
                 <div class="dashboard-container">
@@ -2611,7 +2602,7 @@
                         </div>
                         <div class="profile-summary">
                             <h2>${fields.basic.name || 'Your iKey'}</h2>
-                            <p class="security-status">Security Level: <span class="level-${securityLevel.toLowerCase()}">${securityLevel}</span></p>
+                            <p class="profile-status">Profile ${completionPercent}% complete</p>
                             <p class="last-updated">Last updated: <span id="last-updated-time">${currentBlob.metadata?.updated || 'Never'}</span> <span id="autosave-status"></span><br><small id="data-source"></small></p>
                         </div>
                     </div>
