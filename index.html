@@ -1519,7 +1519,7 @@
                 <div class="lang-dropdown"></div>
             </div>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
-            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">EHR</button>
+            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
             <div id="session-timer" class="session-timer">
                 <span id="session-countdown"></span>
@@ -2543,6 +2543,9 @@
         function renderSectionCard(title, icon, progress, fields, onClick, sectionKey) {
             const percent = Math.round((progress.filled / progress.total) * 100);
             const clickAttr = onClick ? ` onclick="${onClick}" style="cursor:pointer"` : '';
+            const actionButton = sectionKey === 'vault'
+                ? `<button class="edit-section-btn" onclick="event.stopPropagation(); showHealthRecordsTab()">Open</button>`
+                : `<button class="edit-section-btn" onclick="event.stopPropagation(); openEditModal('${sectionKey}')">Edit</button>`;
             return `
                 <div class="section-card ${percent === 100 ? 'complete' : ''}"${clickAttr}>
                     <div class="section-header">
@@ -2563,7 +2566,7 @@
                             </div>
                         `).join('')}
                     </div>
-                    <button class="edit-section-btn" onclick="event.stopPropagation(); openEditModal('${sectionKey}')">Edit</button>
+                    ${actionButton}
                 </div>
             `;
         }
