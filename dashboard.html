@@ -37,10 +37,13 @@
         }
         
         .logo {
-            font-weight: bold;
-            font-size: 20px;
-            color: #667eea;
+            display: inline-flex;
+            align-items: center;
             text-decoration: none;
+        }
+
+        .logo img {
+            height: 32px;
         }
         
         .nav-center {
@@ -121,15 +124,7 @@
         
         .profile-identity {
             display: flex;
-            gap: 20px;
             align-items: center;
-        }
-        
-        .avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
         }
         
         .profile-info h1 {
@@ -350,7 +345,7 @@
 <body>
     <header class="header">
         <nav class="nav">
-            <a href="index.html" class="logo">🔑 iKey</a>
+            <a href="index.html" class="logo"><img src="https://storage.googleapis.com/art_homelessness/1.png" alt="iKey logo"></a>
             <div class="nav-center">
                 <a href="index.html" class="nav-link active">Dashboard</a>
                 <a href="#" class="nav-link">Emergency View</a>
@@ -369,7 +364,6 @@
         <div class="profile-header">
             <div class="profile-top">
                 <div class="profile-identity">
-                    <img src="https://storage.googleapis.com/art_homelessness/1.png" alt="Woman with backpack" class="avatar">
                     <div class="profile-info">
                         <h1>Sarah Chen</h1>
                         <div class="profile-meta">Female • 34 years • San Francisco, CA</div>
