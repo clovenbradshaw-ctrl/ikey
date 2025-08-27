@@ -2008,27 +2008,45 @@
         }
 
         async function fetchFromArchive(guid, key) {
-            const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
+            const cache = await fetchFromCache(guid);
+            let chosen = null;
+            let chosenTime = 0;
+
+            if (cache) {
+                chosen = cache;
+                chosenTime = new Date(cache.created_at).getTime();
+                console.log('Loaded from Xano cache');
+            }
+
             try {
+                const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
                 const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
-                if (!response.ok) throw new Error('Not found');
-                const data = await response.json();
-                const decrypted = await decrypt(data.data, key);
+                if (response.ok) {
+                    const archiveData = await response.json();
+                    const archiveTime = new Date(archiveData.created_at).getTime();
+                    if (!chosen || archiveTime > chosenTime) {
+                        chosen = archiveData;
+                        chosenTime = archiveTime;
+                        console.log('Using newer data from Archive.org');
+                    } else {
+                        console.log('Xano cache is newer than Archive.org');
+                    }
+                } else {
+                    console.log('Archive.org response status:', response.status);
+                }
+            } catch (e) {
+                console.log('Archive fetch failed:', e.message);
+            }
+
+            if (chosen) {
+                const decrypted = await decrypt(chosen.data, key);
                 const fullData = JSON.parse(decrypted);
-                currentData = data;
+                currentData = chosen;
                 currentBlob = { ...fullData };
                 return currentBlob;
-            } catch (e) {
-                const cache = await fetchFromCache(guid);
-                if (cache) {
-                    const decrypted = await decrypt(cache.data, key);
-                    const fullData = JSON.parse(decrypted);
-                    currentData = cache;
-                    currentBlob = { ...fullData };
-                    return currentBlob;
-                }
-                throw e;
             }
+
+            throw new Error('Not found');
         }
         
         // Show loading screen
@@ -2068,7 +2086,17 @@
             }
 
             try {
-                // Try to fetch from Archive.org first
+                const cache = await fetchFromCache(guid);
+                if (cache) {
+                    data = cache;
+                    fetchSuccess = true;
+                    console.log('Loaded from Xano cache');
+                }
+            } catch (e) {
+                console.log('Cache fetch failed:', e.message);
+            }
+
+            try {
                 const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
                 console.log('Fetching from Archive.org:', archiveUrl);
 
@@ -2076,33 +2104,31 @@
                 console.log('Archive.org response status:', response.status);
 
                 if (response.ok) {
-                    data = await response.json();
+                    const archiveData = await response.json();
+                    const cacheTime = data ? new Date(data.created_at).getTime() : 0;
+                    const archiveTime = new Date(archiveData.created_at).getTime();
+
+                    if (!data || archiveTime > cacheTime) {
+                        data = archiveData;
+                        console.log('Using newer data from Archive.org');
+                    } else {
+                        console.log('Xano cache is newer than Archive.org');
+                    }
                     fetchSuccess = true;
-                    console.log('Successfully loaded from Archive.org');
                 } else {
                     throw new Error('Not found on Archive.org');
                 }
             } catch (error) {
                 console.log('Archive fetch failed:', error.message);
-                try {
-                    const cache = await fetchFromCache(guid);
-                    if (cache) {
-                        data = cache;
-                        fetchSuccess = true;
-                        console.log('Loaded from Xano cache');
-                    }
-                } catch (e) {
-                    console.log('Cache fetch failed:', e.message);
-                }
+            }
 
-                if (!fetchSuccess) {
-                    // Check local storage fallback
-                    const localData = localStorage.getItem('pending_' + guid);
-                    if (localData) {
-                        console.log('Found local fallback data');
-                        const parsed = JSON.parse(localData);
-                        data = { local: true, full: parsed };
-                    }
+            if (!fetchSuccess) {
+                // Check local storage fallback
+                const localData = localStorage.getItem('pending_' + guid);
+                if (localData) {
+                    console.log('Found local fallback data');
+                    const parsed = JSON.parse(localData);
+                    data = { local: true, full: parsed };
                 }
             }
 
@@ -3644,35 +3670,39 @@
                 return;
             }
             
-            const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
-            document.getElementById('dev-output').textContent = `Testing: ${archiveUrl}\n\nFetching...`;
+            document.getElementById('dev-output').textContent = `Testing GUID: ${guid}\n\nFetching...`;
+
+            let cache = null;
+            try {
+                cache = await fetchFromCache(guid);
+            } catch (e) {
+                console.log('Cache fetch failed:', e.message);
+            }
 
             try {
+                const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
                 const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
                 if (response.ok) {
-                    const data = await response.json();
+                    const archiveData = await response.json();
+                    const cacheTime = cache ? new Date(cache.created_at).getTime() : 0;
+                    const archiveTime = new Date(archiveData.created_at).getTime();
+                    const latest = !cache || archiveTime > cacheTime ? archiveData : cache;
+                    const source = !cache || archiveTime > cacheTime ? 'Archive.org' : 'Xano backup';
                     document.getElementById('dev-output').textContent =
-                        `Success! Found on Archive.org\n\n` +
-                        `Encrypted: ${data.encrypted}\n` +
-                        `Version: ${data.version}\n\n` +
-                        `Raw JSON:\n${JSON.stringify(data, null, 2)}`;
+                        `Loaded from ${source}\n\nRaw JSON:\n${JSON.stringify(latest, null, 2)}`;
                     return;
                 }
-                throw new Error(`Archive response ${response.status}`);
+                console.log('Archive.org response status:', response.status);
             } catch (error) {
-                try {
-                    const cache = await fetchFromCache(guid);
-                    if (cache) {
-                        document.getElementById('dev-output').textContent =
-                            `Loaded from Xano backup\n\nRaw JSON:\n${JSON.stringify(cache, null, 2)}`;
-                    } else {
-                        document.getElementById('dev-output').textContent =
-                            `Not found on Archive.org or Xano backup.`;
-                    }
-                } catch (e) {
-                    document.getElementById('dev-output').textContent =
-                        `Fetch error: ${e.message}\n\nThis could be a CORS issue or network problem.`;
-                }
+                console.log('Archive fetch failed:', error.message);
+            }
+
+            if (cache) {
+                document.getElementById('dev-output').textContent =
+                    `Loaded from Xano backup\n\nRaw JSON:\n${JSON.stringify(cache, null, 2)}`;
+            } else {
+                document.getElementById('dev-output').textContent =
+                    `Not found on Archive.org or Xano backup.`;
             }
         }
         
