@@ -2493,10 +2493,6 @@
                     </div>
 
                     <div class="quick-actions">
-                        <button onclick="editSection('emergency')" class="action-btn primary">
-                            <span>Add Missing Info</span>
-                            <span class="badge">+${totalFields - filledFields}</span>
-                        </button>
                         <button onclick="downloadQRFixed()" class="action-btn">Download QR</button>
                         <button onclick="shareQR()" class="action-btn">Share</button>
                     </div>
@@ -2864,7 +2860,7 @@
 
                 <div class="content">
                       <form id="create-form">
-                          <div class="section-title" data-i18n="emergencyInfo">Personal Information <span class="section-status incomplete" id="personal-status">Incomplete</span></div>
+                          <div class="section-title"><span data-i18n="emergencyInfo">Personal Information</span> <span class="section-status incomplete" id="personal-status">Incomplete</span></div>
 
                           <div class="form-group">
                               <label for="name"><span data-i18n="name">Name</span> *</label>
@@ -2970,7 +2966,7 @@
                               </div>
                           </div>
 
-                          <div class="section-title" data-i18n="passwordProtected">Password Protected <span class="section-status incomplete" id="password-status">Incomplete</span></div>
+                          <div class="section-title"><span data-i18n="passwordProtected">Password Protected</span> <span class="section-status incomplete" id="password-status">Incomplete</span></div>
 
                           <div class="form-group">
                               <label for="ssn"><span data-i18n="ssn">Social Security Number</span></label>
@@ -3557,10 +3553,6 @@
             }
         }
 
-        function editSection(section) {
-            showUpdateForm(ownerPassword);
-        }
-        
         function testQR() {
             if (window.currentQRUrl) {
                 window.open(window.currentQRUrl, '_blank');
