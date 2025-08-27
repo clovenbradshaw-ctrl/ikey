@@ -106,7 +106,7 @@
       </div>
       <div class="callout small" id="sourceNote">
         We fetch <code>GET https://xvkq-pq7i-idtl.n7d.xano.io/api:Hj4C6PGO/ikey_cache?guid=&lt;YOUR-GUID&gt;</code>.
-        The response below is returned as-is from the server; long encrypted fields are abridged for readability.
+        The response below is returned as-is from the server; long encrypted fields are lightly abridged for readability (first and last 64 characters shown).
       </div>
     </section>
 
@@ -182,7 +182,7 @@
     }
 
     // Abridge long strings (e.g., ciphertext) for display.
-    function abridgeString(s, keep = 24) {
+    function abridgeString(s, keep = 64) {
       if (typeof s !== 'string') return s;
       if (s.length <= keep * 2 + 3) return s;
       return s.slice(0, keep) + "…(" + (s.length - keep*2) + " chars)…" + s.slice(-keep);
