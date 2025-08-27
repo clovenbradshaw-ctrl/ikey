@@ -1746,6 +1746,7 @@
         let currentKey = null;
         let currentData = null; // {encrypted, version, data}
         let currentBlob = null; // decrypted full data
+        let currentSource = '';
         let currentMode = null;
         let currentCreated = null;
         let currentName = null;
@@ -1805,6 +1806,7 @@
                 const cacheOrder = getRecordOrder(cache);
                 const archiveOrder = getRecordOrder(archiveData);
                 const latest = !cache || archiveOrder > cacheOrder ? archiveData : cache;
+                currentSource = !cache || archiveOrder > cacheOrder ? 'Archive.org' : 'Server cache';
                 const full = JSON.parse(await decrypt(latest.data, key));
                 displayFullInfo({
                     ...full,
@@ -1815,8 +1817,10 @@
                         allergies: currentAllergies || full.publicInfo?.allergies
                     }
                 });
+                updateSourceLabel();
             } catch (e) {
                 if (cache) {
+                    currentSource = 'Server cache';
                     const full = JSON.parse(await decrypt(cache.data, key));
                     displayFullInfo({
                         ...full,
@@ -1827,6 +1831,7 @@
                             allergies: currentAllergies || full.publicInfo?.allergies
                         }
                     });
+                    updateSourceLabel();
                 } else {
                     addOfflineNotice();
                 }
@@ -1861,6 +1866,7 @@
         function displayFullInfo(full) {
             currentBlob = full;
             displayEmergencyInfo(full);
+            updateSourceLabel();
         }
 
         function buildUploadMessage() {
@@ -1972,6 +1978,7 @@
 
             try {
                 let archiveData;
+                let source = 'Archive.org';
                 try {
                     const response = await fetch(
                         `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`,
@@ -1983,7 +1990,9 @@
                     const cache = await fetchFromCache(guid);
                     if (!cache) throw err;
                     archiveData = cache;
+                    source = 'Server cache';
                 }
+                currentSource = source;
                 const decrypted = await decrypt(archiveData.editable, key);
                 const editableFields = JSON.parse(decrypted);
                 if (editableFields.publicInfo) {
@@ -2008,6 +2017,7 @@
                 }
                 currentBlob.publicInfo = displayData;
                 await displayEmergencyInfo(currentBlob);
+                updateSourceLabel();
             } catch (e) {
                 console.log('Could not load editable fields', e);
             }
@@ -2025,9 +2035,11 @@
                 ? JSON.parse(await decrypt(data.p, data.k))
                 : null;
             currentBlob = { publicInfo, privateInfo };
+            currentSource = 'Offline QR';
             await displayEmergencyInfo(currentBlob, {
                 banner: '✅ Offline QR - No internet required'
             });
+            updateSourceLabel();
         }
 
         async function handleHybridQR(guid, key, embedded) {
@@ -2051,8 +2063,11 @@
                 if (embedded.b) merged.publicInfo.bloodType = embedded.b;
                 if (embedded.a) merged.publicInfo.allergies = embedded.a;
                 await displayEmergencyInfo(merged);
+                updateSourceLabel();
             } catch (error) {
                 console.log('Cloud fetch failed, using embedded data only');
+                currentSource = 'Embedded data';
+                updateSourceLabel();
             }
         }
 
@@ -2074,10 +2089,12 @@
             const cache = await fetchFromCache(guid);
             let chosen = null;
             let chosenTime = 0;
+            let source = '';
 
             if (cache) {
                 chosen = cache;
                 chosenTime = getRecordOrder(cache);
+                source = 'Server cache';
                 console.log('Loaded from Xano cache');
             }
 
@@ -2090,6 +2107,7 @@
                     if (!chosen || archiveOrder > chosenTime) {
                         chosen = archiveData;
                         chosenTime = archiveOrder;
+                        source = 'Archive.org';
                         console.log('Using newer data from Archive.org');
                     } else {
                         console.log('Xano cache is newer than Archive.org');
@@ -2106,6 +2124,7 @@
                 const fullData = JSON.parse(decrypted);
                 currentData = chosen;
                 currentBlob = { ...fullData };
+                currentSource = source;
                 return currentBlob;
             }
 
@@ -2135,6 +2154,7 @@
             let banner = null;
             let data;
             let fetchSuccess = false;
+            let source = '';
 
             // Calculate age of QR code
             if (createdTime) {
@@ -2153,6 +2173,7 @@
                 if (cache) {
                     data = cache;
                     fetchSuccess = true;
+                    source = 'Server cache';
                     console.log('Loaded from Xano cache');
                 }
             } catch (e) {
@@ -2173,6 +2194,7 @@
 
                     if (!data || archiveOrder > cacheOrder) {
                         data = archiveData;
+                        source = 'Archive.org';
                         console.log('Using newer data from Archive.org');
                     } else {
                         console.log('Xano cache is newer than Archive.org');
@@ -2192,6 +2214,7 @@
                     console.log('Found local fallback data');
                     const parsed = JSON.parse(localData);
                     data = { local: true, full: parsed };
+                    source = 'Local cache';
                 }
             }
 
@@ -2227,8 +2250,10 @@
 
                 currentData = data;
                 currentBlob = { ...fullData };
+                currentSource = source;
 
                 await displayEmergencyInfo(fullData, { overrideName: urlName, banner });
+                updateSourceLabel();
             } catch (error) {
                 console.error('Error loading data:', error);
                 showError('Unable to load personal information. Please check the QR code.');
@@ -2555,7 +2580,7 @@
                         <div class="profile-summary">
                             <h2>${fields.basic.name || 'Your iKey'}</h2>
                             <p class="security-status">Security Level: <span class="level-${securityLevel.toLowerCase()}">${securityLevel}</span></p>
-                            <p class="last-updated">Last updated: <span id="last-updated-time">${currentBlob.metadata?.updated || 'Never'}</span> <span id="autosave-status"></span></p>
+                            <p class="last-updated">Last updated: <span id="last-updated-time">${currentBlob.metadata?.updated || 'Never'}</span> <span id="autosave-status"></span><br><small id="data-source"></small></p>
                         </div>
                     </div>
 
@@ -2602,6 +2627,12 @@
                     </div>
                 </div>
             `;
+
+            const updatedEl = document.getElementById('last-updated-time');
+            if (updatedEl) {
+                updatedEl.textContent = currentBlob.metadata?.updated ? new Date(currentBlob.metadata.updated).toLocaleString() : 'Never';
+            }
+            updateSourceLabel();
 
             localStorage.setItem('ikey_last_view', 'dashboard');
             localStorage.setItem('ikey_current_guid', currentGUID);
@@ -2948,6 +2979,7 @@
 
                 currentData = archivePayload;
                 currentBlob = { ...currentBlob, name, pronouns, criticalInfo, publicInfo, privateInfo, metadata: { ...(currentBlob.metadata || {}), updated: new Date().toISOString() } };
+                currentSource = 'Server cache';
                 showStatus('✅ Data archived!', 'success');
                 showOwnerDashboard();
 
@@ -3279,6 +3311,9 @@
                     throw new Error('Failed to secure data online');
                 }
 
+                currentSource = 'Server cache';
+                updateSourceLabel();
+
                 // Only generate QR after successful upload
                 const embedded = btoa(
                     JSON.stringify({
@@ -3587,6 +3622,13 @@
                 return record || null;
             } catch (e) {
                 return null;
+            }
+        }
+
+        function updateSourceLabel() {
+            const el = document.getElementById('data-source');
+            if (el) {
+                el.textContent = currentSource ? `Source: ${currentSource}` : '';
             }
         }
 
