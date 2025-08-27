@@ -1626,6 +1626,9 @@
             if (typeof record.id !== 'undefined') {
                 return Number(record.id) || 0;
             }
+            if (record.updated_at) {
+                return new Date(record.updated_at).getTime();
+            }
             if (record.created_at) {
                 return new Date(record.created_at).getTime();
             }
@@ -3537,10 +3540,7 @@
                     { method: 'GET', mode: 'cors', cache: 'no-store' }
                 );
                 if (!resp.ok) return null;
-                const json = await resp.json();
-                const record = Array.isArray(json)
-                    ? json.sort((a, b) => getRecordOrder(b) - getRecordOrder(a))[0]
-                    : json;
+                const record = await resp.json();
                 return record || null;
             } catch (e) {
                 return null;
