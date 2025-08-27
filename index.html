@@ -2781,39 +2781,25 @@
                     version: "3.0",
                     data: encryptedBlob
                 };
-                let hash = null;
-                if (password) {
-                    hash = await computeDoubleHash(password, encryptedBlob);
-                    const valid = await validateDoubleHash(currentGUID, hash);
-                    if (!valid) {
-                        throw new Error('Invalid password - hash mismatch');
-                    }
-                }
-                await saveToCache(currentGUID, archivePayload);
-                if (hash) {
-                    await saveDoubleHash(currentGUID, hash);
-                }
+                  let hash = null;
+                  if (password) {
+                      hash = await computeDoubleHash(password, encryptedBlob);
+                  }
 
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-archive-meta-subject': 'Emergency Contacts',
-                        'x-archive-meta-description': 'Encrypted emergency contact information',
-                        'x-archive-meta-guid': currentGUID,
-                        'x-archive-meta-identifier': `ikey_${currentGUID}`,
-                        'x-archive-meta-mediatype': 'data',
-                        'x-archive-meta-updated': new Date().toISOString()
-                    },
-                    body: JSON.stringify({ data: archivePayload })
-                });
+                  const response = await fetch(WEBHOOK_URL, {
+                      method: 'PUT',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ guid: currentGUID, data: archivePayload, doublehash: hash })
+                  });
 
-                if (response.status === 403) {
-                    throw new Error('Invalid password - archive denied');
-                }
-                if (!response.ok) {
-                    throw new Error('Archive failed');
-                }
+                  if (response.status === 403) {
+                      throw new Error('Invalid password - server denied');
+                  }
+                  if (!response.ok) {
+                      throw new Error('Server error');
+                  }
 
                 currentData = archivePayload;
                 currentBlob = { ...currentBlob, name, pronouns, criticalInfo, publicInfo, privateInfo, metadata: { ...(currentBlob.metadata || {}), updated: new Date().toISOString() } };
@@ -3124,14 +3110,6 @@
                 let hash = null;
                 if (password) {
                     hash = await computeDoubleHash(password, encryptedData);
-                    const valid = await validateDoubleHash(currentGUID, hash);
-                    if (!valid) {
-                        throw new Error('Invalid password - hash mismatch');
-                    }
-                }
-                await saveToCache(currentGUID, archivePayload);
-                if (hash) {
-                    await saveDoubleHash(currentGUID, hash);
                 }
 
                 currentData = archivePayload;
@@ -3142,15 +3120,9 @@
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-archive-meta-subject': 'Emergency Contacts',
-                        'x-archive-meta-description': 'Encrypted emergency contact information',
-                        'x-archive-meta-guid': currentGUID,
-                        'x-archive-meta-identifier': `ikey_${currentGUID}`,
-                        'x-archive-meta-title': `ikey_emergency_${currentGUID}.json`,
-                        'x-archive-meta-mediatype': 'data'
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ data: archivePayload })
+                    body: JSON.stringify({ guid: currentGUID, data: archivePayload, doublehash: hash })
                 });
 
                 if (!response.ok) {
@@ -3466,44 +3438,8 @@
             }
         }
 
-        async function saveToCache(guid, data) {
-            try {
-                await fetch(`${XANO_BASE}/ikey_cache`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ guid, data })
-                });
-            } catch (e) {
-                console.log('Cache save failed:', e.message);
-            }
-        }
 
-        async function validateDoubleHash(guid, hash) {
-            try {
-                const resp = await fetch(`${XANO_BASE}/guid_double_hash?guid=${encodeURIComponent(guid)}`);
-                if (!resp.ok) return true;
-                const json = await resp.json();
-                const stored = Array.isArray(json) ? json[0]?.data : json?.data;
-                if (stored) {
-                    return stored === hash;
-                }
-                return true;
-            } catch (e) {
-                return true;
-            }
-        }
 
-        async function saveDoubleHash(guid, hash) {
-            try {
-                await fetch(`${XANO_BASE}/guid_double_hash`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ guid, data: hash })
-                });
-            } catch (e) {
-                console.log('Double hash save failed:', e.message);
-            }
-        }
 
         async function createDemoData(guid, key) {
             const fullData = {
