@@ -421,6 +421,31 @@
             gap: 10px;
             margin-top: 15px;
         }
+
+        /* QR Viewer Overlay */
+        .qr-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .qr-modal {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .qr-modal button {
+            margin-top: 10px;
+        }
         
         /* Help Section */
         .help-link {
@@ -2554,6 +2579,7 @@
                     </div>
 
                     <div class="quick-actions">
+                        <button onclick="viewQR()" class="action-btn">View QR</button>
                         <button onclick="downloadQRFixed()" class="action-btn">Download QR</button>
                         <button onclick="shareQR()" class="action-btn">Share</button>
                     </div>
@@ -3577,6 +3603,31 @@
                 version: "3.0",
                 data: encryptedBlob
             };
+        }
+
+        function viewQR() {
+            const safeName = (currentBlob?.name || '').replace(/:/g, '-');
+            const safeBlood = (currentBlob?.publicInfo?.bloodType || '').replace(/:/g, '-');
+            const fallbackEmbedded = btoa(JSON.stringify({
+                n: currentBlob.name,
+                b: currentBlob.publicInfo?.bloodType,
+                a: currentBlob.publicInfo?.allergies,
+                t: currentBlob.created
+            }));
+            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${fallbackEmbedded}:Name-${safeName}:Blood-${safeBlood}`;
+            const existing = document.getElementById('qr-viewer');
+            if (existing) existing.remove();
+            const overlay = document.createElement('div');
+            overlay.id = 'qr-viewer';
+            overlay.className = 'qr-overlay';
+            overlay.innerHTML = `<div class="qr-modal"><div id="owner-qr"></div><button class="btn" onclick="document.getElementById('qr-viewer').remove()">Close</button></div>`;
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+            document.body.appendChild(overlay);
+            new QRCode(document.getElementById('owner-qr'), {
+                text: url,
+                width: 256,
+                height: 256
+            });
         }
 
         function downloadQRFixed() {
