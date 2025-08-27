@@ -7,6 +7,7 @@ class SessionManager {
         this.interval = null;
         this.warning5Shown = false;
         this.warning1Shown = false;
+        this.autoSaveTimer = null;
         this.ring = document.getElementById('session-timer');
         this.countdown = document.getElementById('session-countdown');
         this.buildUI();
@@ -92,7 +93,7 @@ class SessionManager {
         document.addEventListener('scroll', activity, { passive: true });
         resetIdle();
         document.querySelectorAll('input, textarea').forEach(el =>
-            el.addEventListener('input', () => this.autoSave())
+            el.addEventListener('input', () => this.scheduleAutoSave())
         );
     }
 
@@ -194,7 +195,13 @@ class SessionManager {
         this.expired.classList.remove('active');
     }
 
+    scheduleAutoSave() {
+        clearTimeout(this.autoSaveTimer);
+        this.autoSaveTimer = setTimeout(() => this.autoSave(), 15000);
+    }
+
     autoSave() {
+        clearTimeout(this.autoSaveTimer);
         const status = document.getElementById('autosave-status');
         if (status) status.textContent = 'Saving...';
 
