@@ -1572,6 +1572,7 @@
         const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
         const BEACON_TEXT = 'SQR:1';
         const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
+        const XANO_BASE = 'https://xvkq-pq7i-idtl.n7d.xano.io/api:Hj4C6PGO';
         const MANUAL_AUTH_OVERRIDE = "YOUR_MANUAL_AUTH_KEY_HERE";
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
 
@@ -2029,29 +2030,42 @@
             }
 
             try {
-                // Try to fetch from Archive.org
-                const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
-                console.log('Fetching from Archive.org:', archiveUrl);
-
-                const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
-                console.log('Archive.org response status:', response.status);
-
-                if (response.ok) {
-                    data = await response.json();
+                const cache = await fetchFromCache(guid);
+                if (cache) {
+                    data = cache;
                     fetchSuccess = true;
-                    console.log('Successfully loaded from Archive.org');
-                } else {
-                    throw new Error('Not found on Archive.org');
+                    console.log('Loaded from Xano cache');
                 }
-            } catch (error) {
-                console.log('Archive fetch failed:', error.message);
+            } catch (e) {
+                console.log('Cache fetch failed:', e.message);
+            }
 
-                // Check local storage fallback
-                const localData = localStorage.getItem('pending_' + guid);
-                if (localData) {
-                    console.log('Found local fallback data');
-                    const parsed = JSON.parse(localData);
-                    data = { local: true, full: parsed };
+            if (!fetchSuccess) {
+                try {
+                    // Try to fetch from Archive.org
+                    const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
+                    console.log('Fetching from Archive.org:', archiveUrl);
+
+                    const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                    console.log('Archive.org response status:', response.status);
+
+                    if (response.ok) {
+                        data = await response.json();
+                        fetchSuccess = true;
+                        console.log('Successfully loaded from Archive.org');
+                    } else {
+                        throw new Error('Not found on Archive.org');
+                    }
+                } catch (error) {
+                    console.log('Archive fetch failed:', error.message);
+
+                    // Check local storage fallback
+                    const localData = localStorage.getItem('pending_' + guid);
+                    if (localData) {
+                        console.log('Found local fallback data');
+                        const parsed = JSON.parse(localData);
+                        data = { local: true, full: parsed };
+                    }
                 }
             }
 
@@ -2767,27 +2781,25 @@
                     version: "3.0",
                     data: encryptedBlob
                 };
+                  let hash = null;
+                  if (password) {
+                      hash = await computeDoubleHash(password, encryptedBlob);
+                  }
 
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-archive-meta-subject': 'Emergency Contacts',
-                        'x-archive-meta-description': 'Encrypted emergency contact information',
-                        'x-archive-meta-guid': currentGUID,
-                        'x-archive-meta-identifier': `ikey_${currentGUID}`,
-                        'x-archive-meta-mediatype': 'data',
-                        'x-archive-meta-updated': new Date().toISOString()
-                    },
-                    body: JSON.stringify({ data: archivePayload })
-                });
+                  const response = await fetch(WEBHOOK_URL, {
+                      method: 'PUT',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ guid: currentGUID, data: archivePayload, doublehash: hash })
+                  });
 
-                if (response.status === 403) {
-                    throw new Error('Invalid password - archive denied');
-                }
-                if (!response.ok) {
-                    throw new Error('Archive failed');
-                }
+                  if (response.status === 403) {
+                      throw new Error('Invalid password - server denied');
+                  }
+                  if (!response.ok) {
+                      throw new Error('Server error');
+                  }
 
                 currentData = archivePayload;
                 currentBlob = { ...currentBlob, name, pronouns, criticalInfo, publicInfo, privateInfo, metadata: { ...(currentBlob.metadata || {}), updated: new Date().toISOString() } };
@@ -3095,6 +3107,10 @@
                     version: "3.0",
                     data: encryptedData
                 };
+                let hash = null;
+                if (password) {
+                    hash = await computeDoubleHash(password, encryptedData);
+                }
 
                 currentData = archivePayload;
 
@@ -3104,15 +3120,9 @@
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-archive-meta-subject': 'Emergency Contacts',
-                        'x-archive-meta-description': 'Encrypted emergency contact information',
-                        'x-archive-meta-guid': currentGUID,
-                        'x-archive-meta-identifier': `ikey_${currentGUID}`,
-                        'x-archive-meta-title': `ikey_emergency_${currentGUID}.json`,
-                        'x-archive-meta-mediatype': 'data'
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ data: archivePayload })
+                    body: JSON.stringify({ guid: currentGUID, data: archivePayload, doublehash: hash })
                 });
 
                 if (!response.ok) {
@@ -3410,6 +3420,26 @@
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
+
+        async function computeDoubleHash(password, encrypted) {
+            const first = await sha256Hash(password + encrypted);
+            return await sha256Hash(first);
+        }
+
+        async function fetchFromCache(guid) {
+            try {
+                const resp = await fetch(`${XANO_BASE}/ikey_cache?guid=${encodeURIComponent(guid)}`);
+                if (!resp.ok) return null;
+                const json = await resp.json();
+                const record = Array.isArray(json) ? json[0] : json;
+                return record ? record.data : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+
+
 
         async function createDemoData(guid, key) {
             const fullData = {
