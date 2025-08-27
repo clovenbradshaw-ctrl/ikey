@@ -4026,7 +4026,9 @@
                 const frame = document.getElementById('healthRecordsFrame');
                 const setFrameHeight = () => {
                     const scale = window.getCurrentScale ? window.getCurrentScale() : 1;
-                    frame.style.height = (window.innerHeight / scale) + 'px';
+                    const topBar = document.querySelector('.top-bar');
+                    const offset = topBar ? topBar.offsetHeight : 0;
+                    frame.style.height = ((window.innerHeight - offset) / scale) + 'px';
                 };
                 setFrameHeight();
                 window.addEventListener('resize', setFrameHeight);
@@ -4046,7 +4048,9 @@
             const frame = document.getElementById('resourcesFrame');
             const setFrameHeight = () => {
                 const scale = window.getCurrentScale ? window.getCurrentScale() : 1;
-                frame.style.height = (window.innerHeight / scale) + 'px';
+                const topBar = document.querySelector('.top-bar');
+                const offset = topBar ? topBar.offsetHeight : 0;
+                frame.style.height = ((window.innerHeight - offset) / scale) + 'px';
             };
             setFrameHeight();
             window.addEventListener('resize', setFrameHeight);
