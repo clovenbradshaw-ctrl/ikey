@@ -1734,14 +1734,24 @@
             });
 
             // Attempt to load full data (non-blocking)
+            let cache = null;
+            try {
+                cache = await fetchFromCache(guid);
+            } catch (e) {
+                console.log('Cache fetch failed:', e.message);
+            }
+
             try {
                 const response = await fetch(
                     `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`,
                     { mode: 'cors', cache: 'no-store' }
                 );
                 if (!response.ok) throw new Error('Not found');
-                const data = await response.json();
-                const full = JSON.parse(await decrypt(data.data, key));
+                const archiveData = await response.json();
+                const cacheTime = cache ? new Date(cache.created_at).getTime() : 0;
+                const archiveTime = new Date(archiveData.created_at).getTime();
+                const latest = !cache || archiveTime > cacheTime ? archiveData : cache;
+                const full = JSON.parse(await decrypt(latest.data, key));
                 displayFullInfo({
                     ...full,
                     name: currentName,
@@ -1752,7 +1762,6 @@
                     }
                 });
             } catch (e) {
-                const cache = await fetchFromCache(guid);
                 if (cache) {
                     const full = JSON.parse(await decrypt(cache.data, key));
                     displayFullInfo({
