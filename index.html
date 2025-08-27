@@ -1748,9 +1748,9 @@
                 );
                 if (!response.ok) throw new Error('Not found');
                 const archiveData = await response.json();
-                const cacheTime = cache ? new Date(cache.created_at).getTime() : 0;
-                const archiveTime = new Date(archiveData.created_at).getTime();
-                const latest = !cache || archiveTime > cacheTime ? archiveData : cache;
+                const cacheId = cache ? cache.id : 0;
+                const archiveId = archiveData.id;
+                const latest = !cache || archiveId > cacheId ? archiveData : cache;
                 const full = JSON.parse(await decrypt(latest.data, key));
                 displayFullInfo({
                     ...full,
@@ -2019,11 +2019,11 @@
         async function fetchFromArchive(guid, key) {
             const cache = await fetchFromCache(guid);
             let chosen = null;
-            let chosenTime = 0;
+            let chosenId = 0;
 
             if (cache) {
                 chosen = cache;
-                chosenTime = new Date(cache.created_at).getTime();
+                chosenId = cache.id;
                 console.log('Loaded from Xano cache');
             }
 
@@ -2032,10 +2032,10 @@
                 const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
                 if (response.ok) {
                     const archiveData = await response.json();
-                    const archiveTime = new Date(archiveData.created_at).getTime();
-                    if (!chosen || archiveTime > chosenTime) {
+                    const archiveId = archiveData.id;
+                    if (!chosen || archiveId > chosenId) {
                         chosen = archiveData;
-                        chosenTime = archiveTime;
+                        chosenId = archiveId;
                         console.log('Using newer data from Archive.org');
                     } else {
                         console.log('Xano cache is newer than Archive.org');
@@ -2114,10 +2114,10 @@
 
                 if (response.ok) {
                     const archiveData = await response.json();
-                    const cacheTime = data ? new Date(data.created_at).getTime() : 0;
-                    const archiveTime = new Date(archiveData.created_at).getTime();
+                    const cacheId = data ? data.id : 0;
+                    const archiveId = archiveData.id;
 
-                    if (!data || archiveTime > cacheTime) {
+                    if (!data || archiveId > cacheId) {
                         data = archiveData;
                         console.log('Using newer data from Archive.org');
                     } else {
@@ -3516,7 +3516,7 @@
                 if (!resp.ok) return null;
                 const json = await resp.json();
                 const record = Array.isArray(json)
-                    ? json.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+                    ? json.sort((a, b) => b.id - a.id)[0]
                     : json;
                 return record || null;
             } catch (e) {
@@ -3706,10 +3706,10 @@
                 const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
                 if (response.ok) {
                     const archiveData = await response.json();
-                    const cacheTime = cache ? new Date(cache.created_at).getTime() : 0;
-                    const archiveTime = new Date(archiveData.created_at).getTime();
-                    const latest = !cache || archiveTime > cacheTime ? archiveData : cache;
-                    const source = !cache || archiveTime > cacheTime ? 'Archive.org' : 'Xano backup';
+                    const cacheId = cache ? cache.id : 0;
+                    const archiveId = archiveData.id;
+                    const latest = !cache || archiveId > cacheId ? archiveData : cache;
+                    const source = !cache || archiveId > cacheId ? 'Archive.org' : 'Xano backup';
                     document.getElementById('dev-output').textContent =
                         `Loaded from ${source}\n\nRaw JSON:\n${JSON.stringify(latest, null, 2)}`;
                     return;
