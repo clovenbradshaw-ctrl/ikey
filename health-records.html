@@ -1012,7 +1012,7 @@
         <div class="header" id="documentHeader">
             <h1>🏥 Electronic Health Records</h1>
             <p>Comprehensive Medical Record & Care Documentation</p>
-            <p style="margin-top: 10px;">Last Updated: <span class="last-updated" id="lastUpdated">Never</span></p>
+            <p style="margin-top: 10px;">Last Updated: <span class="last-updated" id="lastUpdated">Never</span><br><small id="hr-source"></small></p>
         </div>
 
         <!-- Identity & Safety Preferences Section -->
@@ -1580,6 +1580,8 @@
                     const payload = await this.crypto.decrypt(archiveData.data, this.sessionPassword);
                     if (payload.healthRecords) {
                         this.loadFormData(payload.healthRecords);
+                        const src = document.getElementById('hr-source');
+                        if (src) src.textContent = 'Source: Archive.org';
                     }
                 } catch (e) {
                     console.warn('No existing health records found', e);
