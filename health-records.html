@@ -2097,17 +2097,17 @@
                     existing.healthRecords = formData;
 
                     const encrypted = await this.crypto.encrypt(existing, password);
-                    const fileContent = JSON.stringify({
+                    const fileContent = {
                         guid: this.guid,
                         encrypted: true,
                         version: '3.0',
                         data: encrypted
-                    });
+                    };
 
                     const response = await fetch(WEBHOOK_URL, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: fileContent
+                        body: JSON.stringify({ data: fileContent })
                     });
                     if (!response.ok) throw new Error('Network response was not ok');
 
