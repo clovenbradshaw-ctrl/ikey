@@ -1769,13 +1769,13 @@
                 this.hasUnsavedChanges = true;
                 this.updateSaveStatus();
 
-                // Auto-save shortly after changes
+                // Auto-save after 15 seconds of inactivity
                 if (this.autoSaveTimeout) clearTimeout(this.autoSaveTimeout);
                 this.autoSaveTimeout = setTimeout(() => {
                     if (this.sessionPassword && !this.isLocked) {
                         this.performSave(this.sessionPassword, true);
                     }
-                }, 1000);
+                }, 15000);
 
                 // Clear existing reminder
                 if (this.saveReminderTimeout) clearTimeout(this.saveReminderTimeout);
@@ -2081,8 +2081,7 @@
                 const formData = this.collectFormData();
                 const timestamp = new Date().toLocaleString();
 
-                // Update last updated
-                document.getElementById('lastUpdated').textContent = timestamp;
+                // Record intended update time in payload
                 formData.lastUpdated = timestamp;
 
                 try {
@@ -2121,6 +2120,10 @@
                         })
                     });
                     if (!response.ok) throw new Error('Network response was not ok');
+
+                    // Update last updated display only after successful save
+                    const lastUpdatedEl = document.getElementById('lastUpdated');
+                    if (lastUpdatedEl) lastUpdatedEl.textContent = timestamp;
 
                     const src = document.getElementById('hr-source');
                     if (src) src.textContent = 'Source: Server cache';
