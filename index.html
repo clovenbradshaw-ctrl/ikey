@@ -992,6 +992,14 @@
             font-size: 0.875rem;
         }
 
+        .notes-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
           body.rtl {
               direction: rtl;
               text-align: right;
@@ -1587,6 +1595,7 @@
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
             <button class="resources-btn" onclick="showResourcesTab()">Resources</button>
+            <button class="notes-btn" onclick="window.location.href='dashboard.html#place-notes'">Notes</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
             <div id="session-timer" class="session-timer">
                 <span id="session-countdown"></span>
@@ -1602,8 +1611,7 @@
         </div>
 
     <div class="floating-links">
-        <a href="privacy.html">Privacy</a>
-        <a href="dashboard.html#place-notes">Notes</a>
+        <a href="#" onclick="showPrivacy()">Privacy</a>
     </div>
 
     <!-- Dev Tools Panel -->
@@ -4063,6 +4071,19 @@
              document.getElementById('healthRecordsTab').style.display = 'none';
              document.getElementById('resourcesTab').style.display = 'none';
          }
+
+        function showPrivacy() {
+            const existing = document.getElementById('privacy-viewer');
+            if (existing) existing.remove();
+            const guid = currentGUID || localStorage.getItem('ikey_current_guid') || '';
+            const overlay = document.createElement('div');
+            overlay.id = 'privacy-viewer';
+            overlay.className = 'qr-overlay';
+            const src = 'privacy.html' + (guid ? `?guid=${encodeURIComponent(guid)}` : '');
+            overlay.innerHTML = `<div class="qr-modal" style="width:90%;height:90%;max-width:1000px;display:flex;flex-direction:column;"><iframe src="${src}" style="flex:1;border:none;border-radius:10px;"></iframe><button class="btn" onclick="document.getElementById('privacy-viewer').remove()">Close</button></div>`;
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+            document.body.appendChild(overlay);
+        }
 
         async function requestLocationAndLoad911() {
             try {
