@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>iKey — Privacy & Security</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121936;
+      --muted: #9fb0d9;
+      --text: #e8eeff;
+      --accent: #6aa8ff;
+      --ok: #4ade80;
+      --warn: #fbbf24;
+      --danger: #fb7185;
+      --code: #0b122b;
+      --border: #263157;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 70% -10%, #16214a 0%, var(--bg) 45%);
+      color: var(--text);
+    }
+    .wrap { max-width: 980px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 2.2rem; margin: 0 0 10px; }
+    h2 { font-size: 1.25rem; margin: 22px 0 10px; }
+    p, li { color: var(--muted); line-height: 1.6; }
+    .hero {
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+    .grid {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(12, 1fr);
+      margin-top: 22px;
+    }
+    .card {
+      grid-column: span 12;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    @media (min-width: 860px) {
+      .card.half { grid-column: span 6; }
+    }
+    .kpi {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 999px; background: #0d1440; border: 1px solid var(--border);
+      color: var(--muted); font-size: .9rem;
+    }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      background: var(--code);
+      color: #d6e4ff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    code { padding: 2px 6px; }
+    pre {
+      padding: 14px; overflow: auto; max-height: 420px; margin: 10px 0 0;
+      white-space: pre-wrap; word-wrap: break-word;
+    }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      background: linear-gradient(180deg, #79b6ff, #4d93ff);
+      border: none; color: #08122c; font-weight: 700;
+      padding: 10px 14px; border-radius: 10px; cursor: pointer;
+      box-shadow: 0 6px 18px rgba(80,140,255,.4);
+    }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .muted { color: var(--muted); }
+    .list-clean { margin: 8px 0 0 0; padding-left: 18px; }
+    .pill { padding: 2px 8px; border-radius: 999px; border:1px solid var(--border); background:#0c1233; color:var(--muted); font-size:.85rem;}
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: rgba(106,168,255,.08);
+      padding: 12px 14px; border-radius: 10px; margin-top: 8px;
+    }
+    .good { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .danger { color: var(--danger); }
+    .small { font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="row">
+        <h1>🔒 iKey Privacy &amp; Security</h1>
+        <span class="kpi">Zero-knowledge by design</span>
+      </div>
+      <p>We built iKey so that even we can’t read your private data. Below, we’ll <strong>run a live request</strong> to our server using <span class="pill">your account’s GUID</span> (no typing needed), and show you exactly what comes back. This is literally all that lives on our servers for your account.</p>
+      <div class="row" style="margin-top:10px;">
+        <button id="runBtn" class="btn">▶ Run Live Demo</button>
+        <span id="guidTag" class="pill">GUID: <em class="muted">detecting…</em></span>
+        <span class="pill">Endpoint: <code>/ikey_cache?guid=…</code></span>
+      </div>
+      <div class="callout small" id="sourceNote">
+        We fetch <code>GET https://xvkq-pq7i-idtl.n7d.xano.io/api:Hj4C6PGO/ikey_cache?guid=&lt;YOUR-GUID&gt;</code>.
+        The response below is returned as-is from the server; long encrypted fields are abridged for readability.
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card half">
+        <h2>✅ What We Store (and Don’t)</h2>
+        <ul class="list-clean">
+          <li>We <strong>do not record</strong> your time of use, device type, or IP address.</li>
+          <li>We <strong>do not track</strong> how often anyone uses iKey — even we don’t know.</li>
+          <li>We intentionally <strong>spam our system with fake data</strong> so no one can count real users.</li>
+          <li>The only thing tied to your account is a random <strong>GUID</strong> that points to your encrypted vault.</li>
+        </ul>
+      </article>
+
+      <article class="card half">
+        <h2>🔐 Three-Layer Protection</h2>
+        <ol class="list-clean">
+          <li><strong>Public layer</strong> — emergency info locked with your QR code’s 256-bit key.</li>
+          <li><strong>Profile layer</strong> — private details locked with your password (PBKDF2-hardened).</li>
+          <li><strong>Vault layer</strong> — sensitive records double-wrapped so they’re unreadable even if the profile layer were compromised.</li>
+        </ol>
+      </article>
+
+      <article class="card">
+        <h2>🛰️ Live Server Response (Abridged)</h2>
+        <p class="muted">This is what our database returns for your GUID. Public items may be human-readable. Private fields are encrypted blocks we <em>cannot</em> understand.</p>
+        <pre id="result">(click “Run Live Demo”)</pre>
+      </article>
+
+      <article class="card half">
+        <h2>⏳ Why Guessing the Key Isn’t Worth It</h2>
+        <p class="muted">
+          Your data is protected with 256-bit keys. On average, a brute-force guess needs <code>2^255</code> tries. Even at an absurd
+          <code id="rateTag">10¹⁵</code> guesses/second, that’s roughly <span class="good" id="yearsTag">calculating…</span> years —
+          far longer than the age of the universe. And because <strong>every user has a different key</strong>, breaking one vault doesn’t help with any other. It’s a terrible return on investment for attackers.
+        </p>
+        <div class="row">
+          <label class="small muted" for="rate">Guess rate (guesses/sec):</label>
+          <input id="rate" type="number" min="1" step="1" value="1000000000000000" style="width:280px; padding:8px; border-radius:8px; border:1px solid var(--border); background:#0d1440; color:var(--text);" />
+          <button class="btn" id="recalc">Recalculate</button>
+        </div>
+      </article>
+
+      <article class="card half">
+        <h2>📜 Plain-English Promise</h2>
+        <ul class="list-clean">
+          <li>We store almost nothing about you.</li>
+          <li>What we do store, we can’t read.</li>
+          <li>Per-user encryption makes targeted attacks pointless.</li>
+        </ul>
+        <p class="muted">That’s <strong>zero-knowledge security</strong>: your privacy isn’t a policy — it’s a property of the design.</p>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    // --- Configuration -------------------------------------------------------
+    const ENDPOINT = "https://xvkq-pq7i-idtl.n7d.xano.io/api:Hj4C6PGO/ikey_cache";
+
+    // Determines where to read the GUID from:
+    // 1) window.IKEY_GUID (set by your app after login)
+    // 2) localStorage.ikey_guid
+    // 3) URL parameter ?guid=...
+    function getGuid() {
+      if (window.IKEY_GUID && typeof window.IKEY_GUID === 'string') return window.IKEY_GUID.trim();
+      try {
+        const ls = localStorage.getItem('ikey_guid');
+        if (ls && ls.trim()) return ls.trim();
+      } catch(_) {}
+      const m = new URLSearchParams(location.search).get('guid');
+      if (m && m.trim()) return m.trim();
+      return null;
+    }
+
+    // Abridge long strings (e.g., ciphertext) for display.
+    function abridgeString(s, keep = 24) {
+      if (typeof s !== 'string') return s;
+      if (s.length <= keep * 2 + 3) return s;
+      return s.slice(0, keep) + "…(" + (s.length - keep*2) + " chars)…" + s.slice(-keep);
+    }
+
+    // Recursively abridge any long values in an object/array.
+    function abridgeDeep(value) {
+      if (value == null) return value;
+      if (typeof value === 'string') return abridgeString(value);
+      if (Array.isArray(value)) return value.map(abridgeDeep);
+      if (typeof value === 'object') {
+        const out = {};
+        for (const [k, v] of Object.entries(value)) {
+          out[k] = abridgeDeep(v);
+        }
+        return out;
+      }
+      return value;
+    }
+
+    // Pretty-print JSON with abridgement.
+    function pretty(obj) {
+      try {
+        return JSON.stringify(abridgeDeep(obj), null, 2);
+      } catch (e) {
+        return String(obj);
+      }
+    }
+
+    // Update the GUID pill UI.
+    function setGuidTag(guid) {
+      const tag = document.getElementById('guidTag');
+      if (!tag) return;
+      tag.innerHTML = "GUID: " + (guid ? ("<code>" + guid + "</code>") : "<em class='muted'>not found</em>");
+    }
+
+    // Fetch the live data from the server and render it.
+    async function runDemo() {
+      const btn = document.getElementById('runBtn');
+      const out = document.getElementById('result');
+      const guid = getGuid();
+
+      setGuidTag(guid);
+      if (!guid) {
+        out.textContent = "We couldn’t detect your GUID automatically.\n\n• If you’re running inside the iKey app, set window.IKEY_GUID or localStorage.ikey_guid.\n• Or open this page with ?guid=YOUR-GUID.\n\nOnce available, reload and the demo will run.";
+        return;
+      }
+
+      const url = ENDPOINT + "?guid=" + encodeURIComponent(guid);
+      btn.disabled = true; btn.textContent = "Fetching…";
+      out.textContent = "GET " + url + "\n\n(Waiting for server…)";
+
+      try {
+        const res = await fetch(url, { method: "GET", mode: "cors", cache: "no-store" });
+        const text = await res.text();
+        let payload = text;
+
+        // attempt to parse JSON if possible
+        try { payload = JSON.parse(text); } catch (_) {}
+
+        out.textContent =
+`// Raw content from our server for your GUID.
+// This is exactly what lives in the database.
+// Note: long encrypted fields are abridged purely for readability.
+
+` + pretty(payload);
+
+        // Clarify for the reader (non-technical note)
+        const sourceNote = document.getElementById('sourceNote');
+        if (sourceNote) {
+          sourceNote.innerHTML = `
+            <strong>Important:</strong> You’re seeing the actual data our server stores for your account.
+            We don’t store access times, device info, or IP addresses — and we cannot interpret the encrypted parts.
+          `;
+        }
+      } catch (err) {
+        out.textContent = "Request failed.\n\n" + (err && err.message ? err.message : String(err));
+      } finally {
+        btn.disabled = false; btn.textContent = "▶ Run Live Demo";
+      }
+    }
+
+    // Brute-force time estimator (high-level, for lay audience).
+    // Average guesses needed: 2^255 for a 256-bit uniformly random key.
+    // years = (2^255) / (rate guesses/sec) / (seconds per year)
+    function updateBruteforceEstimate() {
+      const rateEl = document.getElementById('rate');
+      const rateTag = document.getElementById('rateTag');
+      const yearsTag = document.getElementById('yearsTag');
+      const rate = Math.max(1, Number(rateEl.value || 1));
+      rateTag.textContent = formatSci(rate);
+
+      // Use BigInt math for 2^255 where possible, fall back to floats
+      const twoPow255 = BigInt(1) << BigInt(255); // 2^255
+      const secondsPerYear = 60n * 60n * 24n * 365n; // 31,536,000
+      // Convert rate to BigInt cautiously (cap very large numbers)
+      const rateBig = BigInt(Math.min(rate, Number.MAX_SAFE_INTEGER));
+      const yearsBig = twoPow255 / (rateBig * secondsPerYear);
+      yearsTag.textContent = formatSci(Number(yearsBig)) + " years (avg)";
+
+      function formatSci(num) {
+        if (!isFinite(num) || num <= 0) return "—";
+        const e = Math.floor(Math.log10(num));
+        const m = num / Math.pow(10, e);
+        if (e < 6) return num.toLocaleString();
+        return m.toFixed(2) + "×10^" + e;
+      }
+    }
+
+    // Wire up UI
+    document.getElementById('runBtn').addEventListener('click', runDemo);
+    document.getElementById('recalc').addEventListener('click', updateBruteforceEstimate);
+
+    // Auto-run: detect GUID and fetch on load (no typing).
+    window.addEventListener('DOMContentLoaded', () => {
+      setGuidTag(getGuid());
+      updateBruteforceEstimate();
+      // Auto-run if we have a GUID ready:
+      if (getGuid()) runDemo();
+    });
+  </script>
+</body>
+</html>
