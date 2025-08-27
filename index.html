@@ -2272,8 +2272,8 @@
             html += `
                         <div class="emergency-card">
                             <h3>🚨 Emergency Services</h3>
-                            <p style="margin-bottom:8px;">Double-click to open</p>
-                            <button class="access-911" ondblclick="confirmEmergencyAccess()" title="Double-click to activate">
+                            <p style="margin-bottom:8px;">Tap to open</p>
+                            <button class="access-911" onclick="confirmEmergencyAccess()" title="Tap to activate">
                                 Access Emergency Services
                             </button>
                         </div>
@@ -2485,8 +2485,8 @@
                         ], 'showHealthRecordsTab()', 'vault')}
                         <div class="emergency-card">
                             <h3>🚨 Emergency Services</h3>
-                            <p style="margin-bottom:8px;">Double-click to open</p>
-                            <button class="access-911" ondblclick="confirmEmergencyAccess()" title="Double-click to activate">
+                            <p style="margin-bottom:8px;">Tap to open</p>
+                            <button class="access-911" onclick="confirmEmergencyAccess()" title="Tap to activate">
                                 Access Emergency Services
                             </button>
                         </div>
@@ -3826,29 +3826,31 @@
              document.getElementById('healthRecordsTab').style.display = 'none';
          }
 
-         async function requestLocationAndLoad911() {
-             try {
-                 // Request location permission
-                 await navigator.geolocation.getCurrentPosition(
-                     (position) => {
-                         // Permission granted
-                         location911Enabled = true;
-                         document.getElementById('location-permission-prompt').style.display = 'none';
-                         document.getElementById('location-content').style.display = 'block';
-
-                         // Load the text911.html in iframe
-                         const iframe = document.getElementById('text911Frame');
-                         iframe.src = 'text911.html';
-                     },
-                     (error) => {
-                         alert('Location access is required for 911 emergency features. Please enable location in your browser settings.');
-                     },
-                     { enableHighAccuracy: true }
-                 );
-             } catch (error) {
-                 alert('Unable to access location. Please check your browser settings.');
-             }
-         }
+        async function requestLocationAndLoad911() {
+            try {
+                document.getElementById('location-permission-prompt').style.display = 'none';
+                document.getElementById('location-loading').style.display = 'block';
+                await navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        location911Enabled = true;
+                        document.getElementById('location-loading').style.display = 'none';
+                        document.getElementById('location-content').style.display = 'block';
+                        const iframe = document.getElementById('text911Frame');
+                        iframe.src = 'text911.html';
+                    },
+                    (error) => {
+                        document.getElementById('location-loading').style.display = 'none';
+                        document.getElementById('location-permission-prompt').style.display = 'block';
+                        alert('Location access is required for 911 emergency features. Please enable location in your browser settings.');
+                    },
+                    { enableHighAccuracy: true }
+                );
+            } catch (error) {
+                document.getElementById('location-loading').style.display = 'none';
+                document.getElementById('location-permission-prompt').style.display = 'block';
+                alert('Unable to access location. Please check your browser settings.');
+            }
+        }
 
          // Add click handler for logo to return to QR
          document.addEventListener('DOMContentLoaded', function() {
@@ -3915,6 +3917,10 @@
                     <button class="btn" onclick="requestLocationAndLoad911()">
                         <span>Enable Location for Emergency Use</span>
                     </button>
+                </div>
+                <div id="location-loading" class="loading-screen" style="display:none;">
+                    <div class="spinner"></div>
+                    <p>Getting your location...</p>
                 </div>
                 <div id="location-content" style="display:none;">
                     <iframe id="text911Frame" style="border:none;width:100%;height:1px;" scrolling="no"></iframe>
