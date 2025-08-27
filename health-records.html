@@ -2097,17 +2097,20 @@
                     existing.healthRecords = formData;
 
                     const encrypted = await this.crypto.encrypt(existing, password);
-                    const fileContent = {
-                        guid: this.guid,
+                    const archivePayload = {
                         encrypted: true,
                         version: '3.0',
                         data: encrypted
                     };
+                    let hash = null;
+                    if (password) {
+                        hash = await computeDoubleHash(password, encrypted.data);
+                    }
 
                     const response = await fetch(WEBHOOK_URL, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: fileContent })
+                        body: JSON.stringify({ guid: this.guid, data: archivePayload, doublehash: hash })
                     });
                     if (!response.ok) throw new Error('Network response was not ok');
 
@@ -3310,7 +3313,20 @@
                 }
             };
         }
-        
+
+        async function sha256Hash(text) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function computeDoubleHash(password, encrypted) {
+            const first = await sha256Hash(password + encrypted);
+            return await sha256Hash(first);
+        }
+
         // Adjust nav tabs position based on the security bar height
         function adjustNavTabsPosition() {
             const securityBar = document.querySelector('.security-bar');
