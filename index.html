@@ -1572,6 +1572,7 @@
         const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
         const BEACON_TEXT = 'SQR:1';
         const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
+        const XANO_BASE = 'https://xvkq-pq7i-idtl.n7d.xano.io/api:Hj4C6PGO';
         const MANUAL_AUTH_OVERRIDE = "YOUR_MANUAL_AUTH_KEY_HERE";
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
 
@@ -2029,29 +2030,42 @@
             }
 
             try {
-                // Try to fetch from Archive.org
-                const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
-                console.log('Fetching from Archive.org:', archiveUrl);
-
-                const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
-                console.log('Archive.org response status:', response.status);
-
-                if (response.ok) {
-                    data = await response.json();
+                const cache = await fetchFromCache(guid);
+                if (cache) {
+                    data = cache;
                     fetchSuccess = true;
-                    console.log('Successfully loaded from Archive.org');
-                } else {
-                    throw new Error('Not found on Archive.org');
+                    console.log('Loaded from Xano cache');
                 }
-            } catch (error) {
-                console.log('Archive fetch failed:', error.message);
+            } catch (e) {
+                console.log('Cache fetch failed:', e.message);
+            }
 
-                // Check local storage fallback
-                const localData = localStorage.getItem('pending_' + guid);
-                if (localData) {
-                    console.log('Found local fallback data');
-                    const parsed = JSON.parse(localData);
-                    data = { local: true, full: parsed };
+            if (!fetchSuccess) {
+                try {
+                    // Try to fetch from Archive.org
+                    const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
+                    console.log('Fetching from Archive.org:', archiveUrl);
+
+                    const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                    console.log('Archive.org response status:', response.status);
+
+                    if (response.ok) {
+                        data = await response.json();
+                        fetchSuccess = true;
+                        console.log('Successfully loaded from Archive.org');
+                    } else {
+                        throw new Error('Not found on Archive.org');
+                    }
+                } catch (error) {
+                    console.log('Archive fetch failed:', error.message);
+
+                    // Check local storage fallback
+                    const localData = localStorage.getItem('pending_' + guid);
+                    if (localData) {
+                        console.log('Found local fallback data');
+                        const parsed = JSON.parse(localData);
+                        data = { local: true, full: parsed };
+                    }
                 }
             }
 
@@ -2767,6 +2781,18 @@
                     version: "3.0",
                     data: encryptedBlob
                 };
+                let hash = null;
+                if (password) {
+                    hash = await computeDoubleHash(password, encryptedBlob);
+                    const valid = await validateDoubleHash(currentGUID, hash);
+                    if (!valid) {
+                        throw new Error('Invalid password - hash mismatch');
+                    }
+                }
+                await saveToCache(currentGUID, archivePayload);
+                if (hash) {
+                    await saveDoubleHash(currentGUID, hash);
+                }
 
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'PUT',
@@ -3095,6 +3121,18 @@
                     version: "3.0",
                     data: encryptedData
                 };
+                let hash = null;
+                if (password) {
+                    hash = await computeDoubleHash(password, encryptedData);
+                    const valid = await validateDoubleHash(currentGUID, hash);
+                    if (!valid) {
+                        throw new Error('Invalid password - hash mismatch');
+                    }
+                }
+                await saveToCache(currentGUID, archivePayload);
+                if (hash) {
+                    await saveDoubleHash(currentGUID, hash);
+                }
 
                 currentData = archivePayload;
 
@@ -3409,6 +3447,62 @@
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function computeDoubleHash(password, encrypted) {
+            const first = await sha256Hash(password + encrypted);
+            return await sha256Hash(first);
+        }
+
+        async function fetchFromCache(guid) {
+            try {
+                const resp = await fetch(`${XANO_BASE}/ikey_cache?guid=${encodeURIComponent(guid)}`);
+                if (!resp.ok) return null;
+                const json = await resp.json();
+                const record = Array.isArray(json) ? json[0] : json;
+                return record ? record.data : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function saveToCache(guid, data) {
+            try {
+                await fetch(`${XANO_BASE}/ikey_cache`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ guid, data })
+                });
+            } catch (e) {
+                console.log('Cache save failed:', e.message);
+            }
+        }
+
+        async function validateDoubleHash(guid, hash) {
+            try {
+                const resp = await fetch(`${XANO_BASE}/guid_double_hash?guid=${encodeURIComponent(guid)}`);
+                if (!resp.ok) return true;
+                const json = await resp.json();
+                const stored = Array.isArray(json) ? json[0]?.data : json?.data;
+                if (stored) {
+                    return stored === hash;
+                }
+                return true;
+            } catch (e) {
+                return true;
+            }
+        }
+
+        async function saveDoubleHash(guid, hash) {
+            try {
+                await fetch(`${XANO_BASE}/guid_double_hash`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ guid, data: hash })
+                });
+            } catch (e) {
+                console.log('Double hash save failed:', e.message);
+            }
         }
 
         async function createDemoData(guid, key) {
