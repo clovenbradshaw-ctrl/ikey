@@ -993,11 +993,44 @@
         }
 
         .notes-btn {
-            background: none;
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #667eea;
+            color: #ffffff;
             border: none;
-            color: #667eea;
+            border-radius: 8px;
+            padding: 10px 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
             cursor: pointer;
             font-size: 0.875rem;
+            z-index: 1000;
+        }
+
+        .notes-modal {
+            display: none;
+            position: fixed;
+            z-index: 1100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .notes-modal-content {
+            background: white;
+            margin: 80px auto;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .notes-modal-close {
+            float: right;
+            font-size: 1.25rem;
+            cursor: pointer;
         }
 
           body.rtl {
@@ -1590,12 +1623,40 @@
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
             <button class="resources-btn" onclick="showResourcesTab()">Resources</button>
-            <button class="notes-btn" onclick="window.location.href='dashboard.html#place-notes'">Notes</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
             <div id="session-timer" class="session-timer">
                 <span id="session-countdown"></span>
             </div>
             <button class="logout-btn" style="display:none;" onclick="logoutOwner()">Logout</button>
+        </div>
+    </div>
+    <button class="notes-btn" onclick="openNotesModal()">Notes</button>
+
+    <div id="notesModal" class="notes-modal">
+        <div class="notes-modal-content">
+            <span class="notes-modal-close" onclick="closeNotesModal()">&times;</span>
+            <h2>Add a Place Note</h2>
+            <div style="margin:.5rem 0;">
+                <label style="margin-right:1rem;">
+                    <input type="radio" name="placeMode" value="here" checked>
+                    Use my current location
+                </label>
+                <label>
+                    <input type="radio" name="placeMode" value="manual">
+                    Enter coordinates
+                </label>
+            </div>
+            <div id="manualCoords" style="display:none; gap:.5rem; margin:.5rem 0;">
+                <input id="latInput" type="number" step="any" placeholder="Latitude (e.g., 37.781122)" style="width:48%;">
+                <input id="lngInput" type="number" step="any" placeholder="Longitude (e.g., -122.411009)" style="width:48%;">
+            </div>
+            <input id="titleInput" type="text" placeholder="Title (e.g., Evening sleep spot)" style="width:100%; padding:.5rem; margin:.5rem 0;">
+            <textarea id="noteInput" rows="3" placeholder="Details (e.g., where to sit, who to ask, landmarks)" style="width:100%; padding:.5rem;"></textarea>
+            <button id="savePlaceBtn" style="margin-top:.5rem;">Save Place Note</button>
+            <section style="margin-top:1rem;">
+                <h2>My Place Notes</h2>
+                <div id="placeList"></div>
+            </section>
         </div>
     </div>
     <div id="qrTab">
@@ -4189,6 +4250,26 @@
         </div>
         </div>
     </div>
+    <script>
+        function openNotesModal() {
+            document.getElementById('notesModal').style.display = 'block';
+        }
+        function closeNotesModal() {
+            document.getElementById('notesModal').style.display = 'none';
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const saveBtn = document.getElementById('savePlaceBtn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', closeNotesModal);
+            }
+            window.addEventListener('click', function (event) {
+                const modal = document.getElementById('notesModal');
+                if (event.target === modal) {
+                    closeNotesModal();
+                }
+            });
+        });
+    </script>
     <script src="session.js"></script>
 </body>
 </html>
