@@ -2122,6 +2122,9 @@
                     });
                     if (!response.ok) throw new Error('Network response was not ok');
 
+                    const src = document.getElementById('hr-source');
+                    if (src) src.textContent = 'Source: Server cache';
+
                     // Update save status
                     this.hasUnsavedChanges = false;
                     this.lastSaveTime = new Date();
