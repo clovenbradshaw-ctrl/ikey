@@ -4026,7 +4026,8 @@
                 document.getElementById('resourcesTab').style.display = 'none';
                 const frame = document.getElementById('healthRecordsFrame');
                 const setFrameHeight = () => {
-                    frame.style.height = window.innerHeight + 'px';
+                    const scale = window.getCurrentScale ? window.getCurrentScale() : 1;
+                    frame.style.height = (window.innerHeight / scale) + 'px';
                 };
                 setFrameHeight();
                 window.addEventListener('resize', setFrameHeight);
@@ -4045,7 +4046,8 @@
             document.getElementById('text911Tab').style.display = 'none';
             const frame = document.getElementById('resourcesFrame');
             const setFrameHeight = () => {
-                frame.style.height = window.innerHeight + 'px';
+                const scale = window.getCurrentScale ? window.getCurrentScale() : 1;
+                frame.style.height = (window.innerHeight / scale) + 'px';
             };
             setFrameHeight();
             window.addEventListener('resize', setFrameHeight);
