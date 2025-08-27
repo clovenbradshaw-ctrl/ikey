@@ -1734,10 +1734,27 @@
             });
 
             // Attempt to load full data (non-blocking)
-            fetch(`${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`, { mode: 'cors', cache: 'no-store' })
-                .then(r => r.json())
-                .then(async data => {
-                    const full = JSON.parse(await decrypt(data.data, key));
+            try {
+                const response = await fetch(
+                    `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`,
+                    { mode: 'cors', cache: 'no-store' }
+                );
+                if (!response.ok) throw new Error('Not found');
+                const data = await response.json();
+                const full = JSON.parse(await decrypt(data.data, key));
+                displayFullInfo({
+                    ...full,
+                    name: currentName,
+                    publicInfo: {
+                        ...full.publicInfo,
+                        bloodType: currentBloodType || full.publicInfo?.bloodType,
+                        allergies: currentAllergies || full.publicInfo?.allergies
+                    }
+                });
+            } catch (e) {
+                const cache = await fetchFromCache(guid);
+                if (cache) {
+                    const full = JSON.parse(await decrypt(cache.data, key));
                     displayFullInfo({
                         ...full,
                         name: currentName,
@@ -1747,10 +1764,10 @@
                             allergies: currentAllergies || full.publicInfo?.allergies
                         }
                     });
-                })
-                .catch(() => {
+                } else {
                     addOfflineNotice();
-                });
+                }
+            }
         }
 
         function displayBasicInfo({ name, bloodType, allergies }) {
@@ -1891,34 +1908,43 @@
             await displayEmergencyInfo(currentBlob);
 
             try {
-                const response = await fetch(`${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`, { mode: 'cors', cache: 'no-store' });
-                if (response.ok) {
-                    const archiveData = await response.json();
-                    const decrypted = await decrypt(archiveData.editable, key);
-                    const editableFields = JSON.parse(decrypted);
-                    if (editableFields.publicInfo) {
-                        const pub = editableFields.publicInfo;
-                        if (pub.bloodType) displayData.bloodType = displayData.bloodType || pub.bloodType;
-                        if (pub.allergies) displayData.allergies = displayData.allergies || pub.allergies;
-                        if (pub.medications) displayData.medications = displayData.medications || pub.medications;
-                        if (pub.contact) {
-                            displayData.contact = pub.contact;
-                        }
-                        if (pub.secondaryContact) {
-                            displayData.secondaryContact = pub.secondaryContact;
-                        }
-                    } else {
-                        if (editableFields.bloodType) displayData.bloodType = displayData.bloodType || editableFields.bloodType;
-                        if (editableFields.allergies) displayData.allergies = displayData.allergies || editableFields.allergies;
-                        if (editableFields.contactName || editableFields.contactPhone) {
-                            displayData.contact = displayData.contact || {};
-                            if (editableFields.contactName) displayData.contact.name = editableFields.contactName;
-                            if (editableFields.contactPhone) displayData.contact.phone = editableFields.contactPhone;
-                        }
-                    }
-                    currentBlob.publicInfo = displayData;
-                    await displayEmergencyInfo(currentBlob);
+                let archiveData;
+                try {
+                    const response = await fetch(
+                        `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`,
+                        { mode: 'cors', cache: 'no-store' }
+                    );
+                    if (!response.ok) throw new Error('Not found');
+                    archiveData = await response.json();
+                } catch (err) {
+                    const cache = await fetchFromCache(guid);
+                    if (!cache) throw err;
+                    archiveData = cache;
                 }
+                const decrypted = await decrypt(archiveData.editable, key);
+                const editableFields = JSON.parse(decrypted);
+                if (editableFields.publicInfo) {
+                    const pub = editableFields.publicInfo;
+                    if (pub.bloodType) displayData.bloodType = displayData.bloodType || pub.bloodType;
+                    if (pub.allergies) displayData.allergies = displayData.allergies || pub.allergies;
+                    if (pub.medications) displayData.medications = displayData.medications || pub.medications;
+                    if (pub.contact) {
+                        displayData.contact = pub.contact;
+                    }
+                    if (pub.secondaryContact) {
+                        displayData.secondaryContact = pub.secondaryContact;
+                    }
+                } else {
+                    if (editableFields.bloodType) displayData.bloodType = displayData.bloodType || editableFields.bloodType;
+                    if (editableFields.allergies) displayData.allergies = displayData.allergies || editableFields.allergies;
+                    if (editableFields.contactName || editableFields.contactPhone) {
+                        displayData.contact = displayData.contact || {};
+                        if (editableFields.contactName) displayData.contact.name = editableFields.contactName;
+                        if (editableFields.contactPhone) displayData.contact.phone = editableFields.contactPhone;
+                    }
+                }
+                currentBlob.publicInfo = displayData;
+                await displayEmergencyInfo(currentBlob);
             } catch (e) {
                 console.log('Could not load editable fields', e);
             }
@@ -1983,14 +2009,26 @@
 
         async function fetchFromArchive(guid, key) {
             const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
-            const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
-            if (!response.ok) throw new Error('Not found');
-            const data = await response.json();
-            const decrypted = await decrypt(data.data, key);
-            const fullData = JSON.parse(decrypted);
-            currentData = data;
-            currentBlob = { ...fullData };
-            return currentBlob;
+            try {
+                const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                if (!response.ok) throw new Error('Not found');
+                const data = await response.json();
+                const decrypted = await decrypt(data.data, key);
+                const fullData = JSON.parse(decrypted);
+                currentData = data;
+                currentBlob = { ...fullData };
+                return currentBlob;
+            } catch (e) {
+                const cache = await fetchFromCache(guid);
+                if (cache) {
+                    const decrypted = await decrypt(cache.data, key);
+                    const fullData = JSON.parse(decrypted);
+                    currentData = cache;
+                    currentBlob = { ...fullData };
+                    return currentBlob;
+                }
+                throw e;
+            }
         }
         
         // Show loading screen
@@ -2030,35 +2068,34 @@
             }
 
             try {
-                const cache = await fetchFromCache(guid);
-                if (cache) {
-                    data = cache;
+                // Try to fetch from Archive.org first
+                const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
+                console.log('Fetching from Archive.org:', archiveUrl);
+
+                const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                console.log('Archive.org response status:', response.status);
+
+                if (response.ok) {
+                    data = await response.json();
                     fetchSuccess = true;
-                    console.log('Loaded from Xano cache');
+                    console.log('Successfully loaded from Archive.org');
+                } else {
+                    throw new Error('Not found on Archive.org');
                 }
-            } catch (e) {
-                console.log('Cache fetch failed:', e.message);
-            }
-
-            if (!fetchSuccess) {
+            } catch (error) {
+                console.log('Archive fetch failed:', error.message);
                 try {
-                    // Try to fetch from Archive.org
-                    const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
-                    console.log('Fetching from Archive.org:', archiveUrl);
-
-                    const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
-                    console.log('Archive.org response status:', response.status);
-
-                    if (response.ok) {
-                        data = await response.json();
+                    const cache = await fetchFromCache(guid);
+                    if (cache) {
+                        data = cache;
                         fetchSuccess = true;
-                        console.log('Successfully loaded from Archive.org');
-                    } else {
-                        throw new Error('Not found on Archive.org');
+                        console.log('Loaded from Xano cache');
                     }
-                } catch (error) {
-                    console.log('Archive fetch failed:', error.message);
+                } catch (e) {
+                    console.log('Cache fetch failed:', e.message);
+                }
 
+                if (!fetchSuccess) {
                     // Check local storage fallback
                     const localData = localStorage.getItem('pending_' + guid);
                     if (localData) {
@@ -3622,15 +3659,23 @@
                         `Encrypted: ${data.encrypted}\n` +
                         `Version: ${data.version}\n\n` +
                         `Raw JSON:\n${JSON.stringify(data, null, 2)}`;
-                } else {
-                    document.getElementById('dev-output').textContent = 
-                        `Not found on Archive.org (${response.status})\n\n` +
-                        `This GUID may not have been uploaded yet.`;
+                    return;
                 }
+                throw new Error(`Archive response ${response.status}`);
             } catch (error) {
-                document.getElementById('dev-output').textContent = 
-                    `Fetch error: ${error.message}\n\n` +
-                    `This could be a CORS issue or network problem.`;
+                try {
+                    const cache = await fetchFromCache(guid);
+                    if (cache) {
+                        document.getElementById('dev-output').textContent =
+                            `Loaded from Xano backup\n\nRaw JSON:\n${JSON.stringify(cache, null, 2)}`;
+                    } else {
+                        document.getElementById('dev-output').textContent =
+                            `Not found on Archive.org or Xano backup.`;
+                    }
+                } catch (e) {
+                    document.getElementById('dev-output').textContent =
+                        `Fetch error: ${e.message}\n\nThis could be a CORS issue or network problem.`;
+                }
             }
         }
         
