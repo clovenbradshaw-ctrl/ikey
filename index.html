@@ -2493,10 +2493,6 @@
                     </div>
 
                     <div class="quick-actions">
-                        <button onclick="editSection('emergency')" class="action-btn primary">
-                            <span>Add Missing Info</span>
-                            <span class="badge">+${totalFields - filledFields}</span>
-                        </button>
                         <button onclick="downloadQRFixed()" class="action-btn">Download QR</button>
                         <button onclick="shareQR()" class="action-btn">Share</button>
                     </div>
@@ -3557,10 +3553,6 @@
             }
         }
 
-        function editSection(section) {
-            showUpdateForm(ownerPassword);
-        }
-        
         function testQR() {
             if (window.currentQRUrl) {
                 window.open(window.currentQRUrl, '_blank');
