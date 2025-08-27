@@ -3128,9 +3128,10 @@
                         t: created
                     })
                 );
-
-                const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${embedded}`;
-                window.location.hash = `v2:${currentGUID}:${currentKey}:${embedded}`;
+                const safeName = (formData.name || '').replace(/:/g, '-');
+                const safeBlood = (formData.bloodType || '').replace(/:/g, '-');
+                const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${embedded}:Name-${safeName}:Blood-${safeBlood}`;
+                window.location.hash = `v2:${currentGUID}:${currentKey}:${embedded}:Name-${safeName}:Blood-${safeBlood}`;
 
                 // Generate QR code
                 const qrContainer = document.getElementById('qrcode');
@@ -3443,13 +3444,16 @@
             const canvas = document.querySelector('#qrcode canvas, #owner-qr canvas');
             if (!canvas) {
                 const tempDiv = document.createElement('div');
+                const fallbackEmbedded = btoa(JSON.stringify({
+                    n: currentBlob.name,
+                    b: currentBlob.publicInfo?.bloodType,
+                    a: currentBlob.publicInfo?.allergies,
+                    t: currentBlob.created
+                }));
+                const safeName = (currentBlob.name || '').replace(/:/g, '-');
+                const safeBlood = (currentBlob.publicInfo?.bloodType || '').replace(/:/g, '-');
                 new QRCode(tempDiv, {
-                    text: window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${btoa(JSON.stringify({
-                        n: currentBlob.name,
-                        b: currentBlob.publicInfo?.bloodType,
-                        a: currentBlob.publicInfo?.allergies,
-                        t: currentBlob.created
-                    }))}`,
+                    text: window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${fallbackEmbedded}:Name-${safeName}:Blood-${safeBlood}`,
                     width: 256,
                     height: 256
                 });
@@ -3471,7 +3475,9 @@
         }
 
         function shareQR() {
-            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
+            const safeName = (currentBlob?.name || '').replace(/:/g, '-');
+            const safeBlood = (currentBlob?.publicInfo?.bloodType || '').replace(/:/g, '-');
+            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:Name-${safeName}:Blood-${safeBlood}`;
             if (navigator.share && url) {
                 navigator.share({ title: 'iKey', url }).catch(() => {});
             } else if (url) {
