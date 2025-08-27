@@ -216,8 +216,6 @@ class SessionManager {
             status.textContent = 'Saved';
             setTimeout(() => { status.textContent = ''; }, 2000);
         }
-        const updated = document.getElementById('last-updated-time');
-        if (updated) updated.textContent = new Date().toLocaleString();
     }
 
     saveToArchive(data) {
