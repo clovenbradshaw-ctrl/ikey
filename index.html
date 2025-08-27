@@ -2779,7 +2779,7 @@
                         'x-archive-meta-mediatype': 'data',
                         'x-archive-meta-updated': new Date().toISOString()
                     },
-                    body: JSON.stringify(archivePayload)
+                    body: JSON.stringify({ data: archivePayload })
                 });
 
                 if (response.status === 403) {
@@ -3112,7 +3112,7 @@
                         'x-archive-meta-title': `ikey_emergency_${currentGUID}.json`,
                         'x-archive-meta-mediatype': 'data'
                     },
-                    body: JSON.stringify(archivePayload)
+                    body: JSON.stringify({ data: archivePayload })
                 });
 
                 if (!response.ok) {
