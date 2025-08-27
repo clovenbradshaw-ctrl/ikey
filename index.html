@@ -3471,7 +3471,9 @@
                 );
                 if (!resp.ok) return null;
                 const json = await resp.json();
-                const record = Array.isArray(json) ? json[0] : json;
+                const record = Array.isArray(json)
+                    ? json.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+                    : json;
                 return record || null;
             } catch (e) {
                 return null;
