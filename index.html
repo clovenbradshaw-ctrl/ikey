@@ -425,7 +425,7 @@
             overflow: hidden;
         }
 
-        .progress-bar {
+        .home-progress__bar {
             height: 100%;
             width: 0;
             background: linear-gradient(90deg, #667eea, #764ba2);
@@ -602,10 +602,10 @@
             color: #856404;
             border: 2px solid #ffc107;
             font-weight: 600;
-            animation: pulse 2s infinite;
+            animation: home-status-pulse 2s infinite;
         }
 
-        @keyframes pulse {
+        @keyframes home-status-pulse {
             0% { opacity: 1; }
             50% { opacity: 0.8; }
             100% { opacity: 1; }
@@ -731,7 +731,7 @@
             font-style: italic;
         }
 
-        .progress-bar {
+        .home-progress__bar {
             height: 6px;
             background: #e9ecef;
             margin: 0 30px 20px;
@@ -1035,7 +1035,7 @@
             border-radius: 2px;
             position: relative;
         }
-        .mini-progress .progress-bar {
+        .mini-progress .home-progress__bar {
             height: 100%;
             background: var(--primary);
             border-radius: 2px;
@@ -1248,9 +1248,9 @@
             position: relative;
         }
         .session-timer.pulse {
-            animation: pulse 1s infinite;
+            animation: home-timer-pulse 1s infinite;
         }
-        @keyframes pulse {
+        @keyframes home-timer-pulse {
             0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
@@ -1557,13 +1557,9 @@
                     <p>Getting your location...</p>
                 </div>
                 <div id="location-content" style="display:none;">
-                    <iframe id="text911Frame" style="border:none;width:100%;height:1px;" scrolling="no"></iframe>
+                    <iframe id="text911Frame" style="border:none;width:100%;height:600px;" scrolling="no"></iframe>
                 </div>
             </div>
-        <div id="location-content" style="display:none;">
-            <iframe id="text911Frame" style="border:none;width:100%;height:600px;"></iframe>
-        </div>
-        </div>
         </div>
     </div>
     <!-- Notes modal script removed -->

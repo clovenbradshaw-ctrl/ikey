@@ -150,15 +150,15 @@
             background: #dc2626;
             color: white;
             font-weight: 600;
-            animation: pulse 2s infinite;
+            animation: ehr-pulse 2s infinite;
         }
-        
+
         .btn-save.saved {
             background: #22c55e;
             animation: none;
         }
-        
-        @keyframes pulse {
+
+        @keyframes ehr-pulse {
             0% { opacity: 1; }
             50% { opacity: 0.8; }
             100% { opacity: 1; }
@@ -830,9 +830,9 @@
             position: relative;
         }
         .session-timer.pulse {
-            animation: pulse 1s infinite;
+            animation: ehr-timer-pulse 1s infinite;
         }
-        @keyframes pulse {
+        @keyframes ehr-timer-pulse {
             0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
