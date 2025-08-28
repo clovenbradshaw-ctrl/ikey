@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Personal QR Setup</title>
   <script src="router.js"></script>
+  <script src="vendor/qrcode.min.js"></script>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
@@ -57,7 +58,51 @@
   </div>
   <div class="container">
     <h1>Personal QR Setup</h1>
-    <p>Personal QR code creation is coming soon.</p>
+    <p>Create and save your personal iKey QR code.</p>
+    <button id="generate">Generate QR</button>
+    <div id="result" style="display:none;margin-top:20px;">
+      <div id="qrcode" style="margin:20px auto;"></div>
+      <p><strong>GUID:</strong> <span id="guid"></span></p>
+      <p><strong>Key:</strong> <span id="key"></span></p>
+      <button id="download">Download QR</button>
+    </div>
   </div>
+  <script>
+    const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
+
+    function generateKey() {
+      const buf = crypto.getRandomValues(new Uint8Array(32));
+      let binary = '';
+      buf.forEach(b => binary += String.fromCharCode(b));
+      return btoa(binary);
+    }
+
+    document.getElementById('generate').addEventListener('click', () => {
+      const guid = crypto.randomUUID();
+      const key = generateKey();
+      const url = `${VIEWER_URL}#v2:${guid}:${key}`;
+      const qrDiv = document.getElementById('qrcode');
+      qrDiv.innerHTML = '';
+      new QRCode(qrDiv, {
+        text: url,
+        width: 256,
+        height: 256,
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      document.getElementById('guid').textContent = guid;
+      document.getElementById('key').textContent = key;
+      document.getElementById('result').style.display = 'block';
+    });
+
+    document.getElementById('download').addEventListener('click', () => {
+      const canvas = document.querySelector('#qrcode canvas');
+      if (canvas) {
+        const link = document.createElement('a');
+        link.download = 'personal-qr.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      }
+    });
+  </script>
 </body>
 </html>
