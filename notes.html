@@ -108,7 +108,7 @@
                     <label class="form-label">Details</label>
                     <textarea id="noteDetails" class="form-textarea" placeholder="Add important details"></textarea>
                 </div>
-                <button class="btn-primary" style="width:100%;" onclick="saveNote()" id="saveNoteBtn">Save Note</button>
+                <button class="btn-primary" style="width:100%;" onclick="saveNote().catch(console.error)" id="saveNoteBtn">Save Note</button>
             </div>
             <div class="notes-section">
                 <div class="section-header">
@@ -139,7 +139,7 @@
         let currentFilter = 'all';
         let editingId = null;
 
-        document.addEventListener('DOMContentLoaded', loadNotes);
+        document.addEventListener('DOMContentLoaded', () => { loadNotes().catch(console.error); });
 
         async function loadNotes(){
             const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');

@@ -1569,11 +1569,11 @@
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTabSafe()">🩺 EHR</button>
             <button class="notes-tab-btn" style="display:none;" onclick="window.location='notes.html'">📝 Notes</button>
             <button class="resources-btn" onclick="showResourcesTab()">Resources</button>
-            <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
+            <button class="login-btn" onclick="ownerLogin().catch(console.error)">Owner Login</button>
             <div id="session-timer" class="session-timer">
                 <span id="session-countdown"></span>
             </div>
-            <button class="logout-btn" style="display:none;" onclick="logoutOwner()">Logout</button>
+            <button class="logout-btn" style="display:none;" onclick="logoutOwner().catch(console.error)">Logout</button>
         </div>
     </div>
         <div id="qrTab">
@@ -1638,7 +1638,7 @@
                             <li>Only shared if YOU choose to text 911</li>
                         </ul>
                     </div>
-                    <button class="btn" onclick="requestLocationAndLoad911()">
+                    <button class="btn" onclick="requestLocationAndLoad911().catch(console.error)">
                         <span>Enable Location for Emergency Use</span>
                     </button>
                 </div>

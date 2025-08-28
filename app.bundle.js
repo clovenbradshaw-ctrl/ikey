@@ -197,9 +197,9 @@
             await loadAndDisplayEmergencyInfo(guid, key, null, null);
         }
 
-        function displayFullInfo(full) {
+        async function displayFullInfo(full) {
             currentBlob = full;
-            displayEmergencyInfo(full);
+            await displayEmergencyInfo(full);
             updateSourceLabel();
         }
 
@@ -221,7 +221,7 @@
                     const full = await fetchFromArchive(currentGUID, currentKey);
                     clearInterval(uploadCheckInterval);
                     uploadCheckInterval = null;
-                    displayFullInfo(full);
+                    await displayFullInfo(full);
                 } catch (error) {
                     const el = document.getElementById('loading-message');
                     if (el) el.textContent = buildUploadMessage();
@@ -708,7 +708,7 @@
             }
         }
 
-        function logoutOwner() {
+        async function logoutOwner() {
             ownerPassword = null;
             sessionStorage.removeItem('ownerPassword');
             sessionStorage.removeItem('ownerSessionExpires');
@@ -727,7 +727,7 @@
             }
 
             if (currentGUID && currentKey) {
-                displayEmergencyInfo(currentBlob);
+                await displayEmergencyInfo(currentBlob);
             } else {
                 showCreationForm();
             }
@@ -746,7 +746,7 @@
             sessionStorage.setItem('ownerSessionExpires', Date.now() + duration);
             sessionTimeoutHandle = setTimeout(() => {
                 alert('Session timed out');
-                logoutOwner();
+                logoutOwner().catch(console.error);
             }, duration);
         }
 
@@ -1176,7 +1176,7 @@
                 console.error('Archive error:', error);
                 alert('Failed to prepare archive: ' + error.message);
                 if (currentBlob) {
-                    displayFullInfo(currentBlob);
+                    await displayFullInfo(currentBlob);
                 }
                 return false;
             }
@@ -2309,21 +2309,25 @@
             try {
                 document.getElementById('location-permission-prompt').style.display = 'none';
                 document.getElementById('location-loading').style.display = 'block';
-                await navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        location911Enabled = true;
-                        document.getElementById('location-loading').style.display = 'none';
-                        document.getElementById('location-content').style.display = 'block';
-                        const iframe = document.getElementById('text911Frame');
-                        iframe.src = 'text911.html';
-                    },
-                    (error) => {
-                        document.getElementById('location-loading').style.display = 'none';
-                        document.getElementById('location-permission-prompt').style.display = 'block';
-                        alert('Location access is required for 911 emergency features. Please enable location in your browser settings.');
-                    },
-                    { enableHighAccuracy: true }
-                );
+                await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            location911Enabled = true;
+                            document.getElementById('location-loading').style.display = 'none';
+                            document.getElementById('location-content').style.display = 'block';
+                            const iframe = document.getElementById('text911Frame');
+                            iframe.src = 'text911.html';
+                            resolve();
+                        },
+                        (error) => {
+                            document.getElementById('location-loading').style.display = 'none';
+                            document.getElementById('location-permission-prompt').style.display = 'block';
+                            alert('Location access is required for 911 emergency features. Please enable location in your browser settings.');
+                            reject(error);
+                        },
+                        { enableHighAccuracy: true }
+                    );
+                });
             } catch (error) {
                 document.getElementById('location-loading').style.display = 'none';
                 document.getElementById('location-permission-prompt').style.display = 'block';
