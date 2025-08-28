@@ -1,10 +1,21 @@
-        // Configuration
-        const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
-        const BEACON_TEXT = 'SQR:1';
-        const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
-        const XANO_BASE = 'https://xvkq-pq7i-idtl.n7d.xano.io/api:Hj4C6PGO';
-        const MANUAL_AUTH_OVERRIDE = "YOUR_MANUAL_AUTH_KEY_HERE";
-        const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
+        // Environment and configuration
+        const __DEV__ = typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production';
+        const __CFG_OVERRIDES = __DEV__ && window.__CONFIG_OVERRIDES ? window.__CONFIG_OVERRIDES : {};
+        const VIEWER_URL = __CFG_OVERRIDES.VIEWER_URL || 'https://clovenbradshaw-ctrl.github.io/ikey/';
+        const BEACON_TEXT = __CFG_OVERRIDES.BEACON_TEXT || 'SQR:1';
+        const WEBHOOK_URL = __CFG_OVERRIDES.WEBHOOK_URL || 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
+        const XANO_BASE = __CFG_OVERRIDES.XANO_BASE || 'https://xvkq-pq7i-idtl.n7d.xano.io/api:Hj4C6PGO';
+        if (__DEV__) {
+            const MANUAL_AUTH_OVERRIDE = __CFG_OVERRIDES.MANUAL_AUTH_OVERRIDE || 'YOUR_MANUAL_AUTH_KEY_HERE';
+        }
+        const ARCHIVE_BASE = __CFG_OVERRIDES.ARCHIVE_BASE || 'https://archive.org/download/zuboff/';
+
+        if (!__DEV__) {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelector('.dev-trigger')?.remove();
+                document.getElementById('dev-panel')?.remove();
+            });
+        }
 
         const LANGUAGE_NAMES = {
           en: 'English',
@@ -2032,6 +2043,7 @@
             }
         }
         
+        if (__DEV__) {
         // Dev Tools Functions
         function toggleDevTools() {
             const panel = document.getElementById('dev-panel');
@@ -2280,7 +2292,7 @@
             overlay.id = 'privacy-viewer';
             overlay.className = 'qr-overlay';
             const src = 'privacy.html' + (guid ? `?guid=${encodeURIComponent(guid)}` : '');
-            overlay.innerHTML = `<div class="qr-modal" style="width:90%;height:90%;max-width:1000px;display:flex;flex-direction:column;"><iframe src="${src}" style="flex:1;border:none;border-radius:10px;"></iframe><button class="btn" onclick="document.getElementById('privacy-viewer').remove()">Close</button></div>`;
+            overlay.innerHTML = `<div class="qr-modal" style="width:90%;height:90%;max-width:1000px;display:flex;flex-direction:column;"><iframe src="${src}" sandbox="allow-same-origin allow-scripts" style="flex:1;border:none;border-radius:10px;"></iframe><button class="btn" onclick="document.getElementById('privacy-viewer').remove()">Close</button></div>`;
             overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
             document.body.appendChild(overlay);
         }
@@ -2338,16 +2350,17 @@
         
         document.addEventListener('click', function(e) {
             if (e.target.closest('.dev-trigger') || e.target.closest('.dev-panel')) return;
-            
+
             clickCount++;
-            
+
             if (clickCount === 3) {
                 document.querySelector('.dev-trigger').style.opacity = '1';
                 clickCount = 0;
             }
-            
+
             clearTimeout(clickTimer);
             clickTimer = setTimeout(() => {
                 clickCount = 0;
             }, 500);
         });
+        }
