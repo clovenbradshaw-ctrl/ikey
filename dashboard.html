@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emergency Profile - Sarah Chen</title>
     <link rel="icon" href="https://storage.googleapis.com/art_homelessness/favicon.ico">
+    <script src="router.js"></script>
     <style>
         * {
             margin: 0;
@@ -345,9 +346,9 @@
 <body>
     <header class="header">
         <nav class="nav">
-            <a href="index.html" class="logo"><img src="https://storage.googleapis.com/art_homelessness/1.png" alt="iKey logo"></a>
+            <a href="#" class="logo" onclick="router.go('home')"><img src="https://storage.googleapis.com/art_homelessness/1.png" alt="iKey logo"></a>
             <div class="nav-center">
-                <a href="index.html" class="nav-link active">Dashboard</a>
+                <a href="#" class="nav-link active" onclick="router.go('home')">Dashboard</a>
                 <a href="#" class="nav-link">Emergency View</a>
                 <a href="#" class="nav-link">🩺 EHR</a>
                 <a href="#" class="nav-link">Settings</a>

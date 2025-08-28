@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iKey - Secure Personal Information Vault</title>
+    <script src="router.js"></script>
     <style>
         * {
             margin: 0;
@@ -249,7 +250,7 @@
         </div>
         
         <div class="options-grid">
-            <div class="option-card" onclick="location.hash='app#create'">
+            <div class="option-card" onclick="router.go('app#create')">
                 <div class="recommended-badge">Recommended</div>
                 <div class="icon">👤</div>
                 <h2 class="option-title">Personal QR Code</h2>
@@ -269,7 +270,7 @@
                 </button>
             </div>
             
-            <div class="option-card" onclick="location.hash='app#bulk'">
+            <div class="option-card" onclick="router.go('app#bulk')">
                 <div class="icon">📋</div>
                 <h2 class="option-title">Bulk QR Generation</h2>
                 <p class="option-description">
@@ -1468,7 +1469,7 @@
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
             </div>
-            <button class="home-btn" onclick="window.location='index.html'">Home</button>
+            <button class="home-btn" onclick="router.go('home')">Home</button>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
             <button class="notes-tab-btn" style="display:none;" onclick="window.location='notes.html'">📝 Notes</button>
