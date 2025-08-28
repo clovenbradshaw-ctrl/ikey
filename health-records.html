@@ -1496,6 +1496,7 @@
     <script src="session.js"></script>
     <script>
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
+        const XANO_BASE = 'https://xvkq-pq7i-idtl.n7d.xano.io/api:Hj4C6PGO';
         const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
 
         // Application class to manage state and functionality
@@ -1573,15 +1574,35 @@
 
             async loadArchiveData() {
                 try {
-                    const archiveUrl = `${ARCHIVE_BASE}${this.guid}.json?ts=${Date.now()}`;
-                    const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
-                    if (!response.ok) return;
-                    const archiveData = await response.json();
+                    let archiveData = null;
+                    let source = '';
+
+                    try {
+                        const resp = await fetch(
+                            `${XANO_BASE}/ikey_cache?guid=${encodeURIComponent(this.guid)}`,
+                            { method: 'GET', mode: 'cors', cache: 'no-store' }
+                        );
+                        if (resp.ok) {
+                            archiveData = await resp.json();
+                            source = 'Server cache';
+                        }
+                    } catch (e) {
+                        console.log('Cache fetch failed:', e.message);
+                    }
+
+                    if (!archiveData) {
+                        const archiveUrl = `${ARCHIVE_BASE}${this.guid}.json?ts=${Date.now()}`;
+                        const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                        if (!response.ok) return;
+                        archiveData = await response.json();
+                        source = 'Archive.org';
+                    }
+
                     const payload = await this.crypto.decrypt(archiveData.data, this.sessionPassword);
                     if (payload.healthRecords) {
                         this.loadFormData(payload.healthRecords);
                         const src = document.getElementById('hr-source');
-                        if (src) src.textContent = 'Source: Archive.org';
+                        if (src) src.textContent = `Source: ${source}`;
                     }
                 } catch (e) {
                     console.warn('No existing health records found', e);
@@ -2087,10 +2108,26 @@
                 try {
                     let existing = {};
                     try {
-                        const archiveUrl = `${ARCHIVE_BASE}${this.guid}.json?ts=${Date.now()}`;
-                        const existingResp = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
-                        if (existingResp.ok) {
-                            const existingData = await existingResp.json();
+                        let existingData = null;
+                        try {
+                            const cacheResp = await fetch(
+                                `${XANO_BASE}/ikey_cache?guid=${encodeURIComponent(this.guid)}`,
+                                { method: 'GET', mode: 'cors', cache: 'no-store' }
+                            );
+                            if (cacheResp.ok) {
+                                existingData = await cacheResp.json();
+                            }
+                        } catch (err) {
+                            console.log('Cache fetch failed:', err.message);
+                        }
+                        if (!existingData) {
+                            const archiveUrl = `${ARCHIVE_BASE}${this.guid}.json?ts=${Date.now()}`;
+                            const existingResp = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                            if (existingResp.ok) {
+                                existingData = await existingResp.json();
+                            }
+                        }
+                        if (existingData) {
                             existing = await this.crypto.decrypt(existingData.data, password);
                         }
                     } catch (e) {
