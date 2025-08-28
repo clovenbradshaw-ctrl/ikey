@@ -86,7 +86,7 @@
       <h1>Welcome to iKey</h1>
       <p>Your secure information vault.</p>
     </main>
-  <script>
+    <script>
     function updateTopBarOffset() {
       const topBar = document.querySelector('.top-bar');
       const height = topBar ? topBar.offsetHeight : 0;
@@ -95,6 +95,18 @@
       window.addEventListener('load', updateTopBarOffset);
       window.addEventListener('resize', updateTopBarOffset);
     </script>
+    <script src="vendor/qrcode.min.js"></script>
+    <script>
+      window.QRCode || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>');
+    </script>
+    <script src="vendor/jsqr.js"></script>
+    <script>
+      window.jsQR || document.write('<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"><\/script>');
+    </script>
+    <script src="text-size.js"></script>
+    <script src="medication.js"></script>
+    <script src="app.js"></script>
+    <script src="form-init.js"></script>
     <script src="app.bundle.js"></script>
   </body>
 </html>
