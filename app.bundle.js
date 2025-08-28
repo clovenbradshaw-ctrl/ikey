@@ -2190,12 +2190,7 @@
          let location911Enabled = false;
 
         window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'text911Height') {
-                const frame = document.getElementById('text911Frame');
-                if (frame) {
-                    frame.style.height = e.data.height + 'px';
-                }
-            } else if (e.data && e.data.type === 'closeHealthRecords') {
+            if (e.data && e.data.type === 'closeHealthRecords') {
                 showQRTab();
             }
         });
@@ -2289,6 +2284,14 @@
             try {
                 document.getElementById('location-permission-prompt').style.display = 'none';
                 document.getElementById('location-loading').style.display = 'block';
+                const gate = await permissionGate.geolocation();
+                if (!gate.ok) {
+                    document.getElementById('location-loading').style.display = 'none';
+                    document.getElementById('location-permission-prompt').style.display = 'block';
+                    (window.notifier && window.notifier.error ? window.notifier.error(gate.reason)
+                        : (window.showToast ? window.showToast(gate.reason) : alert(gate.reason)));
+                    return;
+                }
                 await navigator.geolocation.getCurrentPosition(
                     (position) => {
                         location911Enabled = true;
@@ -2300,14 +2303,18 @@
                     (error) => {
                         document.getElementById('location-loading').style.display = 'none';
                         document.getElementById('location-permission-prompt').style.display = 'block';
-                        alert('Location access is required for 911 emergency features. Please enable location in your browser settings.');
+                        const msg = 'Location access is required for 911 emergency features. Please enable location in your browser settings.';
+                        (window.notifier && window.notifier.error ? window.notifier.error(msg)
+                            : (window.showToast ? window.showToast(msg) : alert(msg)));
                     },
                     { enableHighAccuracy: true }
                 );
             } catch (error) {
                 document.getElementById('location-loading').style.display = 'none';
                 document.getElementById('location-permission-prompt').style.display = 'block';
-                alert('Unable to access location. Please check your browser settings.');
+                const msg = 'Unable to access location. Please check your browser settings.';
+                (window.notifier && window.notifier.error ? window.notifier.error(msg)
+                    : (window.showToast ? window.showToast(msg) : alert(msg)));
             }
         }
 

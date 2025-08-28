@@ -263,6 +263,8 @@
             body{padding:0;}
         }
     </style>
+    <script src="permission-gate.js"></script>
+    <script src="frame-manager.js"></script>
     <script src="text-size.js"></script>
 </head>
 <body>
@@ -330,14 +332,7 @@
         };
         const textingDataPromise=fetch('911-texting.json').then(r=>r.json());
 
-        function sendHeight(){
-            if(window.parent){
-                const h=document.body.scrollHeight;
-                window.parent.postMessage({type:'text911Height',height:h},'*');
-            }
-        }
-        window.addEventListener('load',sendHeight);
-        window.addEventListener('resize',sendHeight);
+        FrameManager.initChild('text911Frame');
 
         function encodePlusCode(latitude,longitude){
             latitude=Math.max(-90,Math.min(90,latitude));
@@ -362,10 +357,10 @@
             document.getElementById('loading').style.display='none';
             document.getElementById('content').style.display='block';
             document.getElementById('error').style.display='none';
-            sendHeight();
+            FrameManager.sendHeight();
         }
-        function showError(error){let message='';switch(error.code){case error.PERMISSION_DENIED:message="Location access denied. Please enable it and refresh.";break;case error.POSITION_UNAVAILABLE:message="Location unavailable. Please try again.";break;case error.TIMEOUT:message="Location request timed out. Please refresh.";break;default:message="Unable to get location. Please refresh.";}document.getElementById('errorMessage').textContent=message;document.getElementById('loading').style.display='none';document.getElementById('content').style.display='none';document.getElementById('emergencyButtons').style.display='none';document.getElementById('error').style.display='block';sendHeight();}
-        function getLocation(){if(navigator.geolocation){navigator.geolocation.getCurrentPosition(updateDisplay,showError,{enableHighAccuracy:true,timeout:15000,maximumAge:0});navigator.geolocation.watchPosition(updateDisplay,()=>{},{enableHighAccuracy:true,maximumAge:10000});}else{showError({code:0,message:"Geolocation not supported"});}}
+        function showError(error){let message='';switch(error.code){case error.PERMISSION_DENIED:message="Location access denied. Please enable it and refresh.";break;case error.POSITION_UNAVAILABLE:message="Location unavailable. Please try again.";break;case error.TIMEOUT:message="Location request timed out. Please refresh.";break;default:message=error.message||"Unable to get location. Please refresh.";}document.getElementById('errorMessage').textContent=message;document.getElementById('loading').style.display='none';document.getElementById('content').style.display='none';document.getElementById('emergencyButtons').style.display='none';document.getElementById('error').style.display='block';showToast(message);FrameManager.sendHeight();}
+        async function getLocation(){const gate=await permissionGate.geolocation();if(!gate.ok){showError({code:1,message:gate.reason});return;}navigator.geolocation.getCurrentPosition(updateDisplay,showError,{enableHighAccuracy:true,timeout:15000,maximumAge:0});navigator.geolocation.watchPosition(updateDisplay,()=>{},{enableHighAccuracy:true,maximumAge:10000});}
         window.onload=function(){getLocation();};
     </script>
 </body>

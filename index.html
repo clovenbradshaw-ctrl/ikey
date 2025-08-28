@@ -348,6 +348,7 @@
             const scripts = [
                 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
                 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
+                'permission-gate.js',
                 'app.js',
                 'medication.js',
                 'text-size.js',
@@ -1561,6 +1562,10 @@
         </div>
     </div>
     <!-- Notes modal script removed -->
+    <script src="frame-manager.js"></script>
+    <script>
+      FrameManager.initParent();
+    </script>
     <script src="session.js"></script>
 </body>
 </html>

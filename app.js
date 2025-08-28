@@ -385,15 +385,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (!("geolocation" in navigator)) {
-        alert("Geolocation not available on this device/browser.");
+      const gate = await permissionGate.geolocation();
+      if (!gate.ok) {
+        (window.notifier && window.notifier.error ? window.notifier.error(gate.reason)
+          : (window.showToast ? window.showToast(gate.reason) : alert(gate.reason)));
         return;
       }
       navigator.geolocation.getCurrentPosition(async pos => {
         const lat = round6(pos.coords.latitude);
         const lng = round6(pos.coords.longitude);
         if (!validLatLng(lat, lng)) {
-          alert("Got invalid coordinates from the device.");
+          const msg = "Got invalid coordinates from the device.";
+          (window.notifier && window.notifier.error ? window.notifier.error(msg)
+            : (window.showToast ? window.showToast(msg) : alert(msg)));
           return;
         }
         const place = {
@@ -408,7 +412,9 @@ document.addEventListener("DOMContentLoaded", () => {
         await savePlaceNote(place);
         reset();
       }, err => {
-        alert("Couldn't get your location. You can switch to 'Enter coordinates'.");
+        const msg = "Couldn't get your location. You can switch to 'Enter coordinates'.";
+        (window.notifier && window.notifier.error ? window.notifier.error(msg)
+          : (window.showToast ? window.showToast(msg) : alert(msg)));
         console.error(err);
       }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
       return;

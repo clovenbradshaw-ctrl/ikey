@@ -67,6 +67,7 @@
         .success-message { position:fixed; top:70px; right:20px; background:#28a745; color:white; padding:12px 20px; border-radius:8px; box-shadow:0 4px 12px rgba(40,167,69,0.2); display:none; z-index:1000; animation:slideIn .3s ease; }
         @keyframes slideIn { from{transform:translateX(400px);} to{transform:translateX(0);} }
     </style>
+    <script src="permission-gate.js"></script>
     <script src="app.js"></script>
 </head>
 <body>
@@ -154,17 +155,28 @@
             displayNotes();
         }
 
-        function toggleLocation(){
+        async function toggleLocation(){
             const toggle = document.getElementById('locationToggle');
             const status = document.getElementById('locationStatus');
             if(toggle.checked){
-                if(navigator.geolocation){
-                    navigator.geolocation.getCurrentPosition(pos=>{
-                        currentLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};
-                        status.className='location-status active';
-                        status.textContent='✓ Location captured';
-                    },()=>{toggle.checked=false; currentLocation=null; alert('Location access denied');});
-                } else { toggle.checked=false; alert('Location services not available.'); }
+                const gate = await permissionGate.geolocation();
+                if(!gate.ok){
+                    toggle.checked=false;
+                    currentLocation=null;
+                    (window.notifier && window.notifier.error ? window.notifier.error(gate.reason)
+                        : (window.showToast ? window.showToast(gate.reason) : alert(gate.reason)));
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(pos=>{
+                    currentLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};
+                    status.className='location-status active';
+                    status.textContent='✓ Location captured';
+                },()=>{
+                    toggle.checked=false; currentLocation=null;
+                    const msg='Location access denied';
+                    (window.notifier && window.notifier.error ? window.notifier.error(msg)
+                        : (window.showToast ? window.showToast(msg) : alert(msg)));
+                });
             } else { currentLocation=null; status.className='location-status'; }
         }
 
