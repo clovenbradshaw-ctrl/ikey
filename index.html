@@ -238,6 +238,7 @@
             }
         }
     </style>
+    <script src="app-router.js"></script>
 </head>
 <body>
     <div class="container">
@@ -355,7 +356,10 @@
             ];
             const loadNext = () => {
                 const src = scripts.shift();
-                if (!src) return;
+                if (!src) {
+                    router.render(location.hash.slice(1) || 'home');
+                    return;
+                }
                 const s = document.createElement('script');
                 s.src = src;
                 s.onload = loadNext;
@@ -368,6 +372,9 @@
         function handleRoute() {
             if (location.hash.startsWith('#app')) {
                 loadApp();
+            }
+            if (window.router) {
+                router.render(location.hash.slice(1) || 'home');
             }
         }
 
@@ -1470,9 +1477,9 @@
             </div>
             <button class="home-btn" onclick="window.location='index.html'">Home</button>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
-            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
+            <button class="health-records-btn" style="display:none;" onclick="router.go('app#ehr')">🩺 EHR</button>
             <button class="notes-tab-btn" style="display:none;" onclick="window.location='notes.html'">📝 Notes</button>
-            <button class="resources-btn" onclick="showResourcesTab()">Resources</button>
+            <button class="resources-btn" onclick="router.go('app#resources')">Resources</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
             <div id="session-timer" class="session-timer">
                 <span id="session-countdown"></span>

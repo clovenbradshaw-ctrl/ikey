@@ -877,7 +877,7 @@
 
                         ${renderSectionCard('Electronic Health Records', '🏥', sections.vault, [
                             { label: 'Records', value: fields.vault.records + ' documents' }
-                        ], 'showHealthRecordsTab()', 'vault')}
+                        ], 'router.go(\'app#ehr\')', 'vault')}
                         <div class="emergency-card">
                             <h3>🚨 Emergency Services</h3>
                             <p style="margin-bottom:8px;">Tap to open</p>
@@ -911,7 +911,7 @@
             const percent = Math.round((progress.filled / progress.total) * 100);
             const clickAttr = onClick ? ` onclick="${onClick}" style="cursor:pointer"` : '';
             const actionButton = sectionKey === 'vault'
-                ? `<button class="edit-section-btn" onclick="event.stopPropagation(); showHealthRecordsTab()">Open</button>`
+                ? `<button class="edit-section-btn" onclick="event.stopPropagation(); router.go('app#ehr')">Open</button>`
                 : `<button class="edit-section-btn" onclick="event.stopPropagation(); openEditModal('${sectionKey}')">Edit</button>`;
             return `
                 <div class="section-card ${percent === 100 ? 'complete' : ''}"${clickAttr}>
@@ -2196,7 +2196,7 @@
                     frame.style.height = e.data.height + 'px';
                 }
             } else if (e.data && e.data.type === 'closeHealthRecords') {
-                showQRTab();
+                router.go('home');
             }
         });
 
@@ -2214,7 +2214,7 @@
 
         function confirmEmergencyAccess() {
             if (confirm('Open Emergency Services?')) {
-                show911Tab();
+                router.go('app#911');
             }
         }
 
@@ -2313,7 +2313,7 @@
 
          // Add click handler for logo to return to QR
          document.addEventListener('DOMContentLoaded', function() {
-             document.querySelector('.logo').addEventListener('click', showQRTab);
+             document.querySelector('.logo').addEventListener('click', () => router.go('home'));
          });
 
          // Allow closing dev tools
