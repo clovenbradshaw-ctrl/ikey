@@ -22,7 +22,7 @@ This repository contains the iKey web application and related assets. All of the
 
 ### Offline Dependencies
 
-For offline use, place `qrcode.min.js` and `jsQR.min.js` in a `vendor/` directory and ensure they are bundled with the application. The loader will attempt to use these local copies first and fall back to the CDN versions if they are missing.
+For offline use, place `qrcode.min.js` and `jsQR.min.js` in a `vendor/` directory and ensure they are bundled with the application. The loader will try the CDN versions first and fall back to these local copies if the CDN is unavailable.
 
 ## Dashboard
 
