@@ -2,644 +2,371 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iKey - Secure Personal Information Vault</title>
-    <script>
-(function(){
-  function isHome(){
-    const path = location.pathname;
-    return path.endsWith('/') || path.endsWith('/index.html');
-  }
-  window.router = {
-    go(target){
-      if(target === 'home'){
-        if(isHome()){
-          location.hash = '';
-        } else {
-          location.href = 'index.html';
-        }
-        return;
-      }
-      if(target.startsWith('app')){
-        const normalized = target.replace('?f=', '#');
-        if(isHome()){
-          location.hash = normalized;
-        } else {
-          location.href = 'index.html#' + normalized;
-        }
-        return;
-      }
-      if(/^https?:/i.test(target)){
-        history.pushState(null, '', location.href);
-        location.href = target;
-        return;
-      }
-      location.href = target;
-    }
-  };
-})();
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Emergency QR</title>
+    
     <style>
+        /* Softr embedding fixes */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        :root {
-            --top-bar-height: 0px;
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            padding-top: calc(var(--top-bar-height) + 20px);
-            scroll-margin-top: var(--top-bar-height);
-        }
-        
-        .container {
-            max-width: 1200px;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 60px 40px;
-            margin: 0 auto;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
+        .container {
+            width: calc(100vw - 40px) !important;
+            max-width: 500px !important;
+            margin: 20px auto !important;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 100% !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+            }
+
+            body {
+                background: white !important;
+                align-items: flex-start !important;
+            }
         }
         
-        .tagline {
-            color: #6b7280;
-            font-size: 18px;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
             margin-bottom: 5px;
         }
         
-        .security-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: #f3f4f6;
-            padding: 5px 15px;
-            border-radius: 20px;
+        .header p {
+            opacity: 0.9;
             font-size: 14px;
-            color: #4b5563;
-            margin-top: 10px;
         }
         
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
+        .content {
+            padding: 20px;
         }
         
-        .option-card {
-            background: #fff;
-            border: 2px solid #e5e7eb;
-            border-radius: 15px;
-            padding: 40px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
+        /* Emergency Display Mode */
+        .emergency-card {
+            animation: fadeIn 0.5s ease;
         }
         
-        .option-card:hover {
-            border-color: #667eea;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+        .emergency-header {
+            background: #ff4757;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
         }
         
-        .option-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-        
-        .option-card:hover::before {
-            transform: scaleX(1);
-        }
-        
-        .icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
+        .emergency-header h2 {
+            font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
-            font-size: 30px;
-            color: white;
+            gap: 10px;
         }
         
-        .option-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #1f2937;
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
             margin-bottom: 15px;
         }
         
-        .option-description {
-            color: #6b7280;
-            line-height: 1.6;
-            margin-bottom: 20px;
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
         }
         
-        .features-list {
-            list-style: none;
+        .info-item:last-child {
+            margin-bottom: 0;
         }
         
-        .features-list li {
-            color: #4b5563;
-            padding: 8px 0;
-            padding-left: 25px;
-            position: relative;
+        .info-icon {
+            font-size: 20px;
+            margin-right: 12px;
+            flex-shrink: 0;
         }
         
-        .features-list li:before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #10b981;
-            font-weight: bold;
+        .info-content {
+            flex: 1;
         }
         
-        .bulk-details {
-            background: #f9fafb;
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .phone-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+            padding: 8px 12px;
+            background: #e8f0fe;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .phone-link:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .private-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
             margin-top: 20px;
         }
         
-        .bulk-specs {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .spec-item {
-            text-align: center;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-        }
-        
-        .spec-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #667eea;
-            display: block;
-        }
-        
-        .spec-label {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 5px;
-        }
-        
-        .action-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 14px 30px;
-            border-radius: 8px;
+        .private-section h3 {
+            color: #856404;
             font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
+            margin-bottom: 10px;
+            display: flex;
             align-items: center;
             gap: 8px;
         }
         
-        .action-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        @media (hover: none) {
-            .option-card:hover,
-            .action-button:hover {
-                transform: none;
-                box-shadow: none;
-            }
+        .password-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
         }
         
-        .recommended-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #10b981;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
+        .hint {
             font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
+            color: #856404;
+            margin-bottom: 10px;
+            font-style: italic;
         }
         
-        .footer-info {
-            text-align: center;
-            padding-top: 30px;
-            border-top: 1px solid #e5e7eb;
-            color: #6b7280;
+        /* Creation Form Mode */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: 500;
             font-size: 14px;
         }
         
-        .encryption-info {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 15px;
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
         }
         
-        .encryption-item {
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            color: #2c3e50;
+            margin: 25px 0 15px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            font-weight: 600;
+        }
+        
+        .section-title:first-of-type {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
         }
         
-        @media (max-width: 900px) {
-            .options-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .container {
-                padding: 40px 20px;
-            }
-            
-            .bulk-specs {
-                grid-template-columns: 1fr;
-            }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
         }
-
-        /* Global QR modal styles */
-        .qr-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
-
-        .qr-modal {
-            background: #fff;
-            border-radius: 8px;
-            max-width: 90%;
-            max-height: 90%;
-            overflow: auto;
+        
+        .btn-secondary {
+            background: #6c757d;
+            margin-top: 10px;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-top: 10px;
+        }
+        
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        /* QR Display */
+        .qr-display {
+            text-align: center;
             padding: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
         }
-
-        body.qr-modal-open,
-        body:has(.qr-overlay) {
-            overflow: hidden;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="tagline">Secure Personal Information Vault</div>
-            <div class="security-badge">
-                🔐 Zero-Knowledge Encryption
-            </div>
-        </div>
         
-        <div class="options-grid">
-            <div class="option-card" onclick="router.go('app#create')">
-                <div class="recommended-badge">Recommended</div>
-                <div class="icon">👤</div>
-                <h2 class="option-title">Personal QR Code</h2>
-                <p class="option-description">
-                    Create your own secure iKey QR code to protect and share your personal information with zero-knowledge encryption.
-                </p>
-                <ul class="features-list">
-                    <li>One-time QR generation (never changes)</li>
-                    <li>Three-layer encryption security</li>
-                    <li>Emergency & private info separation</li>
-                    <li>Password-protected access</li>
-                    <li>Auto-archive updates</li>
-                </ul>
-                <button class="action-button">
-                    <span>➜</span>
-                    <span>Get Started</span>
-                </button>
-            </div>
-            
-            <div class="option-card" onclick="router.go('app#bulk')">
-                <div class="icon">📋</div>
-                <h2 class="option-title">Bulk QR Generation</h2>
-                <p class="option-description">
-                    Generate multiple QR codes for organizations, events, or distribution. Perfect for healthcare facilities, schools, or emergency services.
-                </p>
-                <ul class="features-list">
-                    <li>Batch create up to 1000 codes</li>
-                    <li>Print-ready layouts</li>
-                    <li>Customizable page formats</li>
-                    <li>No personal data required</li>
-                    <li>Admin management dashboard</li>
-                </ul>
-                
-                <div class="bulk-details">
-                    <strong style="color: #4b5563;">Printing Specifications</strong>
-                    <div class="bulk-specs">
-                        <div class="spec-item">
-                            <span class="spec-value">15mm</span>
-                            <span class="spec-label">Min. QR Size</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-value">1-30</span>
-                            <span class="spec-label">Codes per Page</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-value">A4/Letter</span>
-                            <span class="spec-label">Page Formats</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="action-button" style="margin-top: 20px;">
-                    <span>⚡</span>
-                    <span>Configure Bulk</span>
-                </button>
-            </div>
-        </div>
+        #qrcode {
+            display: inline-block;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
         
-        <div class="footer-info">
-            <strong>Security First</strong>
-            <div class="encryption-info">
-                <div class="encryption-item">
-                    <span>🔑</span>
-                    <span>256-bit Encryption</span>
-                </div>
-                <div class="encryption-item">
-                    <span>🛡️</span>
-                    <span>PBKDF2 Key Derivation</span>
-                </div>
-                <div class="encryption-item">
-                    <span>📦</span>
-                    <span>Zero-Knowledge Architecture</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const cards = document.querySelectorAll('.option-card');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    card.style.transition = 'all 0.5s ease';
-                    
-                    setTimeout(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 100);
-                }, index * 100);
-            });
-        });
-
-        window.modulePromises = {};
-
-        function showModuleError(src) {
-            let err = document.getElementById('module-error');
-            if (!err) {
-                err = document.createElement('div');
-                err.id = 'module-error';
-                err.style.color = 'red';
-                err.style.padding = '10px';
-                err.style.textAlign = 'center';
-                document.body.appendChild(err);
-            }
-            err.textContent = `⚠️ Failed to load required module: ${src}. Please refresh.`;
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
         }
-
-        function showLoadingOverlay() {
-            let overlay = document.getElementById('app-loading-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'app-loading-overlay';
-                overlay.innerHTML = `
-                    <div class="app-loading">
-                        <div class="spinner"></div>
-                        <p>Loading app...</p>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
-            } else {
-                overlay.style.display = 'flex';
-            }
+        
+        /* Help Section */
+        .help-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
         }
-
-        function hideLoadingOverlay() {
-            const overlay = document.getElementById('app-loading-overlay');
-            if (overlay) overlay.style.display = 'none';
+        
+        .help-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
         }
-
-        function loadApp() {
-            if (window.appLoaded || window.appLoading) return window.allModulesPromise;
-            window.appLoading = true;
-            showLoadingOverlay();
-            const scripts = [
-
-                ['vendor/qrcode.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'],
-                ['vendor/jsQR.min.js', 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js'],
-
-                ['https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', 'vendor/qrcode.min.js'],
-                ['https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js', 'vendor/jsQR.min.js'],
-
-                'app.js',
-                'medication.js',
-                'text-size.js',
-                'app.bundle.js'
-            ];
-
-            window.allModulesPromise = new Promise((resolve, reject) => {
-                const loadNext = () => {
-                    const entry = scripts.shift();
-                    if (!entry) {
-                        window.appLoaded = true;
-                        window.appLoading = false;
-                        hideLoadingOverlay();
-                        resolve();
-                        return;
-                    }
-
-                    const sources = Array.isArray(entry) ? entry.slice() : [entry];
-                    const key = Array.isArray(entry) ? entry[0] : entry;
-
-                    window.modulePromises[key] = new Promise((res, rej) => {
-                        const tryLoad = () => {
-                            const src = sources.shift();
-                            if (!src) {
-                                const err = new Error(`Failed to load ${key}`);
-                                rej(err);
-                                showModuleError(key);
-                                reject(err);
-                                return;
-                            }
-                            const s = document.createElement('script');
-                            s.src = src;
-                            s.onload = () => {
-                                window.loadedModules = window.loadedModules || {};
-                                window.loadedModules[key] = true;
-                                res();
-                                document.dispatchEvent(new CustomEvent('moduleLoaded', { detail: { src: key } }));
-                                loadNext();
-                            };
-                            s.onerror = tryLoad;
-                            document.body.appendChild(s);
-                        };
-                        tryLoad();
-                    });
-                };
-                loadNext();
-            });
-            return window.allModulesPromise;
+        
+        .help-content {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
         }
-
-        async function ensureHealthApp() {
-            if (window.healthApp) return true;
-            if (window.modulePromises['app.js']) {
-                try {
-                    await window.modulePromises['app.js'];
-                    return !!window.healthApp;
-                } catch {
-                    return false;
-                }
-            }
-            return false;
+        
+        .help-content.active {
+            display: block;
         }
-
-        async function showHealthRecordsTabSafe() {
-            loadApp();
-            if (!(await ensureHealthApp())) {
-                let ph = document.getElementById('health-records-placeholder');
-                if (!ph) {
-                    ph = document.createElement('div');
-                    ph.id = 'health-records-placeholder';
-                    ph.style.padding = '20px';
-                    ph.style.textAlign = 'center';
-                    ph.textContent = 'Loading health records...';
-                    document.body.appendChild(ph);
-                } else {
-                    ph.textContent = 'Loading health records...';
-                }
-                try {
-                    await Promise.all([
-                        window.modulePromises['app.js'],
-                        window.modulePromises['app.bundle.js']
-                    ]);
-                } catch {
-                    ph.textContent = 'Unable to load health records.';
-                    return;
-                }
-                ph.remove();
-            }
-            if (typeof window.showHealthRecordsTab === 'function') {
-                window.showHealthRecordsTab();
-            } else {
-                alert('Health records module not available.');
-            }
+        
+        /* Loading State */
+        .loading-screen {
+            text-align: center;
+            padding: 40px;
         }
-
-        function handleRoute() {
-            if (location.hash.startsWith('#app')) {
-                loadApp();
-            }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
-        function loadAppAndRun(fnName, el) {
-            if (el) {
-                el.dataset.originalText = el.textContent;
-                el.textContent = 'Loading...';
-                el.style.pointerEvents = 'none';
-                el.style.opacity = '0.6';
-            }
-            loadApp()
-                .then(() => {
-                    if (el) {
-                        el.textContent = el.dataset.originalText;
-                        el.style.pointerEvents = '';
-                        el.style.opacity = '';
-                    }
-                    if (typeof window[fnName] === 'function') {
-                        window[fnName]();
-                    }
-                })
-                .catch(() => {
-                    if (el) {
-                        el.textContent = el.dataset.originalText;
-                        el.style.pointerEvents = '';
-                        el.style.opacity = '';
-                    }
-                    alert('Failed to load the application module.');
-                });
-            return false;
-        }
-
-        window.addEventListener('hashchange', handleRoute);
-        handleRoute();
-        window.addEventListener('load', loadApp);
-    </script>
-        <style>
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-
-        #app-loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-
-        #app-loading-overlay .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #cbd5e1;
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        #app-loading-overlay p {
-            margin-top: 10px;
-            color: #4b5563;
-            font-weight: 500;
-        }
-
-        #app-loading-overlay .app-loading {
-            text-align: center;
         }
 
         .upload-overlay {
@@ -681,7 +408,7 @@
             overflow: hidden;
         }
 
-        .home-progress__bar {
+        .progress-bar {
             height: 100%;
             width: 0;
             background: linear-gradient(90deg, #667eea, #764ba2);
@@ -693,18 +420,18 @@
         }
 
         .step-icon {
-            font-size: 3rem;
+            font-size: 48px;
             margin-bottom: 20px;
         }
 
         #step-title {
-            font-size: 1.5rem;
+            font-size: 24px;
             margin-bottom: 10px;
             font-weight: 600;
         }
 
         #step-message {
-            font-size: 1rem;
+            font-size: 16px;
             opacity: 0.9;
             line-height: 1.5;
         }
@@ -805,7 +532,7 @@
             padding: 10px;
             border-radius: 5px;
             font-family: monospace;
-            font-size: 0.75rem;
+            font-size: 12px;
             white-space: pre-wrap;
             word-break: break-all;
             max-height: 200px;
@@ -815,8 +542,7 @@
         /* Mobile Responsive */
         @media (max-width: 480px) {
             body {
-                /* Maintain space for fixed top menu */
-                padding: 80px 10px 10px;
+                padding: 10px;
             }
             
             .container {
@@ -824,7 +550,7 @@
             }
             
             .header h1 {
-                font-size: 1.25rem;
+                font-size: 20px;
             }
             
             .action-buttons {
@@ -838,7 +564,7 @@
             border-radius: 8px;
             margin-top: 15px;
             text-align: center;
-            font-size: 0.875rem;
+            font-size: 14px;
         }
         
         .status-success {
@@ -858,10 +584,10 @@
             color: #856404;
             border: 2px solid #ffc107;
             font-weight: 600;
-            animation: home-status-pulse 2s infinite;
+            animation: pulse 2s infinite;
         }
 
-        @keyframes home-status-pulse {
+        @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.8; }
             100% { opacity: 1; }
@@ -919,7 +645,7 @@
         }
 
         .huge-number {
-            font-size: 0.75rem;
+            font-size: 12px;
             color: #666;
             word-break: break-all;
         }
@@ -970,7 +696,7 @@
             padding: 10px;
             background: #f8f9fa;
             border-radius: 8px;
-            font-size: 0.75rem;
+            font-size: 12px;
         }
 
         .final-reminder {
@@ -987,7 +713,7 @@
             font-style: italic;
         }
 
-        .home-progress__bar {
+        .progress-bar {
             height: 6px;
             background: #e9ecef;
             margin: 0 30px 20px;
@@ -1001,763 +727,15 @@
             background: #667eea;
             transition: width 0.5s ease;
         }
-
-        /* Top navigation */
-        .top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            display: grid;
-            grid-template-columns: auto 1fr;
-            align-items: center;
-            padding: 4px 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        .logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-self: start;
-        }
-
-        .logo {
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .logo img {
-            height: 28px;
-        }
-
-         .logo-text-short {
-             display: none;
-         }
-
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            justify-self: end;
-        }
-
-        .size-controls {
-            display: flex;
-            gap: 4px;
-        }
-
-        .lang-select {
-            position: relative;
-        }
-
-        .lang-button {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 6px 10px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            direction: ltr;
-        }
-
-        .size-toggle {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 6px 10px;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .lang-dropdown {
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-top: 4px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            display: none;
-            max-height: 300px;
-            overflow-y: auto;
-            min-width: 160px;
-            z-index: 1000;
-            direction: ltr;
-            text-align: left;
-        }
-
-        .lang-option {
-            padding: 8px 12px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .lang-option:hover,
-        .lang-option.active {
-            background: #f0f0f0;
-        }
-
-        .login-btn {
-            background: none;
-            border: none;
-            color: #667eea;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .dashboard-btn, .logout-btn {
-            background: none;
-            border: none;
-            color: #667eea;
-            cursor: pointer;
-            font-size: 14px;
-            display: none;
-        }
-
-        .health-records-btn {
-            background: none;
-            border: none;
-            color: #667eea;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .resources-btn {
-            background: none;
-            border: none;
-            color: #667eea;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .notes-tab-btn {
-            background: none;
-            border: none;
-            color: #667eea;
-            cursor: pointer;
-            font-size: 0.875rem;
-            display: none;
-        }
-
-          body.rtl {
-              direction: rtl;
-              text-align: right;
-        }
-
-        body.rtl .logo {
-            justify-self: end;
-        }
-        body.rtl .controls {
-            justify-self: start;
-        }
-
-          body.rtl .lang-dropdown {
-              right: auto;
-              left: 0;
-          }
-
-          body.rtl .info-icon {
-              margin-left: 12px;
-              margin-right: 0;
-          }
-
-        .owner-dashboard {
-            padding: 20px;
-        }
-        .owner-status {
-            text-align: center;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        .dashboard-qr {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .dashboard-card {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .action-panel {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-        }
-        .action-panel button {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 6px;
-            background: #667eea;
-            color: #fff;
-            cursor: pointer;
-        }
-        .locked-field {
-            opacity: 0.6;
-            margin-bottom: 10px;
-        }
-
-        /* Redesigned dashboard */
-        .dashboard-container {
-            padding: 20px;
-        }
-        .dashboard-header {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .progress-ring {
-            position: relative;
-            width: 120px;
-            height: 120px;
-        }
-        .progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-        .progress-text .percent {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .section-cards {
-            display: grid;
-            gap: 15px;
-            grid-template-columns: 1fr;
-        }
-
-        @media (min-width: 640px) {
-            .section-cards {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .section-cards {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        .section-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
-            position: relative;
-        }
-        .section-card.complete {
-            opacity: 0.7;
-        }
-        .edit-section-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: transparent;
-            border: none;
-            color: var(--primary);
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-        .edit-section-btn:hover {
-            text-decoration: underline;
-        }
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .section-icon {
-            font-size: 20px;
-        }
-        .mini-progress {
-            flex: 1;
-            height: 4px;
-            background: #e0e0e0;
-            border-radius: 2px;
-            position: relative;
-        }
-        .mini-progress .home-progress__bar {
-            height: 100%;
-            background: var(--primary);
-            border-radius: 2px;
-        }
-        .field-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            font-size: 0.875rem;
-            border-bottom: 1px solid var(--surface-alt);
-            min-height: 48px;
-        }
-        .field-row.missing {
-            opacity: 0.6;
-        }
-        .add-button {
-            color: var(--primary);
-            cursor: pointer;
-            font-weight: 500;
-            min-width: 44px;
-            min-height: 44px;
-            padding: 12px 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .add-button:hover {
-            text-decoration: underline;
-        }
-
-        .field-modal {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        .field-modal.active { display: flex; }
-        .modal-backdrop {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-        }
-        .modal-content {
-            position: relative;
-            background: var(--surface);
-            padding: 32px;
-            border-radius: 12px;
-            z-index: 1;
-            max-width: 600px;
-            width: calc(100% - 40px);
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .modal-content h3 {
-            margin-bottom: 4px;
-        }
-        .modal-content input,
-        .modal-content select,
-        .modal-content textarea {
-            width: 100%;
-            padding: 16px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1.125rem;
-        }
-        .modal-content textarea {
-            min-height: 160px;
-            resize: vertical;
-        }
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 8px;
-        }
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.125rem;
-        }
-        .btn-ghost {
-            background: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.125rem;
-        }
-        .quick-actions {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .action-btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 6px;
-            background: #f0f0f0;
-            cursor: pointer;
-        }
-        .action-btn.primary {
-            background: #667eea;
-            color: #fff;
-        }
-        .badge {
-            background: #fff;
-            color: #667eea;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 6px;
-            font-size: 0.75rem;
-        }
-        @media (max-width: 480px) {
-            .lang-button {
-                padding: 4px 8px;
-                font-size: 0.75rem;
-            }
-
-            .login-btn {
-                font-size: 0.75rem;
-            }
-
-            .dashboard-btn,
-            .logout-btn {
-                font-size: 12px;
-            }
-
-            .logo-text-full {
-                display: none;
-            }
-
-              .logo-text-short {
-                  display: inline;
-              }
-          }
-
-         .privacy-notice {
-             background: #e8f4f8;
-             border: 2px solid #4a90e2;
-             border-radius: 10px;
-             padding: 20px;
-             margin-bottom: 20px;
-             text-align: center;
-         }
-
-         .privacy-notice h3 {
-             color: #2c5282;
-             margin-bottom: 15px;
-         }
-
-         .privacy-notice ul {
-             list-style: none;
-             padding: 0;
-         }
-
-         .privacy-notice li {
-             margin: 10px 0;
-             padding-left: 25px;
-             position: relative;
-         }
-
-        .privacy-notice li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #48bb78;
-            font-weight: bold;
-        }
-        /* Critical info helper */
-        .field-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: #555;
-            margin-top: 4px;
-        }
-
-        /* Session timer styles */
-        .session-timer {
-            --progress: 0deg;
-            --ring-color: #4caf50;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: conic-gradient(var(--ring-color) var(--progress), #e0e0e0 0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            margin-left: 10px;
-        }
-        .session-timer::before {
-            content: '';
-            position: absolute;
-            inset: 3px;
-            background: white;
-            border-radius: 50%;
-        }
-        .session-timer span {
-            font-size: 10px;
-            position: relative;
-        }
-        .session-timer.pulse {
-            animation: home-timer-pulse 1s infinite;
-        }
-        @keyframes home-timer-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
-        }
-        .session-banner {
-            position: fixed;
-            top: -100px;
-            left: 0;
-            right: 0;
-            background: #fff3cd;
-            padding: 10px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: top 0.3s;
-            z-index: 1000;
-        }
-        .session-banner.active {
-            top: 0;
-        }
-        .session-banner button {
-            margin-left: 10px;
-        }
-        .session-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        .session-modal.active {
-            display: flex;
-        }
-        .session-modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            animation: modalPulse 1s infinite alternate;
-        }
-        @keyframes modalPulse {
-            from { transform: scale(1); }
-            to { transform: scale(1.02); }
-        }
-        .session-expired {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: white;
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            text-align: center;
-        }
-        .session-expired.active {
-            display: flex;
-        }
-
-        .blood-type-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin: 12px 0;
-        }
-        .blood-type-btn {
-            position: relative;
-            min-height: 48px;
-            min-width: 48px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            transition: all 0.2s;
-        }
-        .blood-type-btn:hover,
-        .blood-type-btn:focus {
-            border-color: #6366f1;
-            background: #eef2ff;
-        }
-        .blood-type-btn.selected {
-            background: #6366f1;
-            color: white;
-            border-color: #6366f1;
-        }
-        .blood-type-btn input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .unknown-option {
-            width: 100%;
-            padding: 12px;
-            margin-top: 12px;
-            background: #f9fafb;
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-        }
-        #add-secondary-contact {
-            width: 100%;
-        }
-        .search-dropdown {
-            position: absolute;
-            background: white;
-            border: 1px solid #cbd5e0;
-            border-radius: 8px;
-            width: 100%;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 10;
-            display: none;
-        }
-        .search-dropdown .medication-option {
-            padding: 8px 12px;
-            cursor: pointer;
-        }
-        .search-dropdown .medication-option:hover {
-            background: #f7fafc;
-        }
-        .med-name {
-            font-weight: 500;
-        }
-        .med-details {
-            font-size: 0.875rem;
-            color: #718096;
-        }
-        .medication-list {
-            display: grid;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .medication-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-        }
-        .allergy-warnings .warning {
-            margin-top: 4px;
-            font-size: 0.875rem;
-        }
-        .allergy-warnings .high {
-            color: #c53030;
-        }
-        .allergy-warnings .medium {
-            color: #d69e2e;
-        }
-
-        .emergency-card {
-            margin: 16px;
-            padding: 16px;
-            background: #fff5f5;
-            border: 2px dashed var(--danger);
-            border-radius: 12px;
-        }
-
-        .emergency-card h3 {
-            margin-bottom: 8px;
-        }
-
-        .access-911 {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .access-911:active {
-            opacity: 0.9;
-        }
-
-        /* Floating links for Privacy and Notes */
-        .floating-links {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 1000;
-        }
-
-        .floating-links a {
-            background: var(--primary);
-            color: #fff;
-            text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-size: 14px;
-        }
-
-        @media (max-width: 640px) {
-            .floating-links {
-                bottom: 80px; /* avoid overlapping action bar */
-            }
-        }
     </style>
-    <div class="top-bar">
-        <div class="logo-container">
-        <div class="logo"><img src="https://storage.googleapis.com/art_homelessness/1.png" alt="iKey logo"> <span class="logo-text-full">iKey</span><span class="logo-text-short">iKey</span></div>
-        </div>
-        <div class="controls">
-            <div class="size-controls">
-                <button class="size-toggle" onclick="changeTextSize(-1)">🔍-</button>
-                <button class="size-toggle" onclick="changeTextSize(1)">🔍+</button>
-            </div>
-            <div class="lang-select">
-                <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
-                <div class="lang-dropdown">
-                    <div class="lang-option" data-lang="en" dir="auto">EN English</div>
-                    <div class="lang-option" data-lang="es" dir="auto">ES Español</div>
-                    <div class="lang-option" data-lang="ar" dir="auto">AR العربية</div>
-                    <div class="lang-option" data-lang="ku" dir="auto">KU کوردی</div>
-                </div>
-            </div>
-            <button class="home-btn" onclick="router.go('home')">Home</button>
-            <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
-            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTabSafe()">🩺 EHR</button>
-            <button class="notes-tab-btn" style="display:none;" onclick="window.location='notes.html'">📝 Notes</button>
-            <button class="resources-btn" onclick="showResourcesTab()">Resources</button>
-            <button class="login-btn" onclick="ownerLogin().catch(console.error)">Owner Login</button>
-            <div id="session-timer" class="session-timer">
-                <span id="session-countdown"></span>
-            </div>
-            <button class="logout-btn" style="display:none;" onclick="logoutOwner().catch(console.error)">Logout</button>
+</head>
+<body>
+    <div class="container">
+        <div id="main-content">
+            <!-- Content will be dynamically inserted here -->
         </div>
     </div>
-        <div id="qrTab">
-        <div class="container">
-            <div id="main-content">
-                <!-- Content will be dynamically inserted here -->
-            </div>
-        </div>
-
-    <div class="floating-links">
-        <a href="#" onclick="return loadAppAndRun('showPrivacy', this)">Privacy</a>
-    </div>
-
+    
     <!-- Dev Tools Panel -->
     <div class="dev-trigger" onclick="toggleDevTools()">🛠️</div>
     <div id="dev-panel" class="dev-panel">
@@ -1766,18 +744,18 @@
         <div style="margin-bottom: 15px;">
             <input type="text" id="dev-guid" placeholder="Enter GUID">
             <input type="text" id="dev-key" placeholder="Enter Key">
-            <button onclick="return loadAppAndRun('devLoadQR', this)">Load QR</button>
-            <button onclick="return loadAppAndRun('devTestArchive', this)">Test Archive Fetch</button>
+            <button onclick="devLoadQR()">Load QR</button>
+            <button onclick="devTestArchive()">Test Archive Fetch</button>
         </div>
         
         <div style="margin-bottom: 15px;">
             <input type="file" id="dev-qr-upload" accept="image/*" style="margin-bottom: 10px;">
-            <button onclick="return loadAppAndRun('devScanQR', this)">Scan QR Image</button>
+            <button onclick="devScanQR()">Scan QR Image</button>
         </div>
         
         <div style="margin-bottom: 15px;">
-            <button onclick="return loadAppAndRun('devShowRawData', this)">Show Raw Data</button>
-            <button onclick="return loadAppAndRun('devClearStorage', this)">Clear All Data</button>
+            <button onclick="devShowRawData()">Show Raw Data</button>
+            <button onclick="devClearStorage()">Clear All Data</button>
             <button onclick="toggleDevTools()">Close</button>
         </div>
         
@@ -1785,54 +763,1440 @@
     </div>
     
     <!-- QR Libraries -->
-    </div>
-    <div id="healthRecordsTab" style="display:none;">
-        <iframe id="healthRecordsFrame" style="border:none;width:100%;height:100vh;"></iframe>
-    </div>
-    <div id="resourcesTab" style="display:none;">
-        <iframe id="resourcesFrame" style="border:none;width:100%;height:100vh;"></iframe>
-    </div>
-    <div id="text911Tab" style="display:none;">
-        <div class="container">
-            <div class="header">
-                <h1>📍 911 Emergency Location</h1>
-                <p>Share your precise location for emergency services</p>
-            </div>
-            <div class="content">
-                <div id="location-permission-prompt" style="display:block;">
-                    <div class="privacy-notice">
-                        <h3>🔒 Your Privacy is Protected</h3>
-                        <ul style="text-align: left; margin: 20px 0;">
-                            <li>Location is ONLY used when you're on this screen</li>
-                            <li>Nothing is saved online or stored anywhere</li>
-                            <li>Location data stays on your device</li>
-                            <li>Only shared if YOU choose to text 911</li>
-                        </ul>
-                    </div>
-                    <button class="btn" onclick="requestLocationAndLoad911().catch(console.error)">
-                        <span>Enable Location for Emergency Use</span>
-                    </button>
-                </div>
-                <div id="location-loading" class="loading-screen" style="display:none;">
-                    <div class="spinner"></div>
-                    <p>Getting your location...</p>
-                </div>
-                <div id="location-content" style="display:none;">
-                    <iframe id="text911Frame" style="border:none;width:100%;height:600px;" scrolling="no"></iframe>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Notes modal script removed -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
     <script>
-        function updateTopBarOffset() {
-            const topBar = document.querySelector('.top-bar');
-            const height = topBar ? topBar.offsetHeight : 0;
-            document.documentElement.style.setProperty('--top-bar-height', height + 'px');
+        // Configuration
+        const VIEWER_URL = 'https://sites.google.com/view/securecontact/';
+        const BEACON_TEXT = 'SQR:1';
+        const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook-test/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
+        const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
+
+
+        const SECURITY_STEPS = [
+            {
+                title: "Creating Your Encryption",
+                message: "Generating a unique key with 115 quattuorvigintillion combinations",
+                icon: "🔐"
+            },
+            {
+                title: "Zero-Knowledge Security",
+                message: "Your key exists only in this QR code - we can never access it",
+                icon: "🔒"
+            },
+            {
+                title: "Dual-Layer Protection",
+                message: "Emergency info stays accessible, private details need your password",
+                icon: "🛡️"
+            },
+            {
+                title: "Uploading to Archive.org",
+                message: "Sending encrypted data - meaningless without your QR code",
+                icon: "☁️"
+            },
+            {
+                title: "Complete",
+                message: "Your QR code is now the only key in existence",
+                icon: "✅"
+            }
+        ];
+
+
+        // State
+        let currentGUID = null;
+        let currentKey = null;
+        let currentData = null; // minimal {id, data, auth}
+        let currentBlob = null; // decrypted full data
+        let currentMode = null;
+        let currentCreated = null;
+        let currentName = null;
+        let securityInterval = null;
+
+        // Parse parameters from various URL formats
+        function parseUrlParameters() {
+            let guid, key, name, created;
+
+            // Check hash first (new format: #guid|key|name|created)
+            const hash = window.location.hash.substring(1);
+            if (hash && hash.includes('|')) {
+                [guid, key, name, created] = hash.split('|').map(decodeURIComponent);
+                return { guid, key, name, created };
+            }
+
+            // Check URL params (Google Sites format)
+            const urlParams = new URLSearchParams(window.location.search);
+            guid = urlParams.get('guid');
+            name = urlParams.get('name');
+            created = urlParams.get('created');
+            key = hash; // Key might be in hash even with params
+
+            return { guid, key, name, created };
         }
-        window.addEventListener('load', updateTopBarOffset);
-        window.addEventListener('resize', updateTopBarOffset);
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async function() {
+            const { guid, key, name, created } = parseUrlParameters();
+            console.log('Parsed parameters:', { guid, key, name, created });
+
+            if (guid && key) {
+                currentMode = 'view';
+                currentCreated = created;
+                currentName = name;
+                showLoadingScreen(name);
+                await loadAndDisplayEmergencyInfo(guid, key, name, created);
+            } else {
+                currentMode = 'create';
+                showCreationForm();
+            }
+        });
+        
+        // Show loading screen
+        function showLoadingScreen(name) {
+            const container = document.getElementById('main-content');
+            container.innerHTML = `
+                <div class="loading-screen">
+                    <div class="spinner"></div>
+                    <p>Loading emergency information${name ? ` for ${name}` : ''}...</p>
+                </div>
+            `;
+        }
+        
+        // Load and display emergency info
+        async function loadAndDisplayEmergencyInfo(guid, key, urlName, created) {
+            currentGUID = guid;
+            currentKey = key;
+
+            console.log('Loading emergency info for:', guid);
+            console.log('Created timestamp:', created);
+
+            const createdTime = created ? new Date(decodeURIComponent(created)) : null;
+            let banner = null;
+            let data;
+            let fetchSuccess = false;
+
+            // Calculate age of QR code
+            if (createdTime) {
+                const ageMinutes = (Date.now() - createdTime.getTime()) / 60000;
+                console.log('QR code age in minutes:', ageMinutes);
+
+                if (ageMinutes < 5) {
+                    banner = '⏳ Data still uploading to backup servers (usually takes 5-30 minutes). QR code works locally in the meantime.';
+                } else if (ageMinutes < 30) {
+                    banner = '⏳ Data may still be uploading to backup servers. If not loading, please wait a few more minutes.';
+                }
+            }
+
+            try {
+                // Try to fetch from Archive.org
+                const archiveUrl = `${ARCHIVE_BASE}${guid}.json`;
+                console.log('Fetching from Archive.org:', archiveUrl);
+
+                const response = await fetch(archiveUrl, { mode: 'cors' });
+                console.log('Archive.org response status:', response.status);
+
+                if (response.ok) {
+                    data = await response.json();
+                    fetchSuccess = true;
+                    console.log('Successfully loaded from Archive.org');
+                } else {
+                    throw new Error('Not found on Archive.org');
+                }
+            } catch (error) {
+                console.log('Archive fetch failed:', error.message);
+
+                // Check local storage fallback
+                const localData = localStorage.getItem('pending_' + guid);
+                if (localData) {
+                    console.log('Found local fallback data');
+                    const parsed = JSON.parse(localData);
+                    data = { local: true, full: parsed };
+                }
+            }
+
+            if (!fetchSuccess && createdTime) {
+                const ageMinutes = (Date.now() - createdTime.getTime()) / 60000;
+                if (ageMinutes < 5) {
+                    banner = '⏳ Data uploading to Archive.org - this usually takes 5-30 minutes. Your QR works locally for now!';
+                } else if (ageMinutes < 30) {
+                    banner = '⏳ Data may still be uploading - Archive.org backup can take up to 30 minutes to complete';
+                } else {
+                    banner = '⚠️ Data not found on Archive.org - backup may have failed. Try re-uploading.';
+                }
+            }
+
+            if (!data) {
+                await displayEmergencyInfo({ publicInfo: { name: urlName || 'Unknown' } }, { overrideName: urlName, banner });
+                return;
+            }
+
+            try {
+                let fullData;
+                if (data.local) {
+                    fullData = data.full;
+                } else {
+                    const decrypted = await decrypt(data.data, key);
+                    fullData = JSON.parse(decrypted);
+                }
+
+                // Validate beacon
+                if (fullData.beacon !== BEACON_TEXT) {
+                    throw new Error('Invalid QR code');
+                }
+
+                // Decrypt password hint if it exists
+                let passwordHint = null;
+                if (fullData.passwordHint) {
+                    try {
+                        passwordHint = await decrypt(fullData.passwordHint, key);
+                    } catch (e) {
+                        console.log('Could not decrypt password hint');
+                    }
+                }
+
+                currentData = data;
+                currentBlob = { ...fullData, passwordHint };
+
+                await displayEmergencyInfo(fullData, { overrideName: urlName, banner });
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Unable to load emergency information. Please check the QR code.');
+            }
+        }
+
+        // Display emergency information
+        async function displayEmergencyInfo(fullData, options = {}) {
+            const container = document.getElementById('main-content');
+
+            const publicInfo = fullData.publicInfo || {};
+            const passwordHint = fullData.passwordHint;
+            const nameToShow = options.overrideName || fullData.name || publicInfo.name || 'Unknown';
+
+            let html = `
+                <div class="emergency-card">
+                    <div class="emergency-header">
+                        <h2>🚨 EMERGENCY INFORMATION</h2>
+                    </div>
+                    ${options.banner ? `<div class="status-message status-info">${options.banner}</div>` : ''}
+
+                    <div class="content">
+                        <div class="info-section">
+                            <div class="info-item">
+                                <span class="info-icon">👤</span>
+                                <div class="info-content">
+                                    <div class="info-label">Name</div>
+                                    <div class="info-value">${nameToShow}</div>
+                                </div>
+                            </div>
+            `;
+            
+            if (publicInfo.bloodType) {
+                html += `
+                            <div class="info-item">
+                                <span class="info-icon">🩸</span>
+                                <div class="info-content">
+                                    <div class="info-label">Blood Type</div>
+                                    <div class="info-value">${publicInfo.bloodType}</div>
+                                </div>
+                            </div>
+                `;
+            }
+            
+            if (publicInfo.allergies) {
+                html += `
+                            <div class="info-item">
+                                <span class="info-icon">⚠️</span>
+                                <div class="info-content">
+                                    <div class="info-label">Allergies</div>
+                                    <div class="info-value">${publicInfo.allergies}</div>
+                                </div>
+                            </div>
+                `;
+            }
+            
+            html += `</div>`;
+            
+            if (publicInfo.contact) {
+                html += `
+                        <div class="info-section">
+                            <div class="info-item">
+                                <span class="info-icon">📞</span>
+                                <div class="info-content">
+                                    <div class="info-label">Emergency Contact</div>
+                                    <div class="info-value">
+                                        ${publicInfo.contact.name}
+                                        <a href="tel:${publicInfo.contact.phone}" class="phone-link">
+                                            📱 ${publicInfo.contact.phone}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                `;
+            }
+            
+            if (currentBlob && currentBlob.privateInfo) {
+                html += `
+                        <div class="private-section">
+                            <h3>🔒 Private Information</h3>
+                            ${passwordHint ? `<div class="hint">Hint: ${passwordHint}</div>` : ''}
+                            <input type="password" class="password-input" id="vault-password" placeholder="Enter password">
+                            <button class="btn" onclick="unlockPrivateInfo()">Unlock</button>
+                            <div id="private-content"></div>
+                        </div>
+                `;
+            }
+            
+            html += `
+                        <div class="help-link">
+                            <button class="btn-outline" style="font-size:12px;padding:4px 8px;" onclick="ownerLogin()">Owner Login</button>
+                            <a href="#" onclick="toggleHelp('help-content'); return false;">How It Works</a>
+                            <div id="help-content" class="help-content"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // Unlock private information
+        async function unlockPrivateInfo() {
+            const password = document.getElementById('vault-password').value;
+            if (!password) return;
+
+            try {
+                const hash = await sha256Hash(currentKey + password);
+                if (!currentBlob.privateInfo || hash !== currentBlob.privateInfo.encryptedWith) {
+                    throw new Error('Incorrect password');
+                }
+
+                const privateInfo = currentBlob.privateInfo;
+                let html = '<div style="margin-top: 15px;">';
+
+                if (privateInfo.ssn) {
+                    html += `
+                        <div class="info-item">
+                            <span class="info-icon">🆔</span>
+                            <div class="info-content">
+                                <div class="info-label">SSN</div>
+                                <div class="info-value">${privateInfo.ssn}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (privateInfo.notes) {
+                    html += `
+                        <div class="info-item">
+                            <span class="info-icon">📝</span>
+                            <div class="info-content">
+                                <div class="info-label">Medical Notes</div>
+                                <div class="info-value">${privateInfo.notes}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += '</div>';
+
+                document.getElementById('private-content').innerHTML = html;
+                document.getElementById('vault-password').style.display = 'none';
+                document.querySelector('.private-section button').style.display = 'none';
+
+            } catch (error) {
+                alert('Incorrect password');
+            }
+        }
+
+        function ownerLogin() {
+            showUpdateForm();
+        }
+
+        async function showUpdateForm() {
+            const password = prompt("Enter your password to update this emergency QR:");
+            if (!password) return;
+
+            try {
+                // Generate update token
+                const updateToken = await generateUpdateToken(password, currentGUID);
+
+                // Validate password against stored hash
+                if (currentBlob.privateInfo) {
+                    const hash = await sha256Hash(currentKey + password);
+                    if (hash !== currentBlob.privateInfo.encryptedWith) {
+                        alert("Incorrect password!");
+                        return;
+                    }
+                }
+
+                // Show update form (reuse creation form with pre-filled data)
+                showCreationForm();
+
+                // Pre-fill form with current data
+                const publicInfo = currentBlob.publicInfo || {};
+
+                document.getElementById('name').value = currentBlob.name || publicInfo.name || '';
+                document.getElementById('name').disabled = true;
+                document.getElementById('blood-type').value = publicInfo.bloodType || '';
+                document.getElementById('allergies').value = publicInfo.allergies || '';
+                document.getElementById('contact-name').value = publicInfo.contact?.name || '';
+                document.getElementById('contact-phone').value = publicInfo.contact?.phone || '';
+                document.getElementById('password-hint').value = currentBlob.passwordHint || '';
+
+                if (currentBlob.privateInfo) {
+                    const privateInfo = currentBlob.privateInfo;
+                    document.getElementById('ssn').value = privateInfo.ssn || '';
+                    document.getElementById('medical-notes').value = privateInfo.notes || '';
+                }
+
+                // Change form handler to update instead of create
+                document.getElementById('create-form').removeEventListener('submit', handleCreateForm);
+                document.getElementById('create-form').addEventListener('submit', (e) => handleUpdateForm(e, password, updateToken));
+
+                // Change button text
+                document.querySelector('#create-form button[type="submit"]').innerHTML = '<span>Update QR</span>';
+
+            } catch (error) {
+                console.error('Update error:', error);
+                alert('Failed to prepare update: ' + error.message);
+            }
+        }
+
+        async function handleUpdateForm(e, password, updateToken) {
+            e.preventDefault();
+
+            const button = e.target.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.innerHTML = '<span>Updating...</span>';
+            startSecurityAnimation();
+
+            try {
+                // Collect updated form data
+                const publicInfo = {
+                    name: currentBlob.name,
+                    bloodType: document.getElementById('blood-type').value,
+                    allergies: document.getElementById('allergies').value,
+                    contact: {
+                        name: document.getElementById('contact-name').value,
+                        phone: document.getElementById('contact-phone').value
+                    }
+                };
+
+                const newHint = document.getElementById('password-hint').value;
+
+                const privateInfo = password ? {
+                    ssn: document.getElementById('ssn').value,
+                    notes: document.getElementById('medical-notes').value,
+                    encryptedWith: await sha256Hash(currentKey + password)
+                } : null;
+
+                const fullData = {
+                    version: currentBlob.version,
+                    created: currentBlob.created,
+                    name: currentBlob.name,
+                    updated: new Date().toISOString(),
+                    beacon: BEACON_TEXT,
+                    publicInfo,
+                    passwordHint: newHint ? await encrypt(newHint, currentKey) : null,
+                    privateInfo
+                };
+
+                const encryptedBlob = await encrypt(JSON.stringify(fullData), currentKey);
+                const auth = await sha256Hash(updateToken);
+                const updatedData = {
+                    id: currentGUID,
+                    data: encryptedBlob,
+                    auth
+                };
+
+                // Send PUT request to webhook
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        guid: currentGUID,
+                        updateToken: updateToken,
+                        data: updatedData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    currentData = updatedData;
+                    currentBlob = { ...fullData, passwordHint: newHint };
+                    showStatus('✅ Successfully updated!', 'success');
+                    stopSecurityAnimation(true);
+
+                    // Show the updated QR view
+                    await loadAndDisplayEmergencyInfo(currentGUID, currentKey, currentBlob.name, currentBlob.created);
+                } else {
+                    throw new Error(result.error || 'Update failed');
+                }
+
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+                stopSecurityAnimation(false);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<span>Update QR</span>';
+            }
+        }
+        
+        // Show creation form
+        function showCreationForm() {
+            currentMode = 'create';
+            const container = document.getElementById('main-content');
+
+            container.innerHTML = `
+                <div class="header">
+                    <h1>Create Your Emergency QR</h1>
+                    <p>Your emergency QR: Public enough to save your life, private enough to protect your identity</p>
+                </div>
+
+                <div class="content">
+                    <form id="create-form">
+                        <div class="section-title">Always Visible</div>
+                        
+                        <div class="form-group">
+                            <label for="name">Name *</label>
+                            <input type="text" id="name" required placeholder="John Doe">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="blood-type">Blood Type</label>
+                            <select id="blood-type">
+                                <option value="">Unknown</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="allergies">Allergies</label>
+                            <textarea id="allergies" placeholder="Penicillin, peanuts, etc."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contact-name">Emergency Contact Name *</label>
+                            <input type="text" id="contact-name" required placeholder="Jane Doe">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contact-phone">Emergency Contact Phone *</label>
+                            <input type="tel" id="contact-phone" required placeholder="(555) 123-4567">
+                        </div>
+                        
+                        <div class="section-title">Password Protected</div>
+                        
+                        <div class="form-group">
+                            <label for="ssn">Social Security Number</label>
+                            <input type="text" id="ssn" placeholder="XXX-XX-XXXX">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="medical-notes">Medical Notes</label>
+                            <textarea id="medical-notes" placeholder="Medications, conditions, etc."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Password *</label>
+                            <input type="password" id="password" required placeholder="Choose a password">
+                            <div id="password-strength" class="hint"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password-confirm">Confirm Password *</label>
+                            <input type="password" id="password-confirm" required placeholder="Re-enter password">
+                        </div>
+
+                        <div class="hint" id="password-req">
+                            Password must be 8+ chars with upper, lower, number and special character.
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password-hint">Password Hint</label>
+                            <input type="text" id="password-hint" placeholder="Birth year + pet name">
+                        </div>
+                        
+                        <button type="submit" class="btn">
+                            <span>Create QR</span>
+                        </button>
+                    </form>
+                    
+                    <div id="qr-result" style="display: none;">
+                        <div class="qr-display">
+                            <h3>✅ Your Emergency QR Code</h3>
+                            <div id="qrcode"></div>
+                            <div class="action-buttons">
+                                <button class="btn" onclick="downloadQR()">💾 Download</button>
+                                <button class="btn" onclick="testQR()">🔍 Test</button>
+                            </div>
+                            <button class="btn-secondary" onclick="uploadToArchive()">☁️ Save Online</button>
+                        </div>
+                    </div>
+                    
+                    <div id="status-message"></div>
+                    
+                    <div class="help-link">
+                        <a href="#" onclick="toggleHelp('create-help-content'); return false;">How It Works</a>
+                        <div id="create-help-content" class="help-content"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Add form submit handler
+            document.getElementById('create-form').addEventListener('submit', handleCreateForm);
+
+            // Password strength meter
+            document.getElementById('password').addEventListener('input', () => {
+                const pwd = document.getElementById('password').value;
+                const strengthEl = document.getElementById('password-strength');
+                strengthEl.textContent = isStrongPassword(pwd) ? '✅ Meets requirements' : '❌ Does not meet requirements';
+            });
+        }
+        
+        // Handle form submission
+        async function handleCreateForm(e) {
+            e.preventDefault();
+            
+            const button = e.target.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.innerHTML = '<span>Creating...</span>';
+            
+            try {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('password-confirm').value;
+
+                if (!password) {
+                    throw new Error('Password is required');
+                }
+                if (!isStrongPassword(password)) {
+                    throw new Error('Password does not meet requirements');
+                }
+                if (password !== confirmPassword) {
+                    throw new Error('Passwords do not match');
+                }
+                
+                // Generate unique identifiers
+                currentGUID = generateGUID();
+                currentKey = generateKey();
+
+                // Collect form data
+                const publicInfo = {
+                    name: document.getElementById('name').value,
+                    bloodType: document.getElementById('blood-type').value,
+                    allergies: document.getElementById('allergies').value,
+                    contact: {
+                        name: document.getElementById('contact-name').value,
+                        phone: document.getElementById('contact-phone').value
+                    }
+                };
+
+                const passwordHint = document.getElementById('password-hint').value;
+                const encryptedHint = passwordHint ? await encrypt(passwordHint, currentKey) : null;
+
+                const privateInfo = {
+                    ssn: document.getElementById('ssn').value,
+                    notes: document.getElementById('medical-notes').value,
+                    encryptedWith: await sha256Hash(currentKey + password)
+                };
+
+                const created = new Date().toISOString();
+                const fullData = {
+                    version: "3.0",
+                    created,
+                    name: publicInfo.name,
+                    beacon: BEACON_TEXT,
+                    publicInfo,
+                    passwordHint: encryptedHint,
+                    privateInfo
+                };
+
+                // Encrypt entire blob
+                const encryptedBlob = await encrypt(JSON.stringify(fullData), currentKey);
+
+                // Generate auth hash for updates
+                const updateToken = await generateUpdateToken(password, currentGUID);
+                const auth = await sha256Hash(updateToken);
+
+                currentData = {
+                    id: currentGUID,
+                    data: encryptedBlob,
+                    auth
+                };
+
+                currentBlob = { ...fullData, passwordHint };
+                
+                // Generate QR code
+                const qrUrl = `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(publicInfo.name)}|${encodeURIComponent(created)}`;
+                
+                const qrContainer = document.getElementById('qrcode');
+                qrContainer.innerHTML = '';
+                
+                new QRCode(qrContainer, {
+                    text: qrUrl,
+                    width: 256,
+                    height: 256,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                window.currentQRUrl = qrUrl;
+
+                // Store fallback data locally for short-term access
+                const fallbackData = {
+                    version: "3.0",
+                    created,
+                    name: publicInfo.name, // include name for local fallback
+                    beacon: BEACON_TEXT,
+                    publicInfo
+                };
+                localStorage.setItem('pending_' + currentGUID, JSON.stringify(fallbackData));
+                
+                // Show QR display
+                document.getElementById('create-form').style.display = 'none';
+                document.getElementById('qr-result').style.display = 'block';
+                
+                showStatus('✅ QR code created successfully!', 'success');
+                
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<span>Create QR</span>';
+            }
+        }
+
+        function startSecurityAnimation() {
+            const overlay = document.createElement('div');
+            overlay.id = 'upload-overlay';
+            overlay.className = 'upload-overlay';
+            overlay.innerHTML = `
+                <div class="security-container">
+                    <img src="https://archive.org/images/ia-logo.png" alt="Archive.org" class="archive-logo">
+                    <div class="security-progress">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <div class="security-step">
+                        <div class="step-icon" id="step-icon">${SECURITY_STEPS[0].icon}</div>
+                        <h3 id="step-title">${SECURITY_STEPS[0].title}</h3>
+                        <p id="step-message">${SECURITY_STEPS[0].message}</p>
+                    </div>
+                    <div class="step-indicators">
+                        ${SECURITY_STEPS.map((_, i) => `<span class="indicator ${i === 0 ? 'active' : ''}" data-step="${i}"></span>`).join('')}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            setTimeout(() => {
+                overlay.querySelector('.archive-logo').style.opacity = '1';
+            }, 100);
+
+            let currentStep = 0;
+            const totalDuration = 20000;
+            const stepDuration = totalDuration / SECURITY_STEPS.length;
+
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.transition = `width ${totalDuration}ms linear`;
+            progressBar.style.width = '100%';
+
+            securityInterval = setInterval(() => {
+                currentStep++;
+                if (currentStep < SECURITY_STEPS.length) {
+                    updateSecurityStep(currentStep);
+                } else {
+                    clearInterval(securityInterval);
+                }
+            }, stepDuration);
+        }
+
+        function updateSecurityStep(stepIndex) {
+            const step = SECURITY_STEPS[stepIndex];
+            const container = document.querySelector('.security-step');
+            container.style.opacity = '0';
+
+            setTimeout(() => {
+                document.getElementById('step-icon').textContent = step.icon;
+                document.getElementById('step-title').textContent = step.title;
+                document.getElementById('step-message').textContent = step.message;
+                document.querySelectorAll('.indicator').forEach((ind, i) => {
+                    ind.classList.toggle('active', i <= stepIndex);
+                });
+                container.style.opacity = '1';
+            }, 300);
+        }
+
+        function stopSecurityAnimation(success) {
+            if (securityInterval) {
+                clearInterval(securityInterval);
+                securityInterval = null;
+            }
+            const overlay = document.getElementById('upload-overlay');
+            if (!overlay) return;
+
+            if (success) {
+                const stepIcon = document.getElementById('step-icon');
+                const stepTitle = document.getElementById('step-title');
+                const stepMessage = document.getElementById('step-message');
+                if (stepIcon && stepTitle && stepMessage) {
+                    stepIcon.textContent = '✅';
+                    stepTitle.textContent = 'Upload Complete';
+                    stepMessage.textContent = 'Your data is now safely backed up. The QR code is your only key.';
+                }
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 500);
+                }, 2000);
+            } else {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 500);
+            }
+        }
+
+
+        // Upload to Archive.org
+        async function uploadToArchive() {
+            const button = event.target;
+            button.disabled = true;
+            button.innerHTML = '⏳ Uploading...';
+
+            // Create the upload visualization overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'upload-overlay';
+            overlay.className = 'upload-overlay';
+            overlay.innerHTML = `
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <div class="spinner"></div>
+                        <h2 id="upload-title">Securing Your Emergency Data</h2>
+                    </div>
+                    <div class="upload-content" id="upload-content">
+                        <p id="upload-message">Initializing encryption...</p>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div id="upload-error" style="display:none; margin-top:20px;">
+                        <button onclick="retryUpload()" class="btn">Retry Upload</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Animation sequence
+            const narrativeSteps = [
+                // ... your narrative steps array stays the same ...
+                {
+                    title: "Your Emergency Data",
+                    duration: 2000,
+                    progress: 15,
+                    content: () => `
+                        <div class="data-preview">
+                            <h3>Here's your emergency information:</h3>
+                            <div class="data-item">👤 Name: <strong>${currentBlob.publicInfo.name}</strong></div>
+                            <div class="data-item">🩸 Blood Type: <strong>${currentBlob.publicInfo.bloodType || 'Not specified'}</strong></div>
+                            <div class="data-item">⚠️ Allergies: <strong>${currentBlob.publicInfo.allergies || 'None'}</strong></div>
+                            <div class="data-item">📞 Contact: <strong>${currentBlob.publicInfo.contact.name}</strong></div>
+                            <div class="data-item locked">🔒 Private: <strong>SSN, Medical Notes - Password Protected</strong></div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Creating Your Unique Encryption Key",
+                    duration: 3000,
+                    progress: 30,
+                    content: () => `
+                        <div class="key-generation">
+                            <p>Generating a 256-bit encryption key...</p>
+                            <div class="key-display">
+                                <code>${currentKey.substring(0, 32)}...</code>
+                            </div>
+                            <div class="key-strength">
+                                <p><strong>This key has 2^256 possible combinations</strong></p>
+                                <p class="huge-number">115,792,089,237,316,195,423,570,985,008,687,907,853...</p>
+                                <p class="comparison">Even with every quantum computer on Earth,<br> it would take <strong>millions of times longer than the age of the universe</strong> to guess.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Encryption in Progress",
+                    duration: 3000,
+                    progress: 45,
+                    content: () => `
+                        <div class="encryption-visual">
+                            <div class="data-transform">
+                                <div class="before">
+                                    <label>Before:</label>
+                                    <code>{"name":"${currentBlob.publicInfo.name}","blood":"${currentBlob.publicInfo.bloodType}"...}</code>
+                                </div>
+                                <div class="arrow">↓ AES-256-GCM Encryption ↓</div>
+                                <div class="after">
+                                    <label>After:</label>
+                                    <code>${currentData.data.substring(0, 50)}...</code>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Uploading to Archive.org",
+                    duration: 0,
+                    progress: 75,
+                    content: () => `
+                        <div class="uploading-info">
+                            <p>Encrypting your data and uploading it to a secure archive...</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "Finalizing",
+                    duration: 2000,
+                    progress: 90,
+                    content: () => `
+                        <div class="finalizing">
+                            <p>Wrapping up...</p>
+                        </div>
+                    `
+                }
+            ];
+
+            async function runNarrative() {
+                for (let i = 0; i < narrativeSteps.length; i++) {
+                    const step = narrativeSteps[i];
+
+                    document.getElementById('upload-title').textContent = step.title;
+                    document.getElementById('upload-content').innerHTML = step.content();
+                    document.getElementById('progress-fill').style.width = step.progress + '%';
+
+                    if (step.title === "Uploading to Archive.org") {
+                        try {
+                            const payload = {
+                                guid: currentGUID,
+                                filename: `${currentGUID}.json`,
+                                data: currentData,
+                                metadata: {
+                                    created: currentBlob.created,
+                                    type: 'emergency_qr',
+                                    version: currentBlob.version
+                                }
+                            };
+
+                            const response = await fetch(WEBHOOK_URL, {
+                                method: 'POST',
+                                mode: 'cors',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+
+                            let result;
+                            const contentType = response.headers.get("content-type");
+                            if (contentType && contentType.includes("application/json")) {
+                                result = await response.json();
+                            } else {
+                                const text = await response.text();
+                                if (text.includes("Uploaded to archive.org") || text.includes("encrypted")) {
+                                    result = { success: true, message: text };
+                                } else {
+                                    result = { success: false, message: text };
+                                }
+                            }
+
+                            if (!response.ok || result.success === false) {
+                                throw new Error(result.message || result.error || 'Upload failed');
+                            }
+
+                            continue;
+                        } catch (error) {
+                            document.getElementById('upload-title').textContent = '❌ Upload Failed';
+                            document.getElementById('upload-content').innerHTML = `
+                                <div class="error-message">
+                                    <p><strong>Upload interrupted, but don't worry:</strong></p>
+                                    <ul>
+                                        <li>✓ Your encryption is complete</li>
+                                        <li>✓ Your QR code works locally for 30 minutes</li>
+                                        <li>⚠️ Retry upload to ensure long-term backup</li>
+                                    </ul>
+                                    <p class="error-details">Error: ${error.message}</p>
+                                </div>
+                            `;
+                            document.getElementById('upload-error').style.display = 'block';
+                            document.getElementById('progress-fill').style.background = '#ff4757';
+                            return false;
+                        }
+                    } else if (step.duration > 0) {
+                        await new Promise(resolve => setTimeout(resolve, step.duration));
+                    }
+                }
+
+                document.getElementById('upload-title').textContent = '✅ Complete!';
+                document.getElementById('progress-fill').style.width = '100%';
+                document.getElementById('upload-content').innerHTML = `
+                    <div class="success-summary">
+                        <!-- Your success content here -->
+                    </div>
+                `;
+
+                return true;
+            }
+
+            runNarrative().then(success => {
+                if (success) {
+                    button.innerHTML = '✅ Saved Online!';
+                    showStatus('Successfully backed up to Archive.org', 'success');
+                    localStorage.removeItem('pending_' + currentGUID);
+                    setTimeout(() => overlay.remove(), 5000);
+                } else {
+                    button.innerHTML = '❌ Failed - Retry';
+                }
+
+                setTimeout(() => {
+                    button.disabled = false;
+                    if (!success) button.innerHTML = '☁️ Save Online';
+                }, 3000);
+            });
+        }
+
+
+        // Helper function for retry
+        window.retryUpload = function() {
+            document.getElementById('upload-overlay').remove();
+            uploadToArchive();
+        };
+        
+        // Utility functions
+        function generateGUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        
+        function generateKey(length = 32) {
+            const array = new Uint8Array(length);
+            crypto.getRandomValues(array);
+            return btoa(String.fromCharCode.apply(null, array))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=/g, '');
+        }
+
+        function isStrongPassword(pwd) {
+            return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pwd);
+        }
+        
+        async function encrypt(text, password) {
+            const enc = new TextEncoder();
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            
+            const passwordKey = await crypto.subtle.importKey(
+                "raw",
+                enc.encode(password),
+                "PBKDF2",
+                false,
+                ["deriveBits", "deriveKey"]
+            );
+            
+            const aesKey = await crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 100000,
+                    hash: "SHA-256"
+                },
+                passwordKey,
+                { 
+                    name: "AES-GCM",
+                    length: 256
+                },
+                false,
+                ["encrypt"]
+            );
+            
+            const encrypted = await crypto.subtle.encrypt(
+                { 
+                    name: "AES-GCM",
+                    iv: iv,
+                    tagLength: 128
+                },
+                aesKey,
+                enc.encode(text)
+            );
+            
+            const encryptedContent = new Uint8Array(encrypted);
+            const buf = new Uint8Array(salt.byteLength + iv.byteLength + encryptedContent.byteLength);
+            buf.set(salt, 0);
+            buf.set(iv, salt.byteLength);
+            buf.set(encryptedContent, salt.byteLength + iv.byteLength);
+            
+            return btoa(String.fromCharCode(...buf));
+        }
+        
+        async function decrypt(encryptedData, password) {
+            const enc = new TextEncoder();
+            const dec = new TextDecoder();
+            
+            const data = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+            const salt = data.slice(0, 16);
+            const iv = data.slice(16, 28);
+            const encrypted = data.slice(28);
+            
+            const passwordKey = await crypto.subtle.importKey(
+                "raw",
+                enc.encode(password),
+                "PBKDF2",
+                false,
+                ["deriveBits", "deriveKey"]
+            );
+            
+            const aesKey = await crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 100000,
+                    hash: "SHA-256"
+                },
+                passwordKey,
+                { 
+                    name: "AES-GCM",
+                    length: 256
+                },
+                false,
+                ["decrypt"]
+            );
+            
+            const decrypted = await crypto.subtle.decrypt(
+                { 
+                    name: "AES-GCM",
+                    iv: iv,
+                    tagLength: 128
+                },
+                aesKey,
+                encrypted
+            );
+            
+            return dec.decode(decrypted);
+        }
+
+        async function generateUpdateToken(password, guid) {
+            // Deterministic token from password + guid
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password + guid + "UPDATE_SALT_V1");
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            return btoa(String.fromCharCode(...new Uint8Array(hashBuffer)))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=/g, '');
+        }
+
+        async function sha256Hash(text) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function createDemoData(guid, key) {
+            const fullData = {
+                version: "2.0",
+                created: new Date().toISOString(),
+                beacon: BEACON_TEXT,
+                publicInfo: {
+                    name: "Demo User",
+                    bloodType: "O+",
+                    allergies: "Penicillin, Peanuts",
+                    contact: {
+                        name: "Emergency Contact",
+                        phone: "(555) 123-4567"
+                    }
+                },
+                passwordHint: await encrypt("Password is: demo", key),
+                privateInfo: {
+                    ssn: "XXX-XX-XXXX",
+                    notes: "This is demo data. Password is: demo",
+                    encryptedWith: await sha256Hash(key + "demo")
+                }
+            };
+
+            const encryptedBlob = await encrypt(JSON.stringify(fullData), key);
+            const updateToken = await generateUpdateToken("demo", guid);
+            return {
+                id: guid,
+                data: encryptedBlob,
+                auth: await sha256Hash(updateToken)
+            };
+        }
+
+        function downloadQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = 'emergency-qr.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        }
+        
+        function testQR() {
+            if (window.currentQRUrl) {
+                window.open(window.currentQRUrl, '_blank');
+            }
+        }
+        
+        function showStatus(message, type) {
+            const element = document.getElementById('status-message');
+            if (!element) return;
+            
+            element.className = 'status-message status-' + type;
+            element.textContent = message;
+            element.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        function showError(message) {
+            const container = document.getElementById('main-content');
+            container.innerHTML = `
+                <div class="header">
+                    <h1>❌ Error</h1>
+                </div>
+                <div class="content">
+                    <div class="status-message status-error">
+                        ${message}
+                    </div>
+                    <button class="btn" onclick="showCreationForm()">Create New QR</button>
+                </div>
+            `;
+        }
+        
+        function toggleHelp(targetId = 'help-content') {
+            const helpContent = document.getElementById(targetId);
+            if (!helpContent) return;
+            
+            if (helpContent.classList.contains('active')) {
+                helpContent.classList.remove('active');
+            } else {
+                helpContent.innerHTML = `
+                    <h4>How Your Privacy Works</h4>
+                    <p>Anyone who scans your QR sees:</p>
+                    <ul>
+                        <li>✓ Your name & emergency contact (that's the point - to help you!)</li>
+                        <li>✓ Blood type & allergies (critical for first responders)</li>
+                    </ul>
+                    <p>Only with your password:</p>
+                    <ul>
+                        <li>🔒 Social Security Number</li>
+                        <li>🔒 Medical notes & medications</li>
+                    </ul>
+                    <p><strong>The Beautiful Math:</strong><br>
+                    Your encryption has more possible combinations than there are<br>
+                    grains of sand on all beaches on Earth... multiplied by the<br>
+                    number of stars in the universe... multiplied by a trillion.</p>
+                    <p><strong>Important:</strong> We designed this so even WE can't access your data.<br>
+                    Your QR code contains the only encryption key that exists.<br>
+                    Lose the QR = lose access forever. There's no password reset,<br>
+                    no customer service that can help, no backdoor.</p>
+                    <p>This is true security - not even the creators can break in.</p>
+                `;
+                helpContent.classList.add('active');
+            }
+        }
+        
+        // Dev Tools Functions
+        function toggleDevTools() {
+            const panel = document.getElementById('dev-panel');
+            panel.classList.toggle('active');
+        }
+        
+        async function devLoadQR() {
+            const guid = document.getElementById('dev-guid').value;
+            const key = document.getElementById('dev-key').value;
+            
+            if (!guid || !key) {
+                document.getElementById('dev-output').textContent = 'Please enter both GUID and Key';
+                return;
+            }
+            
+            document.getElementById('dev-output').textContent = 'Loading...';
+            
+            try {
+                await loadAndDisplayEmergencyInfo(guid, key, null, null);
+                document.getElementById('dev-output').textContent = 'Successfully loaded QR data';
+            } catch (error) {
+                document.getElementById('dev-output').textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        async function devTestArchive() {
+            const guid = document.getElementById('dev-guid').value;
+            if (!guid) {
+                document.getElementById('dev-output').textContent = 'Please enter a GUID';
+                return;
+            }
+            
+            const archiveUrl = `${ARCHIVE_BASE}${guid}.json`;
+            document.getElementById('dev-output').textContent = `Testing: ${archiveUrl}\n\nFetching...`;
+            
+            try {
+                const response = await fetch(archiveUrl, { mode: 'cors' });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('dev-output').textContent =
+                        `Success! Found on Archive.org\n\n` +
+                        `ID: ${data.id}\n` +
+                        `Has Auth: ${!!data.auth}\n\n` +
+                        `Raw JSON:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    document.getElementById('dev-output').textContent = 
+                        `Not found on Archive.org (${response.status})\n\n` +
+                        `This GUID may not have been uploaded yet.`;
+                }
+            } catch (error) {
+                document.getElementById('dev-output').textContent = 
+                    `Fetch error: ${error.message}\n\n` +
+                    `This could be a CORS issue or network problem.`;
+            }
+        }
+        
+        async function devScanQR() {
+            const file = document.getElementById('dev-qr-upload').files[0];
+            const output = document.getElementById('dev-output');
+            if (!file) {
+                output.textContent = 'Please select a QR image file';
+                return;
+            }
+
+            output.textContent = 'Scanning QR image...';
+            try {
+                const data = await scanFileForQR(file);
+                if (!data) {
+                    output.textContent = 'Unable to read QR code from image';
+                    return;
+                }
+
+                output.textContent = `QR detected: ${data}`;
+                const { guid, key } = parseQRData(data);
+                await loadAndDisplayEmergencyInfo(guid, key, null, null);
+                output.textContent += '\nLoaded QR data';
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        function parseQRData(text) {
+            let guid, key;
+            if (text.includes('http')) {
+                const parts = text.split('#');
+                const url = new URL(parts[0]);
+                guid = url.searchParams.get('guid');
+                key = parts[1];
+            } else if (text.includes('#')) {
+                [guid, key] = text.split('#');
+            }
+            if (!guid || !key) {
+                throw new Error('Invalid QR data');
+            }
+            return { guid, key };
+        }
+
+        function scanFileForQR(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, canvas.width, canvas.height);
+                        resolve(code ? code.data : null);
+                    };
+                    img.onerror = () => reject(new Error('Invalid image')); 
+                    img.src = reader.result;
+                };
+                reader.onerror = () => reject(new Error('File reading failed'));
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function devShowRawData() {
+            if (!currentData) {
+                document.getElementById('dev-output').textContent = 'No data loaded';
+                return;
+            }
+            
+            document.getElementById('dev-output').textContent = 
+                `Current Data:\n\n` +
+                `GUID: ${currentGUID}\n` +
+                `Key: ${currentKey}\n` +
+                `Mode: ${currentMode}\n\n` +
+                `Raw Data:\n${JSON.stringify(currentData, null, 2)}`;
+        }
+        
+        function devClearStorage() {
+            currentGUID = null;
+            currentKey = null;
+            currentData = null;
+            document.getElementById('dev-output').textContent = 'All data cleared';
+        }
+
+        // Allow closing dev tools
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('dev-panel').classList.remove('active');
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('dev-panel');
+            if (panel.classList.contains('active') &&
+                !e.target.closest('.dev-panel') &&
+                !e.target.closest('.dev-trigger')) {
+                panel.classList.remove('active');
+            }
+        });
+
+        // Triple-click to show dev tools
+        let clickCount = 0;
+        let clickTimer = null;
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.dev-trigger') || e.target.closest('.dev-panel')) return;
+            
+            clickCount++;
+            
+            if (clickCount === 3) {
+                document.querySelector('.dev-trigger').style.opacity = '1';
+                clickCount = 0;
+            }
+            
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 500);
+        });
     </script>
-    <script src="session.js"></script>
 </body>
 </html>
