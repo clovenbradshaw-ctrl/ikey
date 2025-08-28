@@ -373,8 +373,32 @@
             err.textContent = `⚠️ Failed to load required module: ${src}. Please refresh.`;
         }
 
+        function showLoadingOverlay() {
+            let overlay = document.getElementById('app-loading-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'app-loading-overlay';
+                overlay.innerHTML = `
+                    <div class="app-loading">
+                        <div class="spinner"></div>
+                        <p>Loading app...</p>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            } else {
+                overlay.style.display = 'flex';
+            }
+        }
+
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('app-loading-overlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
         function loadApp() {
-            if (window.appLoaded) return window.allModulesPromise;
+            if (window.appLoaded || window.appLoading) return window.allModulesPromise;
+            window.appLoading = true;
+            showLoadingOverlay();
             const scripts = [
                 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
                 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
@@ -407,7 +431,10 @@
 
             loadNext();
             window.appLoaded = true;
-            window.allModulesPromise = Promise.all(Object.values(window.modulePromises));
+            window.allModulesPromise = Promise.all(Object.values(window.modulePromises)).finally(() => {
+                hideLoadingOverlay();
+                window.appLoading = false;
+            });
             return window.allModulesPromise;
         }
 
@@ -469,6 +496,39 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        #app-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        #app-loading-overlay .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #cbd5e1;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        #app-loading-overlay p {
+            margin-top: 10px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        #app-loading-overlay .app-loading {
+            text-align: center;
         }
 
         .upload-overlay {
