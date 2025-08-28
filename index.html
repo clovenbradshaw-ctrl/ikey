@@ -462,6 +462,10 @@
                             rej(err);
                             showModuleError(src);
                             reject(err);
+                            window.appLoading = false;
+                            hideLoadingOverlay();
+                            delete window.modulePromises[src];
+                            return;
                         };
                         document.body.appendChild(s);
                     });
