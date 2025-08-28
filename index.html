@@ -429,8 +429,8 @@
             window.appLoading = true;
             showLoadingOverlay();
             const scripts = [
-                'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
-                'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
+                ['vendor/qrcode.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'],
+                ['vendor/jsQR.min.js', 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js'],
                 'app.js',
                 'medication.js',
                 'text-size.js',
@@ -439,14 +439,40 @@
 
             window.allModulesPromise = new Promise((resolve, reject) => {
                 const loadNext = () => {
-                    const src = scripts.shift();
-                    if (!src) {
+                    const entry = scripts.shift();
+                    if (!entry) {
                         window.appLoaded = true;
                         window.appLoading = false;
                         hideLoadingOverlay();
                         resolve();
                         return;
                     }
+
+                    const sources = Array.isArray(entry) ? entry.slice() : [entry];
+                    const key = Array.isArray(entry) ? entry[0] : entry;
+
+                    window.modulePromises[key] = new Promise((res, rej) => {
+                        const tryLoad = () => {
+                            const src = sources.shift();
+                            if (!src) {
+                                const err = new Error(`Failed to load ${key}`);
+                                rej(err);
+                                showModuleError(key);
+                                reject(err);
+                                return;
+                            }
+                            const s = document.createElement('script');
+                            s.src = src;
+                            s.onload = () => {
+                                window.loadedModules = window.loadedModules || {};
+                                window.loadedModules[key] = true;
+                                res();
+                                document.dispatchEvent(new CustomEvent('moduleLoaded', { detail: { src: key } }));
+                                loadNext();
+                            };
+                            s.onerror = tryLoad;
+                            document.body.appendChild(s);
+
                     window.modulePromises[src] = new Promise((res, rej) => {
                         const s = document.createElement('script');
                         s.src = src;
@@ -466,8 +492,9 @@
                             hideLoadingOverlay();
                             delete window.modulePromises[src];
                             return;
+
                         };
-                        document.body.appendChild(s);
+                        tryLoad();
                     });
                 };
                 loadNext();

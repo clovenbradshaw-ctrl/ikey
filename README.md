@@ -20,6 +20,10 @@ This section is for people who want to work on the project.
 
 This repository contains the iKey web application and related assets. All of the files that make the iKey website work live here. You can open the `.html` files in a browser to see the pages, and the `.js` files contain the code that powers features like encryption and saving.
 
+### Offline Dependencies
+
+For offline use, place `qrcode.min.js` and `jsQR.min.js` in a `vendor/` directory and ensure they are bundled with the application. The loader will attempt to use these local copies first and fall back to the CDN versions if they are missing.
+
 ## Dashboard
 
 This explains the main page you see after logging in.
