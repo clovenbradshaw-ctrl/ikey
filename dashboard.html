@@ -345,9 +345,9 @@
 <body>
     <header class="header">
         <nav class="nav">
-            <a href="index.html" class="logo"><img src="https://storage.googleapis.com/art_homelessness/1.png" alt="iKey logo"></a>
+            <a href="#" class="logo" onclick="router.go('app#index'); return false;"><img src="https://storage.googleapis.com/art_homelessness/1.png" alt="iKey logo"></a>
             <div class="nav-center">
-                <a href="index.html" class="nav-link active">Dashboard</a>
+                <a href="#" class="nav-link active" onclick="router.go('app#index'); return false;">Dashboard</a>
                 <a href="#" class="nav-link">Emergency View</a>
                 <a href="#" class="nav-link">🩺 EHR</a>
                 <a href="#" class="nav-link">Settings</a>
@@ -540,7 +540,7 @@
     <script>
     function confirmEmergencyAccess() {
         if (confirm('Open Emergency Services?')) {
-            window.location.href = 'text911.html';
+            router.go('app#text911');
         }
     }
     </script>

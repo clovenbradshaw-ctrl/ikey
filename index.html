@@ -333,7 +333,7 @@
         }
         
         function handleBulkGeneration() {
-            window.location.href = 'bulk.html';
+            router.go('app#bulk');
         }
         
         document.addEventListener('DOMContentLoaded', () => {
@@ -1446,10 +1446,10 @@
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
             </div>
-            <button class="home-btn" onclick="window.location='index.html'">Home</button>
+            <button class="home-btn" onclick="router.go('app#index')">Home</button>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
-            <button class="notes-tab-btn" style="display:none;" onclick="window.location='notes.html'">📝 Notes</button>
+            <button class="notes-tab-btn" style="display:none;" onclick="router.go('app#notes')">📝 Notes</button>
             <button class="resources-btn" onclick="showResourcesTab()">Resources</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
             <div id="session-timer" class="session-timer">
@@ -3731,7 +3731,7 @@
                 setFrameHeight();
                 window.addEventListener('resize', setFrameHeight);
                 if (!frame.src) {
-                    frame.src = 'health-records.html';
+                    frame.src = 'app#health-records';
                 }
                 document.getElementById('healthRecordsTab').style.display = 'block';
             } catch (e) {
@@ -3753,6 +3753,9 @@
             setFrameHeight();
             window.addEventListener('resize', setFrameHeight);
             if (!frame.src) {
+                if (router && router.addBreadcrumb) {
+                    router.addBreadcrumb('Resources', 'https://wttin.org/');
+                }
                 frame.src = 'https://wttin.org/';
             }
             document.getElementById('resourcesTab').style.display = 'block';
@@ -3772,8 +3775,8 @@
             const overlay = document.createElement('div');
             overlay.id = 'privacy-viewer';
             overlay.className = 'qr-overlay';
-            const src = 'privacy.html' + (guid ? `?guid=${encodeURIComponent(guid)}` : '');
-            overlay.innerHTML = `<div class="qr-modal" style="width:90%;height:90%;max-width:1000px;display:flex;flex-direction:column;"><iframe src="${src}" style="flex:1;border:none;border-radius:10px;"></iframe><button class="btn" onclick="document.getElementById('privacy-viewer').remove()">Close</button></div>`;
+            const route = 'app#privacy' + (guid ? `?guid=${encodeURIComponent(guid)}` : '');
+            overlay.innerHTML = `<div class="qr-modal" style="width:90%;height:90%;max-width:1000px;display:flex;flex-direction:column;"><iframe src="${route}" style="flex:1;border:none;border-radius:10px;"></iframe><button class="btn" onclick="document.getElementById('privacy-viewer').remove()">Close</button></div>`;
             overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
             document.body.appendChild(overlay);
         }
@@ -3788,7 +3791,7 @@
                         document.getElementById('location-loading').style.display = 'none';
                         document.getElementById('location-content').style.display = 'block';
                         const iframe = document.getElementById('text911Frame');
-                        iframe.src = 'text911.html';
+                        iframe.src = 'app#text911';
                     },
                     (error) => {
                         document.getElementById('location-loading').style.display = 'none';
