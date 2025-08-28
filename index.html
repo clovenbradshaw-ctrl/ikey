@@ -1630,7 +1630,7 @@
             <button class="logout-btn" style="display:none;" onclick="logoutOwner()">Logout</button>
         </div>
     </div>
-    <button class="notes-btn" onclick="openNotesModal()">Notes</button>
+    <button class="notes-btn" style="display:none;" onclick="openNotesModal()">Notes</button>
 
     <div id="notesModal" class="notes-modal">
         <div class="notes-modal-content">
@@ -2044,6 +2044,7 @@
                     document.querySelector('.login-btn').style.display = 'none';
                     document.querySelector('.dashboard-btn').style.display = 'inline-block';
                     document.querySelector('.logout-btn').style.display = 'inline-block';
+                    document.querySelector('.notes-btn').style.display = 'inline-block';
                     document.querySelector('.health-records-btn').style.display = 'inline-block';
                     showOwnerDashboard();
                     startSessionTimer(expiry - Date.now());
@@ -2521,6 +2522,7 @@
                 document.querySelector('.login-btn').style.display = 'none';
                 document.querySelector('.dashboard-btn').style.display = 'inline-block';
                 document.querySelector('.logout-btn').style.display = 'inline-block';
+                document.querySelector('.notes-btn').style.display = 'inline-block';
                 showOwnerDashboard();
                 startSessionTimer();
                 document.querySelector('.health-records-btn').style.display = 'inline-block';
@@ -2535,6 +2537,7 @@
             document.querySelector('.dashboard-btn').style.display = 'none';
             document.querySelector('.health-records-btn').style.display = 'none';
             document.querySelector('.logout-btn').style.display = 'none';
+            document.querySelector('.notes-btn').style.display = 'none';
             document.querySelector('.login-btn').style.display = 'inline-block';
 
             localStorage.removeItem('ikey_last_view');
