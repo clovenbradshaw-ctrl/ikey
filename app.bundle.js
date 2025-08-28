@@ -167,6 +167,20 @@
         async function parseAndDisplay() {
             const hash = window.location.hash.substring(1);
 
+            // Handle legacy query style like /#app?f=create1
+            if (hash.startsWith('app?')) {
+                const params = new URLSearchParams(hash.slice(4));
+                const route = params.get('f');
+                if (route === 'bulk') {
+                    window.location.href = 'bulk.html';
+                    return;
+                }
+                currentMode = 'create';
+                showCreationForm();
+                return;
+            }
+
+
             // Handle new app routes like /#app#create or /#app#bulk
             if (hash.startsWith('app#')) {
                 const route = hash.split('#')[1];

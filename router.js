@@ -14,10 +14,18 @@
         return;
       }
       if(target.startsWith('app')){
+
+        const normalized = target.replace('?f=', '#');
+        if(isHome()){
+          location.hash = normalized;
+        } else {
+          location.href = 'index.html#' + normalized;
+
         if(isHome()){
           location.hash = target;
         } else {
           location.href = 'index.html#' + target;
+
         }
         return;
       }

@@ -95,6 +95,16 @@
       window.addEventListener('load', updateTopBarOffset);
       window.addEventListener('resize', updateTopBarOffset);
     </script>
+
+<script src="vendor/qrcode.min.js"></script>
+<script>window.QRCode || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>');</script>
+<script src="vendor/jsqr.js"></script>
+<script>window.jsQR || document.write('<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"><\/script>');</script>
+<script src="text-size.js"></script>
+<script src="medication.js"></script>
+<script src="app.js"></script>
+<script src="form-init.js"></script>
+
 <script>
         // Configuration
         const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
@@ -264,6 +274,20 @@
 
         async function parseAndDisplay() {
             const hash = window.location.hash.substring(1);
+
+            // Handle legacy query style like /#app?f=create1
+            if (hash.startsWith('app?')) {
+                const params = new URLSearchParams(hash.slice(4));
+                const route = params.get('f');
+                if (route === 'bulk') {
+                    window.location.href = 'bulk.html';
+                    return;
+                }
+                currentMode = 'create';
+                showCreationForm();
+                return;
+            }
+
 
             // Handle new app routes like /#app#create or /#app#bulk
             if (hash.startsWith('app#')) {
