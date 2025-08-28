@@ -95,6 +95,7 @@
       window.addEventListener('load', updateTopBarOffset);
       window.addEventListener('resize', updateTopBarOffset);
     </script>
+
 <script src="vendor/qrcode.min.js"></script>
 <script>window.QRCode || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>');</script>
 <script src="vendor/jsqr.js"></script>
@@ -103,6 +104,7 @@
 <script src="medication.js"></script>
 <script src="app.js"></script>
 <script src="form-init.js"></script>
+
 <script>
         // Configuration
         const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
@@ -285,6 +287,7 @@
                 showCreationForm();
                 return;
             }
+
 
             // Handle new app routes like /#app#create or /#app#bulk
             if (hash.startsWith('app#')) {

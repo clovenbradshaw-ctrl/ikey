@@ -180,6 +180,7 @@
                 return;
             }
 
+
             // Handle new app routes like /#app#create or /#app#bulk
             if (hash.startsWith('app#')) {
                 const route = hash.split('#')[1];
