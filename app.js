@@ -389,24 +389,30 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Geolocation not available on this device/browser.");
         return;
       }
-      navigator.geolocation.getCurrentPosition(async pos => {
-        const lat = round6(pos.coords.latitude);
-        const lng = round6(pos.coords.longitude);
-        if (!validLatLng(lat, lng)) {
-          alert("Got invalid coordinates from the device.");
-          return;
-        }
-        const place = {
-          id: uid(),
-          title,
-          note,
-          category: selectedCategory,
-          type: "coords",
-          coords: { lat, lng },
-          createdAt: Date.now()
-        };
-        await savePlaceNote(place);
-        reset();
+      navigator.geolocation.getCurrentPosition(pos => {
+        (async () => {
+          try {
+            const lat = round6(pos.coords.latitude);
+            const lng = round6(pos.coords.longitude);
+            if (!validLatLng(lat, lng)) {
+              alert("Got invalid coordinates from the device.");
+              return;
+            }
+            const place = {
+              id: uid(),
+              title,
+              note,
+              category: selectedCategory,
+              type: "coords",
+              coords: { lat, lng },
+              createdAt: Date.now()
+            };
+            await savePlaceNote(place);
+            reset();
+          } catch (e) {
+            console.error(e);
+          }
+        })();
       }, err => {
         alert("Couldn't get your location. You can switch to 'Enter coordinates'.");
         console.error(err);

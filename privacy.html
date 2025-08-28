@@ -293,7 +293,7 @@
     }
 
     // Wire up UI
-    document.getElementById('runBtn').addEventListener('click', runDemo);
+    document.getElementById('runBtn').addEventListener('click', () => { runDemo().catch(console.error); });
     document.getElementById('recalc').addEventListener('click', updateBruteforceEstimate);
 
     // Auto-run: detect GUID and fetch on load (no typing).
@@ -301,7 +301,7 @@
       setGuidTag(getGuid());
       updateBruteforceEstimate();
       // Auto-run if we have a GUID ready:
-      if (getGuid()) runDemo();
+      if (getGuid()) { runDemo().catch(console.error); }
     });
   </script>
 </body>
