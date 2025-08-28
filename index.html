@@ -25,20 +25,12 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 60px 40px;
+            margin: 0 auto;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 50px;
-        }
-        
-        .logo {
-            font-size: 48px;
-            font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
         }
         
         .tagline {
@@ -250,7 +242,6 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">iKey</div>
             <div class="tagline">Secure Personal Information Vault</div>
             <div class="security-badge">
                 🔐 Zero-Knowledge Encryption
@@ -337,7 +328,8 @@
     </div>
     <script>
         function handlePersonalSetup() {
-            window.location.href = 'dashboard.html';
+            showQRTab();
+            showCreationForm();
         }
         
         function handleBulkGeneration() {
@@ -361,7 +353,6 @@
         });
     </script>
         <style>
->>>>>>> main
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -754,6 +745,10 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .logo img {
+            height: 28px;
         }
 
          .logo-text-short {
@@ -1440,7 +1435,7 @@
     </style>
     <div class="top-bar">
         <div class="logo-container">
-            <div class="logo">🔑 <span class="logo-text-full">iKey</span><span class="logo-text-short">iKey</span></div>
+        <div class="logo"><img src="https://storage.googleapis.com/art_homelessness/1.png" alt="iKey logo"> <span class="logo-text-full">iKey</span><span class="logo-text-short">iKey</span></div>
         </div>
         <div class="controls">
             <div class="size-controls">
@@ -1451,7 +1446,7 @@
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
             </div>
-            <button class="home-btn" onclick="window.location='landing.html'">Home</button>
+            <button class="home-btn" onclick="window.location='index.html'">Home</button>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
             <button class="notes-tab-btn" style="display:none;" onclick="window.location='notes.html'">📝 Notes</button>
