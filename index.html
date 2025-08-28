@@ -22,7 +22,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh !important;
             display: flex !important;
             align-items: center !important;
@@ -727,6 +727,203 @@
             background: #667eea;
             transition: width 0.5s ease;
         }
+
+        /* Landing page styles */
+        .landing-container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 40px;
+        }
+        .landing-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .landing-logo {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .landing-tagline {
+            color: #6b7280;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .landing-security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #f3f4f6;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #4b5563;
+            margin-top: 10px;
+        }
+        .landing-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .landing-option-card {
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 40px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .landing-option-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+        }
+        .landing-option-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        .landing-option-card:hover::before {
+            transform: scaleX(1);
+        }
+        .landing-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 30px;
+            color: white;
+        }
+        .landing-option-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        .landing-option-description {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .landing-features-list {
+            list-style: none;
+        }
+        .landing-features-list li {
+            color: #4b5563;
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .landing-features-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+        .bulk-details {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .bulk-specs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .spec-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+        .spec-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+        .spec-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        .landing-action-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .landing-action-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        .landing-recommended-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .landing-footer-info {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .landing-encryption-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+        .landing-encryption-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        @media (max-width: 900px) {
+            .landing-options-grid {
+                grid-template-columns: 1fr;
+            }
+            .landing-container {
+                padding: 40px 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -768,9 +965,11 @@
 
     <script>
         // Configuration
-        const VIEWER_URL = 'https://sites.google.com/view/securecontact/';
+        const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
         const BEACON_TEXT = 'SQR:1';
-        const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook-test/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
+        const WEBHOOK_URL = 'https://n8n.intelechia.com/webhook/d5e99c29-2cf1-44c1-b5b4-95a1ca048441';
+        const XANO_BASE = 'https://xvkq-pq7i-idtl.n7d.xano.io/api:Hj4C6PGO';
+        const MANUAL_AUTH_OVERRIDE = "YOUR_MANUAL_AUTH_KEY_HERE";
         const ARCHIVE_BASE = 'https://archive.org/download/zuboff/';
 
 
@@ -802,6 +1001,92 @@
             }
         ];
 
+        function showLandingPage() {
+            const mainContainer = document.querySelector('.container');
+            if (mainContainer) mainContainer.style.display = 'none';
+            const landing = document.createElement('div');
+            landing.id = 'landing-root';
+            landing.innerHTML = `
+                <div class="landing-container">
+                    <div class="landing-header">
+                        <div class="landing-logo">iKey</div>
+                        <div class="landing-tagline">Secure Personal Information Vault</div>
+                        <div class="landing-security-badge">🔐 Zero-Knowledge Encryption</div>
+                    </div>
+                    <div class="landing-options-grid">
+                        <div class="landing-option-card" onclick="handlePersonalSetup()">
+                            <div class="landing-recommended-badge">Recommended</div>
+                            <div class="landing-icon">👤</div>
+                            <h2 class="landing-option-title">Personal QR Code</h2>
+                            <p class="landing-option-description">
+                                Create your own secure iKey QR code to protect and share your personal information with zero-knowledge encryption.
+                            </p>
+                            <ul class="landing-features-list">
+                                <li>One-time QR generation (never changes)</li>
+                                <li>Three-layer encryption security</li>
+                                <li>Emergency & private info separation</li>
+                                <li>Password-protected access</li>
+                                <li>Auto-archive updates</li>
+                            </ul>
+                            <button class="landing-action-button"><span>➜</span><span>Get Started</span></button>
+                        </div>
+                        <div class="landing-option-card" onclick="handleBulkGeneration()">
+                            <div class="landing-icon">📋</div>
+                            <h2 class="landing-option-title">Bulk QR Generation</h2>
+                            <p class="landing-option-description">
+                                Generate multiple QR codes for organizations, events, or distribution. Perfect for healthcare facilities, schools, or emergency services.
+                            </p>
+                            <ul class="landing-features-list">
+                                <li>Batch create up to 1000 codes</li>
+                                <li>Print-ready layouts</li>
+                                <li>Customizable page formats</li>
+                                <li>CSV import for bulk data</li>
+                                <li>Admin management dashboard</li>
+                            </ul>
+                            <div class="bulk-details">
+                                <strong style="color: #4b5563;">Printing Specifications</strong>
+                                <div class="bulk-specs">
+                                    <div class="spec-item">
+                                        <span class="spec-value">15mm</span>
+                                        <span class="spec-label">Min. QR Size</span>
+                                    </div>
+                                    <div class="spec-item">
+                                        <span class="spec-value">1-30</span>
+                                        <span class="spec-label">Codes per Page</span>
+                                    </div>
+                                    <div class="spec-item">
+                                        <span class="spec-value">A4/Letter</span>
+                                        <span class="spec-label">Page Formats</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="landing-action-button" style="margin-top: 20px;"><span>⚡</span><span>Configure Bulk</span></button>
+                        </div>
+                    </div>
+                    <div class="landing-footer-info">
+                        <strong>Security First</strong>
+                        <div class="landing-encryption-info">
+                            <div class="landing-encryption-item"><span>🔑</span><span>256-bit Encryption</span></div>
+                            <div class="landing-encryption-item"><span>🛡️</span><span>PBKDF2 Key Derivation</span></div>
+                            <div class="landing-encryption-item"><span>📦</span><span>Zero-Knowledge Architecture</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(landing);
+        }
+
+        function handlePersonalSetup() {
+            const landing = document.getElementById('landing-root');
+            if (landing) landing.remove();
+            const mainContainer = document.querySelector('.container');
+            if (mainContainer) mainContainer.style.display = 'block';
+            showCreationForm();
+        }
+
+        function handleBulkGeneration() {
+            window.location.href = 'bulk.html';
+        }
 
         // State
         let currentGUID = null;
@@ -846,8 +1131,8 @@
                 showLoadingScreen(name);
                 await loadAndDisplayEmergencyInfo(guid, key, name, created);
             } else {
-                currentMode = 'create';
-                showCreationForm();
+                currentMode = 'landing';
+                showLandingPage();
             }
         });
         
