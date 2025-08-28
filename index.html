@@ -2,501 +2,367 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>iKey - Your data. Your key.</title>
-    <link rel="icon" href="https://storage.googleapis.com/art_homelessness/favicon.ico">
-    <meta name="description" content="Secure personal information with zero-knowledge encryption. Only your QR code can unlock your data.">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iKey - Secure Personal Information Vault</title>
     <style>
-        /* Softr embedding fixes */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
-        :root {
-            --primary: #4F46E5;
-            --danger: #EF4444;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --surface: #FFFFFF;
-            --surface-alt: #F9FAFB;
-            --text: #111827;
-            --text-secondary: #6B7280;
-        }
-
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow-x: hidden !important;
-            width: 100% !important;
-        }
-
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: var(--surface-alt);
-            min-height: 100vh !important;
-            display: flex !important;
-            flex-direction: column;
-            align-items: center !important;
-            justify-content: flex-start !important;
-            padding-top: 80px !important;
-        }
-
-        #healthRecordsTab {
-            width: 100%;
-        }
-
-        #resourcesTab {
-            width: 100%;
-        }
-
-        .container {
-            width: 100% !important;
-            max-width: none;
-            margin: 0 !important;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            overflow: visible;
-            animation: slideIn 0.3s ease;
-        }
-
-        @media (max-width: 640px) {
-            .container {
-                max-width: 100%;
-                border-radius: 0 !important;
-                margin: 0 !important;
-                padding-bottom: 80px;
-            }
-
-            body {
-                background: white !important;
-                align-items: flex-start !important;
-            }
-
-            .top-bar {
-                display: flex;
-                justify-content: space-between;
-                grid-template-columns: none;
-                flex-wrap: wrap;
-                height: auto;
-                padding: 4px 10px;
-            }
-            .logo-text-full {
-                display: none;
-            }
-
-            .logo-text-short {
-                display: inline;
-            }
-
-            .controls {
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-
-            .dashboard-btn,
-            .health-records-btn,
-            .resources-btn {
-                display: none !important;
-            }
-
-            .dashboard-header {
-                flex-direction: row;
-                align-items: center;
-            }
-
-            .progress-ring,
-            .progress-ring svg {
-                width: 60px;
-                height: 60px;
-            }
-
-            .section-cards {
-                display: grid;
-                grid-template-columns: 1fr;
-            }
-
-            .section-card {
-                margin: 8px;
-                padding: 12px;
-                position: relative;
-            }
-
-            .action-buttons {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: white;
-                border-top: 1px solid #e5e7eb;
-                padding: 12px;
-                display: flex;
-                gap: 8px;
-                z-index: 100;
-            }
-
-            .action-buttons .btn {
-                flex: 1;
-            }
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
         
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 40px;
         }
         
         .header {
-            background: var(--primary);
-            color: white;
-            padding: 20px;
             text-align: center;
+            margin-bottom: 50px;
         }
         
-        .header h1 {
-            font-size: 1.5rem;
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .tagline {
+            color: #6b7280;
+            font-size: 18px;
             margin-bottom: 5px;
         }
         
-        .header p {
-            opacity: 0.9;
-            font-size: 0.875rem;
-        }
-        
-        .content {
-            padding: 20px;
-        }
-        
-        /* Info Display Mode */
-        .info-card {
-            animation: fadeIn 0.5s ease;
-        }
-
-        .info-header {
-            background: #ff4757;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .info-header h2 {
-            font-size: 1.125rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .info-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .info-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-        
-        .info-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .info-icon {
-            font-size: 1.25rem;
-            margin-right: 12px;
-            flex-shrink: 0;
-        }
-        
-        .info-content {
-            flex: 1;
-        }
-        
-        .info-label {
-            font-size: 0.75rem;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-        }
-        
-        .info-value {
-            font-size: 1rem;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        
-        .phone-link {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
+        .security-badge {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            margin-top: 5px;
-            padding: 8px 12px;
-            background: #e8f0fe;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .phone-link:hover {
-            background: var(--primary);
-            color: white;
-            transform: translateY(-2px);
+            background: #f3f4f6;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #4b5563;
+            margin-top: 10px;
         }
         
-        .private-section {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
         }
         
-        .private-section h3 {
-            color: #856404;
-            font-size: 1rem;
-            margin-bottom: 10px;
+        .option-card {
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 40px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+        }
+        
+        .option-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .option-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 30px;
+            color: white;
         }
         
-        .password-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            margin-bottom: 10px;
+        .option-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 15px;
         }
         
-        .hint {
-            font-size: 0.75rem;
-            color: #856404;
-            margin-bottom: 10px;
-            font-style: italic;
-        }
-        
-        /* Creation Form Mode */
-        .form-group {
+        .option-description {
+            color: #6b7280;
+            line-height: 1.6;
             margin-bottom: 20px;
         }
         
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #2c3e50;
-            font-weight: 500;
-            font-size: 0.875rem;
+        .features-list {
+            list-style: none;
         }
         
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            transition: border-color 0.3s;
+        .features-list li {
+            color: #4b5563;
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
         }
         
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
+        .features-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
         }
         
-        .form-group textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-        
-        .section-title {
-            font-size: 1rem;
-            color: #2c3e50;
-            margin: 25px 0 15px;
-            padding-top: 20px;
-            border-top: 2px solid #e0e0e0;
-            font-weight: 600;
-        }
-
-        .section-title:first-of-type {
-            margin-top: 0;
-            padding-top: 0;
-            border-top: none;
-        }
-
-        .section-status {
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            margin-left: 8px;
-        }
-
-        .section-status.complete {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .section-status.incomplete {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
+        .bulk-details {
+            background: #f9fafb;
             border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 44px;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            margin-top: 10px;
-        }
-        
-        .btn-outline {
-            background: white;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            margin-top: 10px;
-        }
-        
-        .btn-outline:hover {
-            background: var(--primary);
-            color: white;
-        }
-        
-        /* QR Display */
-        .qr-display {
-            text-align: center;
             padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
             margin-top: 20px;
         }
         
-        #qrcode {
-            display: inline-block;
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-        
-        .action-buttons {
+        .bulk-specs {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
             margin-top: 15px;
         }
-
-        /* QR Viewer Overlay */
-        .qr-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .qr-modal {
+        
+        .spec-item {
+            text-align: center;
+            padding: 10px;
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .qr-modal button {
-            margin-top: 10px;
+            border-radius: 8px;
         }
         
-        /* Help Section */
-        .help-link {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #e0e0e0;
-        }
-        
-        .help-link a {
+        .spec-value {
+            font-size: 20px;
+            font-weight: bold;
             color: #667eea;
-            text-decoration: none;
-            font-size: 0.875rem;
-        }
-        
-        .help-content {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 10px;
-            font-size: 0.875rem;
-            line-height: 1.6;
-            display: none;
-        }
-        
-        .help-content.active {
             display: block;
         }
         
-        /* Loading State */
-        .loading-screen {
+        .spec-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .action-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .recommended-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .footer-info {
             text-align: center;
-            padding: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 14px;
         }
         
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(102, 126, 234, 0.3);
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+        .encryption-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
         }
         
+        .encryption-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @media (max-width: 900px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 40px 20px;
+            }
+            
+            .bulk-specs {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">iKey</div>
+            <div class="tagline">Secure Personal Information Vault</div>
+            <div class="security-badge">
+                🔐 Zero-Knowledge Encryption
+            </div>
+        </div>
+        
+        <div class="options-grid">
+            <div class="option-card" onclick="handlePersonalSetup()">
+                <div class="recommended-badge">Recommended</div>
+                <div class="icon">👤</div>
+                <h2 class="option-title">Personal QR Code</h2>
+                <p class="option-description">
+                    Create your own secure iKey QR code to protect and share your personal information with zero-knowledge encryption.
+                </p>
+                <ul class="features-list">
+                    <li>One-time QR generation (never changes)</li>
+                    <li>Three-layer encryption security</li>
+                    <li>Emergency & private info separation</li>
+                    <li>Password-protected access</li>
+                    <li>Auto-archive updates</li>
+                </ul>
+                <button class="action-button">
+                    <span>➜</span>
+                    <span>Get Started</span>
+                </button>
+            </div>
+            
+            <div class="option-card" onclick="handleBulkGeneration()">
+                <div class="icon">📋</div>
+                <h2 class="option-title">Bulk QR Generation</h2>
+                <p class="option-description">
+                    Generate multiple QR codes for organizations, events, or distribution. Perfect for healthcare facilities, schools, or emergency services.
+                </p>
+                <ul class="features-list">
+                    <li>Batch create up to 1000 codes</li>
+                    <li>Print-ready layouts</li>
+                    <li>Customizable page formats</li>
+                    <li>CSV import for bulk data</li>
+                    <li>Admin management dashboard</li>
+                </ul>
+                
+                <div class="bulk-details">
+                    <strong style="color: #4b5563;">Printing Specifications</strong>
+                    <div class="bulk-specs">
+                        <div class="spec-item">
+                            <span class="spec-value">15mm</span>
+                            <span class="spec-label">Min. QR Size</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-value">1-30</span>
+                            <span class="spec-label">Codes per Page</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-value">A4/Letter</span>
+                            <span class="spec-label">Page Formats</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="action-button" style="margin-top: 20px;">
+                    <span>⚡</span>
+                    <span>Configure Bulk</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="footer-info">
+            <strong>Security First</strong>
+            <div class="encryption-info">
+                <div class="encryption-item">
+                    <span>🔑</span>
+                    <span>256-bit Encryption</span>
+                </div>
+                <div class="encryption-item">
+                    <span>🛡️</span>
+                    <span>PBKDF2 Key Derivation</span>
+                </div>
+                <div class="encryption-item">
+                    <span>📦</span>
+                    <span>Zero-Knowledge Architecture</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function handlePersonalSetup() {
+            window.location.href = 'personal.html';
+        }
+        
+        function handleBulkGeneration() {
+            window.location.href = 'bulk.html';
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.option-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
+    </script>
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
