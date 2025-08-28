@@ -889,7 +889,7 @@
 
                         ${renderSectionCard('Electronic Health Records', '🏥', sections.vault, [
                             { label: 'Records', value: fields.vault.records + ' documents' }
-                        ], 'showHealthRecordsTab()', 'vault')}
+                        ], 'showHealthRecordsTabSafe()', 'vault')}
                         <div class="emergency-card">
                             <h3>🚨 Emergency Services</h3>
                             <p style="margin-bottom:8px;">Tap to open</p>
@@ -923,7 +923,7 @@
             const percent = Math.round((progress.filled / progress.total) * 100);
             const clickAttr = onClick ? ` onclick="${onClick}" style="cursor:pointer"` : '';
             const actionButton = sectionKey === 'vault'
-                ? `<button class="edit-section-btn" onclick="event.stopPropagation(); showHealthRecordsTab()">Open</button>`
+                ? `<button class="edit-section-btn" onclick="event.stopPropagation(); showHealthRecordsTabSafe()">Open</button>`
                 : `<button class="edit-section-btn" onclick="event.stopPropagation(); openEditModal('${sectionKey}')">Edit</button>`;
             return `
                 <div class="section-card ${percent === 100 ? 'complete' : ''}"${clickAttr}>
@@ -1500,6 +1500,10 @@
                 }
 
                 alert('Store this password somewhere safe. Without it, you cannot archive new data or modify the protected content.');
+
+                if (!(await ensureHealthApp())) {
+                    throw new Error('Health records module not loaded');
+                }
 
                 // Generate identifiers and keys
                 currentGUID = generateGUID();
@@ -2231,6 +2235,10 @@
         }
 
        async function showHealthRecordsTab() {
+            if (!(await ensureHealthApp())) {
+                alert('Health records module not loaded.');
+                return;
+            }
             if (!ownerPassword) {
                 await ownerLogin();
                 if (!ownerPassword) return;
