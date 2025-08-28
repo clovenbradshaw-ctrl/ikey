@@ -263,6 +263,7 @@
             body{padding:0;}
         }
     </style>
+    <script src="permission-gate.js"></script>
     <script src="text-size.js"></script>
 </head>
 <body>
@@ -365,7 +366,19 @@
             sendHeight();
         }
         function showError(error){let message='';switch(error.code){case error.PERMISSION_DENIED:message="Location access denied. Please enable it and refresh.";break;case error.POSITION_UNAVAILABLE:message="Location unavailable. Please try again.";break;case error.TIMEOUT:message="Location request timed out. Please refresh.";break;default:message="Unable to get location. Please refresh.";}document.getElementById('errorMessage').textContent=message;document.getElementById('loading').style.display='none';document.getElementById('content').style.display='none';document.getElementById('emergencyButtons').style.display='none';document.getElementById('error').style.display='block';sendHeight();}
-        function getLocation(){if(navigator.geolocation){navigator.geolocation.getCurrentPosition(updateDisplay,showError,{enableHighAccuracy:true,timeout:15000,maximumAge:0});navigator.geolocation.watchPosition(updateDisplay,()=>{},{enableHighAccuracy:true,maximumAge:10000});}else{showError({code:0,message:"Geolocation not supported"});}}
+        async function getLocation(){
+            if(!navigator.geolocation){
+                showError({code:0,message:"Geolocation not supported"});
+                return;
+            }
+            const {ok,value}=await permissionGate('geolocation',{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+            if(ok){
+                updateDisplay(value);
+                navigator.geolocation.watchPosition(updateDisplay,()=>{}, {enableHighAccuracy:true,maximumAge:10000});
+            }else{
+                showError({code:1,message:"Location access denied"});
+            }
+        }
         window.onload=function(){getLocation();};
     </script>
 </body>
