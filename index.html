@@ -10,12 +10,18 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        :root {
+            --top-bar-height: 0px;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            padding-top: calc(var(--top-bar-height) + 20px);
+            scroll-margin-top: var(--top-bar-height);
         }
         
         .container {
@@ -1561,6 +1567,15 @@
         </div>
     </div>
     <!-- Notes modal script removed -->
+    <script>
+        function updateTopBarOffset() {
+            const topBar = document.querySelector('.top-bar');
+            const height = topBar ? topBar.offsetHeight : 0;
+            document.documentElement.style.setProperty('--top-bar-height', height + 'px');
+        }
+        window.addEventListener('load', updateTopBarOffset);
+        window.addEventListener('resize', updateTopBarOffset);
+    </script>
     <script src="session.js"></script>
 </body>
 </html>
