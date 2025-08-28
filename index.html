@@ -339,14 +339,20 @@
         </div>
     </div>
     <script>
+        (function () {
+            if (window.location.search || window.location.hash) {
+                window.location.replace(`personal.html${window.location.search}${window.location.hash}`);
+            }
+        })();
+
         function handlePersonalSetup() {
             window.location.href = 'personal.html';
         }
-        
+
         function handleBulkGeneration() {
             window.location.href = 'bulk.html';
         }
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             const cards = document.querySelectorAll('.option-card');
             cards.forEach((card, index) => {
