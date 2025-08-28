@@ -867,24 +867,26 @@
         }
         
         function testPrint() {
-            alert(`Generating test print with 5 QR codes in ${currentLayout} layout...`);
+            console.log(`Generating test print with 5 QR codes in ${currentLayout} layout...`);
         }
-        
+
         function generateBatch() {
             const features = [];
             document.querySelectorAll('.feature-item.active .feature-title').forEach(f => {
                 features.push(f.textContent);
             });
-            
-            alert(`Generating batch:\n\n` +
-                  `• Quantity: ${currentQuantity} codes\n` +
-                  `• Layout: ${currentLayout}\n` +
-                  `• Pages: ${Math.ceil(currentQuantity / codesPerPage)}\n` +
-                  `• Features: ${features.join(', ')}\n\n` +
-                  `Each QR will contain:\n` +
-                  `• Unique GUID\n` +
-                  `• 256-bit encryption key\n` +
-                  `• Zero-knowledge architecture ready`);
+
+            console.log(
+                `Generating batch:\n` +
+                `• Quantity: ${currentQuantity} codes\n` +
+                `• Layout: ${currentLayout}\n` +
+                `• Pages: ${Math.ceil(currentQuantity / codesPerPage)}\n` +
+                `• Features: ${features.join(', ')}\n` +
+                `Each QR will contain:\n` +
+                `• Unique GUID\n` +
+                `• 256-bit encryption key\n` +
+                `• Zero-knowledge architecture ready`
+            );
         }
         
         updatePreview();
