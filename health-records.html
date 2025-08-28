@@ -16,7 +16,12 @@
             margin: 0;
             padding: 0;
         }
-        
+
+        :root {
+            --top-bar-height: 0px;
+            --nav-tabs-height: 0px;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             font-size: 0.9167rem;
@@ -24,7 +29,7 @@
             color: #1e293b;
             background: white;
             padding: 20px;
-            padding-top: 105px;
+            padding-top: calc(var(--top-bar-height) + var(--nav-tabs-height) + 20px);
         }
         
         .security-bar {
@@ -190,7 +195,7 @@
         
         .nav-tabs {
             position: fixed;
-            top: 56px;
+            top: var(--top-bar-height);
             left: 0;
             right: 0;
             background: #f8fafc;
@@ -231,11 +236,11 @@
             color: #3b82f6;
             border-bottom-color: #3b82f6;
         }
-        
+
         .main-content {
             margin-top: 20px;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -262,7 +267,7 @@
         .section {
             margin-bottom: 30px;
             page-break-inside: avoid;
-            scroll-margin-top: 125px;
+            scroll-margin-top: calc(var(--top-bar-height) + var(--nav-tabs-height));
         }
         
         .section-header {
@@ -773,16 +778,8 @@
                 width: 100%;
                 justify-content: center;
             }
-            
-            body {
-                padding-top: 120px;
-            }
-            
-            .nav-tabs {
-                top: 80px;
-            }
         }
-        
+
         @media (max-width: 768px) {
             .grid-2,
             .grid-3 {
@@ -796,14 +793,12 @@
             
             body {
                 padding: 10px;
-                padding-top: 140px;
             }
-            
+
             .nav-tabs {
                 padding: 0 10px;
-                top: 100px;
             }
-            
+
             .tab {
                 padding: 10px 15px;
                 font-size: 0.75rem;
@@ -3379,30 +3374,18 @@
             return await sha256Hash(first);
         }
 
-        // Adjust nav tabs position based on the security bar height
-        function adjustNavTabsPosition() {
+        // Adjust layout based on the dynamic heights of the bars
+        function updateOffsets() {
             const securityBar = document.querySelector('.security-bar');
             const navTabs = document.getElementById('navTabs');
-            if (securityBar && navTabs) {
-                const securityHeight = securityBar.offsetHeight;
-                const navHeight = navTabs.offsetHeight;
-
-                // Position the navigation tabs just below the security bar
-                navTabs.style.top = securityHeight + 'px';
-
-                // Add space for both bars so content isn't hidden
-                const offset = securityHeight + navHeight + 20; // extra breathing room
-                document.body.style.paddingTop = offset + 'px';
-
-                // Ensure in-page navigation accounts for the fixed headers
-                document.querySelectorAll('.section').forEach(section => {
-                    section.style.scrollMarginTop = offset + 'px';
-                });
-            }
+            const securityHeight = securityBar ? securityBar.offsetHeight : 0;
+            const navHeight = navTabs ? navTabs.offsetHeight : 0;
+            document.documentElement.style.setProperty('--top-bar-height', securityHeight + 'px');
+            document.documentElement.style.setProperty('--nav-tabs-height', navHeight + 'px');
         }
 
-        window.addEventListener('load', adjustNavTabsPosition);
-        window.addEventListener('resize', adjustNavTabsPosition);
+        window.addEventListener('load', updateOffsets);
+        window.addEventListener('resize', updateOffsets);
 
         // Initialize the application
         const app = new HealthVaultApp();
