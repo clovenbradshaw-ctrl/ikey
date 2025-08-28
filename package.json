@@ -1,0 +1,7 @@
+{
+  "name": "ikey",
+  "version": "1.0.0",
+  "scripts": {
+    "lint:ids": "node check-duplicate-ids.js"
+  }
+}

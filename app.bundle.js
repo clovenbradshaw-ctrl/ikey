@@ -919,7 +919,7 @@
                         <span class="section-icon">${icon}</span>
                         <h3>${title}</h3>
                         <div class="mini-progress">
-                            <div class="progress-bar" style="width: ${percent}%"></div>
+                            <div class="home-progress__bar" style="width: ${percent}%"></div>
                         </div>
                     </div>
                     <div class="section-fields">
