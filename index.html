@@ -1879,10 +1879,6 @@
         let currentBlob = null; // decrypted full data
         let currentSource = '';
         let currentMode = null;
-        let currentCreated = null;
-        let currentName = null;
-        let currentBloodType = null;
-        let currentAllergies = null;
         let ownerPassword = null;
         let uploadCheckInterval = null;
         let sessionTimeoutHandle = null;
@@ -1902,96 +1898,11 @@
                 return handleLegacyFormat(hash);
             }
 
-            const [version, guid, key, embeddedStr] = hash.split(':');
+            const [version, guid, key] = hash.split(':');
             currentGUID = guid;
             currentKey = key;
             currentMode = 'view';
-            const embedded = JSON.parse(atob(embeddedStr));
-            currentName = embedded.n;
-            currentBloodType = embedded.b || null;
-            currentAllergies = embedded.a || null;
-            currentCreated = embedded.t || null;
-
-            // Show embedded data immediately
-            displayBasicInfo({
-                name: currentName,
-                bloodType: currentBloodType,
-                allergies: currentAllergies
-            });
-
-            // Attempt to load full data (non-blocking)
-            let cache = null;
-            try {
-                cache = await fetchFromCache(guid);
-            } catch (e) {
-                console.log('Cache fetch failed:', e.message);
-            }
-
-            try {
-                const response = await fetch(
-                    `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`,
-                    { mode: 'cors', cache: 'no-store' }
-                );
-                if (!response.ok) throw new Error('Not found');
-                const archiveData = await response.json();
-                const cacheOrder = getRecordOrder(cache);
-                const archiveOrder = getRecordOrder(archiveData);
-                const latest = !cache || archiveOrder > cacheOrder ? archiveData : cache;
-                currentSource = !cache || archiveOrder > cacheOrder ? 'Archive.org' : 'Server cache';
-                const full = JSON.parse(await decrypt(latest.data, key));
-                displayFullInfo({
-                    ...full,
-                    name: currentName,
-                    publicInfo: {
-                        ...full.publicInfo,
-                        bloodType: currentBloodType || full.publicInfo?.bloodType,
-                        allergies: currentAllergies || full.publicInfo?.allergies
-                    }
-                });
-                updateSourceLabel();
-            } catch (e) {
-                if (cache) {
-                    currentSource = 'Server cache';
-                    const full = JSON.parse(await decrypt(cache.data, key));
-                    displayFullInfo({
-                        ...full,
-                        name: currentName,
-                        publicInfo: {
-                            ...full.publicInfo,
-                            bloodType: currentBloodType || full.publicInfo?.bloodType,
-                            allergies: currentAllergies || full.publicInfo?.allergies
-                        }
-                    });
-                    updateSourceLabel();
-                } else {
-                    addOfflineNotice();
-                }
-            }
-        }
-
-        function displayBasicInfo({ name, bloodType, allergies }) {
-            const container = document.getElementById('main-content');
-            container.innerHTML = `
-                <div class="info-card">
-                    <div class="info-header">
-                        <h2><span class="info-icon">🔑</span><span data-i18n="emergencyInfo">Personal Information</span></h2>
-                    </div>
-                    <div class="content">
-                        <div class="info-section">
-                            <div class="info-item">
-                                <span class="info-icon">👤</span>
-                                <div class="info-content">
-                                    <div class="info-label" data-i18n="name">Name</div>
-                                    <div class="info-value">${name || 'Unknown'}</div>
-                                </div>
-                            </div>
-                            ${bloodType ? `<div class="info-item"><span class="info-icon">🩸</span><div class="info-content"><div class="info-label" data-i18n="bloodType">Blood Type</div><div class="info-value">${bloodType}</div></div></div>` : ''}
-                            ${allergies ? `<div class="info-item"><span class="info-icon">⚠️</span><div class="info-content"><div class="info-label" data-i18n="allergies">Allergies</div><div class="info-value">${allergies}</div></div></div>` : ''}
-                        </div>
-                        <div class="status-message status-info" id="loading-message">Loading additional information...</div>
-                    </div>
-                </div>`;
-            setLanguage(currentLanguage);
+            await loadAndDisplayEmergencyInfo(guid, key, null, null);
         }
 
         function displayFullInfo(full) {
@@ -2001,10 +1912,6 @@
         }
 
         function buildUploadMessage() {
-            if (currentCreated) {
-                const ageMinutes = Math.floor((Date.now() - new Date(currentCreated).getTime()) / 60000);
-                return `⏳ Data still uploading... (${ageMinutes} min old, usually ready in 5-30 min)`;
-            }
             return '⏳ Data still uploading... (usually ready in 5-30 min)';
         }
 
@@ -2022,15 +1929,7 @@
                     const full = await fetchFromArchive(currentGUID, currentKey);
                     clearInterval(uploadCheckInterval);
                     uploadCheckInterval = null;
-                    displayFullInfo({
-                        ...full,
-                        name: currentName,
-                        publicInfo: {
-                            ...full.publicInfo,
-                            bloodType: currentBloodType || full.publicInfo?.bloodType,
-                            allergies: currentAllergies || full.publicInfo?.allergies
-                        }
-                    });
+                    displayFullInfo(full);
                 } catch (error) {
                     const el = document.getElementById('loading-message');
                     if (el) el.textContent = buildUploadMessage();
@@ -2174,41 +2073,11 @@
             updateSourceLabel();
         }
 
-        async function handleHybridQR(guid, key, embedded) {
-            currentGUID = guid;
-            currentKey = key;
-            const publicInfo = {
-                name: embedded.n,
-                bloodType: embedded.b || 'Loading...',
-                allergies: embedded.a || 'Loading...'
-            };
-            await displayEmergencyInfo(
-                { publicInfo },
-                {
-                    banner:
-                        '🔄 Hybrid mode - Critical data available, loading additional info...'
-                }
-            );
-            try {
-                const cloudData = await fetchFromArchive(guid, key);
-                const merged = { ...cloudData };
-                if (embedded.b) merged.publicInfo.bloodType = embedded.b;
-                if (embedded.a) merged.publicInfo.allergies = embedded.a;
-                await displayEmergencyInfo(merged);
-                updateSourceLabel();
-            } catch (error) {
-                console.log('Cloud fetch failed, using embedded data only');
-                currentSource = 'Embedded data';
-                updateSourceLabel();
-            }
-        }
 
         async function handleCloudQR(parts) {
             const [guid, key, name, created] = parts.map(p => decodeURIComponent(p || ''));
             if (guid && key) {
                 currentMode = 'view';
-                currentCreated = created;
-                currentName = name;
                 showLoadingScreen(name);
                 await loadAndDisplayEmergencyInfo(guid, key, name, created);
             } else {
@@ -3157,7 +3026,6 @@
                               ></textarea>
                               <div class="field-info">
                                   <span class="char-counter">0/100</span>
-                                  <span class="info-note" data-i18n="criticalInfoNote">• Embedded in QR • Always visible</span>
                               </div>
                           </div>
 
@@ -3445,18 +3313,8 @@
                 updateSourceLabel();
 
                 // Only generate QR after successful upload
-                const embedded = btoa(
-                    JSON.stringify({
-                        n: formData.name,
-                        b: formData.bloodType,
-                        a: formData.allergies?.substring(0, 2000), // limit embedded allergies to 2000 chars
-                        t: created
-                    })
-                );
-                const safeName = (formData.name || '').replace(/:/g, '-');
-                const safeBlood = (formData.bloodType || '').replace(/:/g, '-');
-                const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${embedded}:Name-${safeName}:Blood-${safeBlood}`;
-                window.location.hash = `v2:${currentGUID}:${currentKey}:${embedded}:Name-${safeName}:Blood-${safeBlood}`;
+                const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
+                window.location.hash = `v2:${currentGUID}:${currentKey}`;
 
                 // Generate QR code
                 const qrContainer = document.getElementById('qrcode');
@@ -3795,15 +3653,7 @@
         }
 
         function viewQR() {
-            const safeName = (currentBlob?.name || '').replace(/:/g, '-');
-            const safeBlood = (currentBlob?.publicInfo?.bloodType || '').replace(/:/g, '-');
-            const fallbackEmbedded = btoa(JSON.stringify({
-                n: currentBlob.name,
-                b: currentBlob.publicInfo?.bloodType,
-                a: currentBlob.publicInfo?.allergies,
-                t: currentBlob.created
-            }));
-            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${fallbackEmbedded}:Name-${safeName}:Blood-${safeBlood}`;
+            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
             const existing = document.getElementById('qr-viewer');
             if (existing) existing.remove();
             const overlay = document.createElement('div');
@@ -3821,18 +3671,11 @@
 
         function downloadQRFixed() {
             const canvas = document.querySelector('#qrcode canvas, #owner-qr canvas');
+            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
             if (!canvas) {
                 const tempDiv = document.createElement('div');
-                const fallbackEmbedded = btoa(JSON.stringify({
-                    n: currentBlob.name,
-                    b: currentBlob.publicInfo?.bloodType,
-                    a: currentBlob.publicInfo?.allergies,
-                    t: currentBlob.created
-                }));
-                const safeName = (currentBlob.name || '').replace(/:/g, '-');
-                const safeBlood = (currentBlob.publicInfo?.bloodType || '').replace(/:/g, '-');
                 new QRCode(tempDiv, {
-                    text: window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:${fallbackEmbedded}:Name-${safeName}:Blood-${safeBlood}`,
+                    text: url,
                     width: 256,
                     height: 256
                 });
@@ -3854,9 +3697,7 @@
         }
 
         function shareQR() {
-            const safeName = (currentBlob?.name || '').replace(/:/g, '-');
-            const safeBlood = (currentBlob?.publicInfo?.bloodType || '').replace(/:/g, '-');
-            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}:Name-${safeName}:Blood-${safeBlood}`;
+            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
             if (navigator.share && url) {
                 navigator.share({ title: 'iKey', url }).catch(() => {});
             } else if (url) {
