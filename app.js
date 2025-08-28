@@ -195,6 +195,16 @@ function validLatLng(lat, lng) {
 const mapsOpen = ({ lat, lng }) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 const mapsEmbed = ({ lat, lng }) => `https://www.google.com/maps?q=${lat},${lng}&output=embed`;
 
+const categoryLabels = {
+  shelter: "🏠 Shelter",
+  food: "🍽️ Food",
+  medical: "🏥 Medical",
+  services: "🏪 Services",
+  contacts: "👥 Contacts",
+  personal: "📋 Personal"
+};
+const getCategoryLabel = cat => categoryLabels[cat] || cat;
+
 // ----------------- render -----------------
 function renderPlaces() {
   const wrap = document.getElementById("placeList");
@@ -202,7 +212,7 @@ function renderPlaces() {
   wrap.innerHTML = "";
 
   if (!state.locations.length) {
-    wrap.textContent = "No place notes yet.";
+    wrap.textContent = "No notes yet.";
     return;
   }
 
@@ -213,16 +223,36 @@ function renderPlaces() {
     card.style.padding = "12px";
     card.style.marginBottom = "12px";
 
-    const h = document.createElement("div");
-    h.style.fontWeight = "700";
-    h.textContent = loc.title || "(Untitled place)";
-    card.appendChild(h);
+    const header = document.createElement("div");
+    header.style.display = "flex";
+    header.style.alignItems = "center";
+    header.style.gap = "6px";
 
-    const meta = document.createElement("div");
-    meta.style.fontSize = "12px";
-    meta.style.opacity = "0.8";
-    meta.textContent = `(${loc.coords.lat}, ${loc.coords.lng})`;
-    card.appendChild(meta);
+    const titleEl = document.createElement("div");
+    titleEl.style.fontWeight = "700";
+    titleEl.textContent = loc.title || "(Untitled note)";
+    header.appendChild(titleEl);
+
+    if (loc.category) {
+      const cat = document.createElement("span");
+      cat.textContent = getCategoryLabel(loc.category);
+      cat.style.background = "#667eea";
+      cat.style.color = "#fff";
+      cat.style.fontSize = "12px";
+      cat.style.padding = "2px 6px";
+      cat.style.borderRadius = "8px";
+      header.appendChild(cat);
+    }
+
+    card.appendChild(header);
+
+    if (loc.coords) {
+      const meta = document.createElement("div");
+      meta.style.fontSize = "12px";
+      meta.style.opacity = "0.8";
+      meta.textContent = `(${loc.coords.lat}, ${loc.coords.lng})`;
+      card.appendChild(meta);
+    }
 
     if (loc.note) {
       const p = document.createElement("div");
@@ -231,23 +261,25 @@ function renderPlaces() {
       card.appendChild(p);
     }
 
-    const iframe = document.createElement("iframe");
-    iframe.width = "100%";
-    iframe.height = "220";
-    iframe.style.border = "0";
-    iframe.loading = "lazy";
-    iframe.referrerPolicy = "no-referrer-when-downgrade";
-    iframe.src = mapsEmbed(loc.coords);
-    card.appendChild(iframe);
+    if (loc.coords) {
+      const iframe = document.createElement("iframe");
+      iframe.width = "100%";
+      iframe.height = "220";
+      iframe.style.border = "0";
+      iframe.loading = "lazy";
+      iframe.referrerPolicy = "no-referrer-when-downgrade";
+      iframe.src = mapsEmbed(loc.coords);
+      card.appendChild(iframe);
 
-    const a = document.createElement("a");
-    a.href = mapsOpen(loc.coords);
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.textContent = "Open in Google Maps";
-    a.style.display = "inline-block";
-    a.style.marginTop = "8px";
-    card.appendChild(a);
+      const a = document.createElement("a");
+      a.href = mapsOpen(loc.coords);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = "Open in Google Maps";
+      a.style.display = "inline-block";
+      a.style.marginTop = "8px";
+      card.appendChild(a);
+    }
 
     wrap.appendChild(card);
   });
@@ -276,8 +308,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const titleInput = document.getElementById("titleInput");
   const noteInput = document.getElementById("noteInput");
   const saveBtn = document.getElementById("savePlaceBtn");
+  const locationToggle = document.getElementById("locationToggle");
+  const locationOptions = document.getElementById("locationOptions");
+  const categoryButtons = Array.from(document.querySelectorAll(".category-btn"));
+  let selectedCategory = null;
 
-  if (!modeRadios.length || !manualRow || !saveBtn) return;
+  if (!saveBtn) return;
 
   const updateModeUI = () => {
     const mode = modeRadios.find(r => r.checked)?.value || "here";
@@ -286,61 +322,108 @@ document.addEventListener("DOMContentLoaded", () => {
   modeRadios.forEach(r => r.addEventListener("change", updateModeUI));
   updateModeUI();
 
+  const updateLocationUI = () => {
+    locationOptions.style.display = locationToggle.checked ? "block" : "none";
+  };
+  locationToggle.addEventListener("change", updateLocationUI);
+  updateLocationUI();
+
+  categoryButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.classList.contains("selected")) {
+        btn.classList.remove("selected");
+        selectedCategory = null;
+      } else {
+        categoryButtons.forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        selectedCategory = btn.dataset.category;
+      }
+    });
+  });
+
   try {
     const cached = JSON.parse(localStorage.getItem("ikey.places.draft") || "[]");
     if (Array.isArray(cached)) state.locations = cached;
   } catch {}
 
   saveBtn.addEventListener("click", async () => {
-    const mode = modeRadios.find(r => r.checked)?.value || "here";
     const title = (titleInput.value || "").trim();
     const note = (noteInput.value || "").trim();
+    const includeLocation = locationToggle.checked;
 
-    if (mode === "manual") {
-      const lat = parseFloat(latInput.value);
-      const lng = parseFloat(lngInput.value);
-      if (!validLatLng(lat, lng)) {
-        alert("Please enter valid coordinates:\n-90 ≤ latitude ≤ 90\n-180 ≤ longitude ≤ 180");
+    const reset = () => {
+      titleInput.value = "";
+      noteInput.value = "";
+      latInput.value = "";
+      lngInput.value = "";
+      categoryButtons.forEach(b => b.classList.remove("selected"));
+      selectedCategory = null;
+      locationToggle.checked = false;
+      updateLocationUI();
+    };
+
+    if (includeLocation) {
+      const mode = modeRadios.find(r => r.checked)?.value || "here";
+      if (mode === "manual") {
+        const lat = parseFloat(latInput.value);
+        const lng = parseFloat(lngInput.value);
+        if (!validLatLng(lat, lng)) {
+          alert("Please enter valid coordinates:\n-90 ≤ latitude ≤ 90\n-180 ≤ longitude ≤ 180");
+          return;
+        }
+        const place = {
+          id: uid(),
+          title,
+          note,
+          category: selectedCategory,
+          type: "coords",
+          coords: { lat: round6(lat), lng: round6(lng) },
+          createdAt: Date.now()
+        };
+        await savePlaceNote(place);
+        reset();
         return;
       }
-      const place = {
-        id: uid(),
-        title,
-        note,
-        type: "coords",
-        coords: { lat: round6(lat), lng: round6(lng) },
-        createdAt: Date.now()
-      };
-      await savePlaceNote(place);
-      titleInput.value = ""; noteInput.value = ""; latInput.value = ""; lngInput.value = "";
+
+      if (!("geolocation" in navigator)) {
+        alert("Geolocation not available on this device/browser.");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = round6(pos.coords.latitude);
+        const lng = round6(pos.coords.longitude);
+        if (!validLatLng(lat, lng)) {
+          alert("Got invalid coordinates from the device.");
+          return;
+        }
+        const place = {
+          id: uid(),
+          title,
+          note,
+          category: selectedCategory,
+          type: "coords",
+          coords: { lat, lng },
+          createdAt: Date.now()
+        };
+        await savePlaceNote(place);
+        reset();
+      }, err => {
+        alert("Couldn't get your location. You can switch to 'Enter coordinates'.");
+        console.error(err);
+      }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
       return;
     }
 
-    if (!("geolocation" in navigator)) {
-      alert("Geolocation not available on this device/browser.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const lat = round6(pos.coords.latitude);
-      const lng = round6(pos.coords.longitude);
-      if (!validLatLng(lat, lng)) {
-        alert("Got invalid coordinates from the device.");
-        return;
-      }
-      const place = {
-        id: uid(),
-        title,
-        note,
-        type: "coords",
-        coords: { lat, lng },
-        createdAt: Date.now()
-      };
-      await savePlaceNote(place);
-      titleInput.value = ""; noteInput.value = "";
-    }, err => {
-      alert("Couldn't get your location. You can switch to 'Enter coordinates'.");
-      console.error(err);
-    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+    const place = {
+      id: uid(),
+      title,
+      note,
+      category: selectedCategory,
+      type: "note",
+      createdAt: Date.now()
+    };
+    await savePlaceNote(place);
+    reset();
   });
 
   renderPlaces();
