@@ -1780,19 +1780,19 @@
 
             try {
                 let archiveData;
-                let source = 'Archive.org';
-                try {
+                let source = '';
+                const cache = await fetchFromCache(guid);
+                if (cache) {
+                    archiveData = cache;
+                    source = 'Server cache';
+                } else {
                     const response = await fetch(
                         `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`,
                         { mode: 'cors', cache: 'no-store' }
                     );
                     if (!response.ok) throw new Error('Not found');
                     archiveData = await response.json();
-                } catch (err) {
-                    const cache = await fetchFromCache(guid);
-                    if (!cache) throw err;
-                    archiveData = cache;
-                    source = 'Server cache';
+                    source = 'Archive.org';
                 }
                 currentSource = source;
                 const decrypted = await decrypt(archiveData.editable, key);
@@ -1860,35 +1860,25 @@
         async function fetchFromArchive(guid, key) {
             const cache = await fetchFromCache(guid);
             let chosen = null;
-            let chosenTime = 0;
             let source = '';
 
             if (cache) {
                 chosen = cache;
-                chosenTime = getRecordOrder(cache);
                 source = 'Server cache';
                 console.log('Loaded from Xano cache');
-            }
-
-            try {
-                const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
-                const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
-                if (response.ok) {
-                    const archiveData = await response.json();
-                    const archiveOrder = getRecordOrder(archiveData);
-                    if (!chosen || archiveOrder > chosenTime) {
-                        chosen = archiveData;
-                        chosenTime = archiveOrder;
+            } else {
+                try {
+                    const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
+                    const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                    if (response.ok) {
+                        chosen = await response.json();
                         source = 'Archive.org';
-                        console.log('Using newer data from Archive.org');
                     } else {
-                        console.log('Xano cache is newer than Archive.org');
+                        console.log('Archive.org response status:', response.status);
                     }
-                } else {
-                    console.log('Archive.org response status:', response.status);
+                } catch (e) {
+                    console.log('Archive fetch failed:', e.message);
                 }
-            } catch (e) {
-                console.log('Archive fetch failed:', e.message);
             }
 
             if (chosen) {
@@ -1952,31 +1942,33 @@
                 console.log('Cache fetch failed:', e.message);
             }
 
-            try {
-                const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
-                console.log('Fetching from Archive.org:', archiveUrl);
+            if (!fetchSuccess) {
+                try {
+                    const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
+                    console.log('Fetching from Archive.org:', archiveUrl);
 
-                const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
-                console.log('Archive.org response status:', response.status);
+                    const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
+                    console.log('Archive.org response status:', response.status);
 
-                if (response.ok) {
-                    const archiveData = await response.json();
-                    const cacheOrder = data ? getRecordOrder(data) : 0;
-                    const archiveOrder = getRecordOrder(archiveData);
+                    if (response.ok) {
+                        const archiveData = await response.json();
+                        const cacheOrder = data ? getRecordOrder(data) : 0;
+                        const archiveOrder = getRecordOrder(archiveData);
 
-                    if (!data || archiveOrder > cacheOrder) {
-                        data = archiveData;
-                        source = 'Archive.org';
-                        console.log('Using newer data from Archive.org');
+                        if (!data || archiveOrder > cacheOrder) {
+                            data = archiveData;
+                            source = 'Archive.org';
+                            console.log('Using newer data from Archive.org');
+                        } else {
+                            console.log('Xano cache is newer than Archive.org');
+                        }
+                        fetchSuccess = true;
                     } else {
-                        console.log('Xano cache is newer than Archive.org');
+                        throw new Error('Not found on Archive.org');
                     }
-                    fetchSuccess = true;
-                } else {
-                    throw new Error('Not found on Archive.org');
+                } catch (error) {
+                    console.log('Archive fetch failed:', error.message);
                 }
-            } catch (error) {
-                console.log('Archive fetch failed:', error.message);
             }
 
             if (!fetchSuccess) {
@@ -2264,6 +2256,11 @@
         }
 
         function showOwnerDashboard() {
+            if (!currentBlob) {
+                console.error('Cannot show dashboard - no data loaded');
+                alert('No data loaded for this iKey.');
+                return;
+            }
             // Ensure the dashboard content is visible regardless of the current tab
             document.getElementById('qrTab').style.display = 'block';
             document.getElementById('text911Tab').style.display = 'none';
@@ -3576,17 +3573,19 @@
                 console.log('Cache fetch failed:', e.message);
             }
 
+            if (cache) {
+                document.getElementById('dev-output').textContent =
+                    `Loaded from Xano backup\n\nRaw JSON:\n${JSON.stringify(cache, null, 2)}`;
+                return;
+            }
+
             try {
                 const archiveUrl = `${ARCHIVE_BASE}${guid}.json?ts=${Date.now()}`;
                 const response = await fetch(archiveUrl, { mode: 'cors', cache: 'no-store' });
                 if (response.ok) {
                     const archiveData = await response.json();
-                    const cacheOrder = cache ? getRecordOrder(cache) : 0;
-                    const archiveOrder = getRecordOrder(archiveData);
-                    const latest = !cache || archiveOrder > cacheOrder ? archiveData : cache;
-                    const source = !cache || archiveOrder > cacheOrder ? 'Archive.org' : 'Xano backup';
                     document.getElementById('dev-output').textContent =
-                        `Loaded from ${source}\n\nRaw JSON:\n${JSON.stringify(latest, null, 2)}`;
+                        `Loaded from Archive.org\n\nRaw JSON:\n${JSON.stringify(archiveData, null, 2)}`;
                     return;
                 }
                 console.log('Archive.org response status:', response.status);
@@ -3594,13 +3593,8 @@
                 console.log('Archive fetch failed:', error.message);
             }
 
-            if (cache) {
-                document.getElementById('dev-output').textContent =
-                    `Loaded from Xano backup\n\nRaw JSON:\n${JSON.stringify(cache, null, 2)}`;
-            } else {
-                document.getElementById('dev-output').textContent =
-                    `Not found on Archive.org or Xano backup.`;
-            }
+            document.getElementById('dev-output').textContent =
+                `Not found on Archive.org or Xano backup.`;
         }
         
         async function devScanQR() {
