@@ -343,8 +343,23 @@
             });
         });
 
+        window.modulePromises = {};
+
+        function showModuleError(src) {
+            let err = document.getElementById('module-error');
+            if (!err) {
+                err = document.createElement('div');
+                err.id = 'module-error';
+                err.style.color = 'red';
+                err.style.padding = '10px';
+                err.style.textAlign = 'center';
+                document.body.appendChild(err);
+            }
+            err.textContent = `⚠️ Failed to load required module: ${src}. Please refresh.`;
+        }
+
         function loadApp() {
-            if (window.appLoaded) return;
+            if (window.appLoaded) return window.allModulesPromise;
             const scripts = [
                 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
                 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
@@ -353,16 +368,77 @@
                 'text-size.js',
                 'app.bundle.js'
             ];
+
             const loadNext = () => {
                 const src = scripts.shift();
                 if (!src) return;
-                const s = document.createElement('script');
-                s.src = src;
-                s.onload = loadNext;
-                document.body.appendChild(s);
+                window.modulePromises[src] = new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = src;
+                    s.onload = () => {
+                        window.loadedModules = window.loadedModules || {};
+                        window.loadedModules[src] = true;
+                        resolve();
+                        document.dispatchEvent(new CustomEvent('moduleLoaded', { detail: { src } }));
+                        loadNext();
+                    };
+                    s.onerror = () => {
+                        reject(new Error(`Failed to load ${src}`));
+                        showModuleError(src);
+                    };
+                    document.body.appendChild(s);
+                });
             };
+
             loadNext();
             window.appLoaded = true;
+            window.allModulesPromise = Promise.all(Object.values(window.modulePromises));
+            return window.allModulesPromise;
+        }
+
+        async function ensureHealthApp() {
+            if (window.healthApp) return true;
+            if (window.modulePromises['app.js']) {
+                try {
+                    await window.modulePromises['app.js'];
+                    return !!window.healthApp;
+                } catch {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        async function showHealthRecordsTabSafe() {
+            loadApp();
+            if (!(await ensureHealthApp())) {
+                let ph = document.getElementById('health-records-placeholder');
+                if (!ph) {
+                    ph = document.createElement('div');
+                    ph.id = 'health-records-placeholder';
+                    ph.style.padding = '20px';
+                    ph.style.textAlign = 'center';
+                    ph.textContent = 'Loading health records...';
+                    document.body.appendChild(ph);
+                } else {
+                    ph.textContent = 'Loading health records...';
+                }
+                try {
+                    await Promise.all([
+                        window.modulePromises['app.js'],
+                        window.modulePromises['app.bundle.js']
+                    ]);
+                } catch {
+                    ph.textContent = 'Unable to load health records.';
+                    return;
+                }
+                ph.remove();
+            }
+            if (typeof window.showHealthRecordsTab === 'function') {
+                window.showHealthRecordsTab();
+            } else {
+                alert('Health records module not available.');
+            }
         }
 
         function handleRoute() {
@@ -1470,7 +1546,7 @@
             </div>
             <button class="home-btn" onclick="window.location='index.html'">Home</button>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
-            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
+            <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTabSafe()">🩺 EHR</button>
             <button class="notes-tab-btn" style="display:none;" onclick="window.location='notes.html'">📝 Notes</button>
             <button class="resources-btn" onclick="showResourcesTab()">Resources</button>
             <button class="login-btn" onclick="ownerLogin()">Owner Login</button>
