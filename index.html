@@ -461,9 +461,29 @@
                 loadApp();
             }
         }
+        function loadAppAndRun(fnName, el) {
+            if (el) {
+                el.dataset.originalText = el.textContent;
+                el.textContent = 'Loading...';
+                el.style.pointerEvents = 'none';
+                el.style.opacity = '0.6';
+            }
+            loadApp().then(() => {
+                if (el) {
+                    el.textContent = el.dataset.originalText;
+                    el.style.pointerEvents = '';
+                    el.style.opacity = '';
+                }
+                if (typeof window[fnName] === 'function') {
+                    window[fnName]();
+                }
+            });
+            return false;
+        }
 
         window.addEventListener('hashchange', handleRoute);
         handleRoute();
+        window.addEventListener('load', loadApp);
     </script>
         <style>
         @keyframes spin {
@@ -1584,7 +1604,7 @@
         </div>
 
     <div class="floating-links">
-        <a href="#" onclick="showPrivacy()">Privacy</a>
+        <a href="#" onclick="return loadAppAndRun('showPrivacy', this)">Privacy</a>
     </div>
 
     <!-- Dev Tools Panel -->
@@ -1595,18 +1615,18 @@
         <div style="margin-bottom: 15px;">
             <input type="text" id="dev-guid" placeholder="Enter GUID">
             <input type="text" id="dev-key" placeholder="Enter Key">
-            <button onclick="devLoadQR()">Load QR</button>
-            <button onclick="devTestArchive()">Test Archive Fetch</button>
+            <button onclick="return loadAppAndRun('devLoadQR', this)">Load QR</button>
+            <button onclick="return loadAppAndRun('devTestArchive', this)">Test Archive Fetch</button>
         </div>
         
         <div style="margin-bottom: 15px;">
             <input type="file" id="dev-qr-upload" accept="image/*" style="margin-bottom: 10px;">
-            <button onclick="devScanQR()">Scan QR Image</button>
+            <button onclick="return loadAppAndRun('devScanQR', this)">Scan QR Image</button>
         </div>
         
         <div style="margin-bottom: 15px;">
-            <button onclick="devShowRawData()">Show Raw Data</button>
-            <button onclick="devClearStorage()">Clear All Data</button>
+            <button onclick="return loadAppAndRun('devShowRawData', this)">Show Raw Data</button>
+            <button onclick="return loadAppAndRun('devClearStorage', this)">Clear All Data</button>
             <button onclick="toggleDevTools()">Close</button>
         </div>
         
