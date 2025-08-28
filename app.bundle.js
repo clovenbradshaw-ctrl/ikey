@@ -81,12 +81,20 @@
         function buildLanguageButtons() {
           const dropdown = document.querySelector('.lang-dropdown');
           if (!dropdown) return;
-          dropdown.innerHTML = '';
-          const codes = [...PRIMARY_LANGS, ...Object.keys(translations).filter(c => !PRIMARY_LANGS.includes(c))];
-          codes.forEach(code => {
-            if (translations[code]) {
+          const existing = Array.from(dropdown.querySelectorAll('.lang-option')).map(el => el.dataset.lang);
+          Object.keys(translations).forEach(code => {
+            if (!existing.includes(code)) {
               dropdown.appendChild(createLangButton(code));
             }
+          });
+        }
+
+        function attachLangHandlers() {
+          document.querySelectorAll('.lang-option').forEach(el => {
+            el.addEventListener('click', () => {
+              setLanguage(el.dataset.lang);
+              toggleLangDropdown(false);
+            });
           });
         }
 
@@ -130,6 +138,19 @@
             dropdown.style.display = 'none';
           }
         });
+
+        async function loadTranslations() {
+          try {
+            const response = await fetch('translations.json');
+            const data = await response.json();
+            const newTranslations = data.translations || data;
+            Object.assign(translations, newTranslations);
+            buildLanguageButtons();
+            setLanguage(currentLanguage);
+          } catch (error) {
+            console.error('Failed to load translations:', error);
+          }
+        }
 
         // State
         let currentGUID = null;
@@ -221,17 +242,8 @@
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', async function() {
-            if (Object.keys(translations).length === 0) {
-                try {
-                    const response = await fetch('translations.json');
-                    const data = await response.json();
-                    translations = data.translations || data;
-                } catch (error) {
-                    console.error('Failed to load translations:', error);
-                }
-            }
-
-            buildLanguageButtons();
+            attachLangHandlers();
+            loadTranslations();
 
             const savedLang =
                 localStorage.getItem('ikey_preferred_language') ||
