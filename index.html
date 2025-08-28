@@ -528,16 +528,25 @@
                 el.style.pointerEvents = 'none';
                 el.style.opacity = '0.6';
             }
-            loadApp().then(() => {
-                if (el) {
-                    el.textContent = el.dataset.originalText;
-                    el.style.pointerEvents = '';
-                    el.style.opacity = '';
-                }
-                if (typeof window[fnName] === 'function') {
-                    window[fnName]();
-                }
-            });
+            loadApp()
+                .then(() => {
+                    if (el) {
+                        el.textContent = el.dataset.originalText;
+                        el.style.pointerEvents = '';
+                        el.style.opacity = '';
+                    }
+                    if (typeof window[fnName] === 'function') {
+                        window[fnName]();
+                    }
+                })
+                .catch(() => {
+                    if (el) {
+                        el.textContent = el.dataset.originalText;
+                        el.style.pointerEvents = '';
+                        el.style.opacity = '';
+                    }
+                    alert('Failed to load the application module.');
+                });
             return false;
         }
 
