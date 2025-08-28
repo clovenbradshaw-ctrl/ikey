@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iKey - Notes</title>
+    <link rel="icon" href="https://storage.googleapis.com/art_homelessness/favicon.ico">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; background:#f5f6fa; color:#333; line-height:1.6; }
+        .header { background:white; padding:12px 20px; border-bottom:1px solid #e1e4e8; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        .header-left { display:flex; align-items:center; gap:20px; }
+        .back-btn { background:none; border:none; color:#586069; cursor:pointer; font-size:16px; display:flex; align-items:center; gap:8px; }
+        .page-title { font-size:20px; font-weight:600; color:#1a1a1a; }
+        .btn-primary { background:#5b5fc7; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:500; cursor:pointer; transition:all .2s; }
+        .btn-primary:hover { background:#4a4db8; transform:translateY(-1px); }
+        .container { max-width:1400px; margin:0 auto; padding:20px; }
+        .content-grid { display:grid; grid-template-columns:350px 1fr; gap:20px; }
+        .add-note-panel { background:white; border-radius:12px; padding:20px; height:fit-content; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+        .panel-title { font-size:18px; font-weight:600; margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+        .form-group { margin-bottom:16px; }
+        .form-label { display:block; font-size:13px; font-weight:500; color:#586069; margin-bottom:6px; }
+        .form-input, .form-textarea { width:100%; padding:10px; border:1px solid #d1d5da; border-radius:6px; font-size:14px; transition:all .2s; }
+        .form-input:focus, .form-textarea:focus { outline:none; border-color:#5b5fc7; box-shadow:0 0 0 3px rgba(91,95,199,0.1); }
+        .form-textarea { min-height:100px; resize:vertical; font-family:inherit; }
+        .category-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+        .category-pill { padding:8px; border:1px solid #d1d5da; border-radius:20px; background:white; font-size:13px; cursor:pointer; text-align:center; transition:all .2s; }
+        .category-pill:hover { background:#f6f8fa; }
+        .category-pill.selected { background:#5b5fc7; color:white; border-color:#5b5fc7; }
+        .location-toggle { background:#f6f8fa; border-radius:8px; padding:12px; margin-bottom:16px; }
+        .toggle-row { display:flex; justify-content:space-between; align-items:center; }
+        .toggle-label { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500; }
+        .switch { position:relative; width:44px; height:24px; }
+        .switch input { opacity:0; width:0; height:0; }
+        .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cfd3d7; transition:.3s; border-radius:24px; }
+        .slider:before { position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background-color:white; transition:.3s; border-radius:50%; }
+        input:checked + .slider { background-color:#28a745; }
+        input:checked + .slider:before { transform:translateX(20px); }
+        .location-status { font-size:12px; color:#586069; margin-top:8px; padding:6px 10px; background:white; border-radius:4px; display:none; }
+        .location-status.active { display:block; color:#28a745; }
+        .notes-section { background:white; border-radius:12px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+        .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .section-title { font-size:18px; font-weight:600; }
+        .filter-tabs { display:flex; gap:8px; }
+        .filter-tab { padding:6px 12px; border:1px solid #d1d5da; border-radius:20px; background:white; font-size:13px; cursor:pointer; transition:all .2s; }
+        .filter-tab:hover { background:#f6f8fa; }
+        .filter-tab.active { background:#5b5fc7; color:white; border-color:#5b5fc7; }
+        .notes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+        .note-card { background:#f6f8fa; border:1px solid #e1e4e8; border-radius:8px; padding:16px; transition:all .2s; cursor:pointer; position:relative; }
+        .note-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.08); transform:translateY(-2px); }
+        .note-card-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:12px; }
+        .note-card-title { font-weight:600; font-size:15px; color:#1a1a1a; }
+        .note-card-category { padding:3px 8px; background:#5b5fc7; color:white; border-radius:12px; font-size:11px; white-space:nowrap; }
+        .note-card-location { display:flex; align-items:center; gap:4px; color:#28a745; font-size:12px; margin-bottom:8px; }
+        .note-card-content { color:#586069; font-size:13px; line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+        .note-card-footer { margin-top:12px; padding-top:12px; border-top:1px solid #e1e4e8; display:flex; justify-content:space-between; align-items:center; }
+        .note-card-date { font-size:11px; color:#959da5; }
+        .note-card-actions { display:flex; gap:8px; }
+        .note-action-btn { padding:4px 8px; border:1px solid #d1d5da; border-radius:4px; background:white; color:#586069; font-size:12px; cursor:pointer; transition:all .2s; }
+        .note-action-btn:hover { background:#f6f8fa; color:#1a1a1a; }
+        .note-action-btn.delete:hover { background:#fee; border-color:#d73a49; color:#d73a49; }
+        .empty-state { text-align:center; padding:60px 20px; color:#959da5; }
+        .empty-icon { font-size:48px; margin-bottom:16px; opacity:0.5; }
+        .empty-title { font-size:18px; font-weight:500; margin-bottom:8px; }
+        .empty-text { font-size:14px; }
+        @media (max-width:768px){ .content-grid{grid-template-columns:1fr;} .add-note-panel{margin-bottom:20px;} .notes-grid{grid-template-columns:1fr;} .filter-tabs{overflow-x:auto;white-space:nowrap;padding-bottom:8px;} .header{padding:12px;} .container{padding:12px;} .category-grid{grid-template-columns:1fr;} }
+        .success-message { position:fixed; top:70px; right:20px; background:#28a745; color:white; padding:12px 20px; border-radius:8px; box-shadow:0 4px 12px rgba(40,167,69,0.2); display:none; z-index:1000; animation:slideIn .3s ease; }
+        @keyframes slideIn { from{transform:translateX(400px);} to{transform:translateX(0);} }
+    </style>
+    <script src="app.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="window.location='index.html'">← Back to Profile</button>
+            <h1 class="page-title">📝 Notes</h1>
+        </div>
+        <button class="btn-primary" onclick="exportNotes()">Export All</button>
+    </div>
+    <div class="container">
+        <div class="content-grid">
+            <div class="add-note-panel">
+                <h2 class="panel-title"><span>➕</span><span>Add New Note</span></h2>
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="noteTitle" class="form-input" placeholder="e.g., Safe place to rest, Medical appointment">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <div class="category-grid">
+                        <button class="category-pill" onclick="selectCategory(this,'shelter')">🏠 Shelter</button>
+                        <button class="category-pill" onclick="selectCategory(this,'food')">🍽️ Food</button>
+                        <button class="category-pill" onclick="selectCategory(this,'medical')">🏥 Medical</button>
+                        <button class="category-pill" onclick="selectCategory(this,'services')">🏪 Services</button>
+                        <button class="category-pill" onclick="selectCategory(this,'contacts')">👥 Contacts</button>
+                        <button class="category-pill" onclick="selectCategory(this,'personal')">📋 Personal</button>
+                    </div>
+                </div>
+                <div class="location-toggle">
+                    <div class="toggle-row">
+                        <label class="toggle-label"><span>📍</span><span>Save Location</span></label>
+                        <label class="switch"><input type="checkbox" id="locationToggle" onchange="toggleLocation()"><span class="slider"></span></label>
+                    </div>
+                    <div id="locationStatus" class="location-status">Location will be saved</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Details</label>
+                    <textarea id="noteDetails" class="form-textarea" placeholder="Add important details"></textarea>
+                </div>
+                <button class="btn-primary" style="width:100%;" onclick="saveNote()" id="saveNoteBtn">Save Note</button>
+            </div>
+            <div class="notes-section">
+                <div class="section-header">
+                    <h2 class="section-title">My Notes</h2>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterNotes('all', this)">All</button>
+                        <button class="filter-tab" onclick="filterNotes('location', this)">📍 With Location</button>
+                        <button class="filter-tab" onclick="filterNotes('recent', this)">Recent</button>
+                    </div>
+                </div>
+                <div id="notesGrid" class="notes-grid"></div>
+                <div id="emptyState" class="empty-state" style="display:none;">
+                    <div class="empty-icon">📝</div>
+                    <div class="empty-title">No notes yet</div>
+                    <div class="empty-text">Create your first note to keep track of important information</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="successMessage" class="success-message">✓ Note saved successfully</div>
+    <script>
+        const password = sessionStorage.getItem('ownerPassword');
+        if(!password){ alert('Please login first'); window.location='index.html'; }
+        const STORAGE_KEY = 'ikeyNotesEnc';
+        let notes = [];
+        let selectedCategory = null;
+        let currentLocation = null;
+        let currentFilter = 'all';
+        let editingId = null;
+
+        document.addEventListener('DOMContentLoaded', loadNotes);
+
+        async function loadNotes(){
+            const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+            notes = [];
+            for(const enc of stored){
+                try{
+                    const saltBuf = new Uint8Array(ThreeLayerEncryption.base64ToArrayBuffer(enc.salt));
+                    const key = await ThreeLayerEncryption.deriveKey(password, saltBuf, 150000);
+                    const dec = await ThreeLayerEncryption.decryptObject({iv:enc.iv,data:enc.data}, key);
+                    notes.push({...dec,id:enc.id,salt:enc.salt});
+                }catch(e){console.error('decrypt fail',e);}
+            }
+            displayNotes();
+        }
+
+        function toggleLocation(){
+            const toggle = document.getElementById('locationToggle');
+            const status = document.getElementById('locationStatus');
+            if(toggle.checked){
+                if(navigator.geolocation){
+                    navigator.geolocation.getCurrentPosition(pos=>{
+                        currentLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};
+                        status.className='location-status active';
+                        status.textContent='✓ Location captured';
+                    },()=>{toggle.checked=false; currentLocation=null; alert('Location access denied');});
+                } else { toggle.checked=false; alert('Location services not available.'); }
+            } else { currentLocation=null; status.className='location-status'; }
+        }
+
+        function selectCategory(btn,cat){
+            document.querySelectorAll('.category-pill').forEach(b=>b.classList.remove('selected'));
+            if(selectedCategory===cat){ selectedCategory=null; return; }
+            btn.classList.add('selected');
+            selectedCategory=cat;
+        }
+
+        async function saveNote(){
+            const title=document.getElementById('noteTitle').value.trim();
+            const details=document.getElementById('noteDetails').value.trim();
+            if(!title||!details){ alert('Please enter both title and details'); return; }
+            const note={ title, details, category:selectedCategory, location:currentLocation, timestamp:new Date().toISOString() };
+            if(editingId){ await updateNote(editingId,note); } else { await createNote(note); }
+            clearForm();
+            await loadNotes();
+            showSuccessMessage();
+        }
+
+        async function createNote(note){
+            const id=self.crypto.randomUUID();
+            const salt=self.crypto.getRandomValues(new Uint8Array(16));
+            const key=await ThreeLayerEncryption.deriveKey(password,salt,150000);
+            const enc=await ThreeLayerEncryption.encryptObject(note,key);
+            const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+            stored.unshift({id,salt:ThreeLayerEncryption.arrayBufferToBase64(salt.buffer),iv:enc.iv,data:enc.data});
+            localStorage.setItem(STORAGE_KEY,JSON.stringify(stored));
+        }
+
+        async function updateNote(id,note){
+            const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+            const idx=stored.findIndex(n=>n.id===id);
+            if(idx===-1) return;
+            const saltBuf=new Uint8Array(ThreeLayerEncryption.base64ToArrayBuffer(stored[idx].salt));
+            const key=await ThreeLayerEncryption.deriveKey(password,saltBuf,150000);
+            const enc=await ThreeLayerEncryption.encryptObject(note,key);
+            stored[idx].iv=enc.iv; stored[idx].data=enc.data;
+            localStorage.setItem(STORAGE_KEY,JSON.stringify(stored));
+        }
+
+        function clearForm(){
+            document.getElementById('noteTitle').value='';
+            document.getElementById('noteDetails').value='';
+            document.querySelectorAll('.category-pill').forEach(b=>b.classList.remove('selected'));
+            selectedCategory=null; currentLocation=null;
+            document.getElementById('locationToggle').checked=false;
+            document.getElementById('locationStatus').className='location-status';
+            editingId=null;
+            document.getElementById('saveNoteBtn').textContent='Save Note';
+        }
+
+        function displayNotes(){
+            const grid=document.getElementById('notesGrid');
+            const empty=document.getElementById('emptyState');
+            let filtered=notes;
+            if(currentFilter==='location'){ filtered=notes.filter(n=>n.location); }
+            else if(currentFilter==='recent'){ const threeDaysAgo=new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate()-3); filtered=notes.filter(n=>new Date(n.timestamp)>threeDaysAgo); }
+            if(filtered.length===0){ grid.style.display='none'; empty.style.display='block'; return; }
+            grid.style.display='grid'; empty.style.display='none';
+            grid.innerHTML=filtered.map(n=>`<div class="note-card" onclick="editNote('${n.id}')"><div class="note-card-header"><div class="note-card-title">${escapeHtml(n.title)}</div>${n.category?`<span class="note-card-category">${getCategoryLabel(n.category)}</span>`:''}</div>${n.location?`<div class="note-card-location"><span>📍</span><span>Location saved</span></div>`:''}<div class="note-card-content">${escapeHtml(n.details)}</div><div class="note-card-footer"><span class="note-card-date">${formatDate(n.timestamp)}</span><div class="note-card-actions">${n.location?`<button class="note-action-btn" onclick="showMap(event,'${n.id}')">Map</button>`:''}<button class="note-action-btn" onclick="editNote(event,'${n.id}')">Edit</button><button class="note-action-btn delete" onclick="deleteNote(event,'${n.id}')">Delete</button></div></div></div>`).join('');
+        }
+
+        function filterNotes(f,btn){ currentFilter=f; document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); displayNotes(); }
+        function getCategoryLabel(c){ const labels={shelter:'🏠 Shelter',food:'🍽️ Food',medical:'🏥 Medical',services:'🏪 Services',contacts:'👥 Contacts',personal:'📋 Personal'}; return labels[c]||c; }
+        function formatDate(ts){ const d=new Date(ts); const now=new Date(); const diff=Math.ceil((now-d)/86400000); if(diff===0) return 'Today'; if(diff===1) return 'Yesterday'; if(diff<7) return diff+' days ago'; return d.toLocaleDateString(); }
+        function escapeHtml(t){ const div=document.createElement('div'); div.textContent=t; return div.innerHTML; }
+        function editNote(event,id){ if(event) event.stopPropagation(); const note=notes.find(n=>n.id===id); if(!note) return; document.getElementById('noteTitle').value=note.title; document.getElementById('noteDetails').value=note.details; selectedCategory=note.category||null; document.querySelectorAll('.category-pill').forEach(b=>{b.classList.toggle('selected',b.textContent.includes(getCategoryLabel(selectedCategory||'')));}); if(note.location){ currentLocation=note.location; document.getElementById('locationToggle').checked=true; document.getElementById('locationStatus').className='location-status active'; document.getElementById('locationStatus').textContent='✓ Location captured'; } else { currentLocation=null; document.getElementById('locationToggle').checked=false; document.getElementById('locationStatus').className='location-status'; } editingId=id; document.getElementById('saveNoteBtn').textContent='Update Note'; }
+        function showMap(event,id){ event.stopPropagation(); const note=notes.find(n=>n.id===id); if(note&&note.location){ alert(`Location:\nLatitude: ${note.location.lat}\nLongitude: ${note.location.lng}`); } }
+        function deleteNote(event,id){ event.stopPropagation(); if(!confirm('Delete this note?')) return; const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(n=>n.id!==id); localStorage.setItem(STORAGE_KEY,JSON.stringify(stored)); notes=notes.filter(n=>n.id!==id); displayNotes(); }
+        function showSuccessMessage(){ const msg=document.getElementById('successMessage'); msg.style.display='block'; setTimeout(()=>{msg.style.display='none';},3000); }
+        function exportNotes(){ const dataStr=JSON.stringify(notes,null,2); const dataUri='data:application/json;charset=utf-8,'+encodeURIComponent(dataStr); const exportFileDefaultName='ikey-notes-'+new Date().toISOString().slice(0,10)+'.json'; const linkElement=document.createElement('a'); linkElement.setAttribute('href',dataUri); linkElement.setAttribute('download',exportFileDefaultName); linkElement.click(); }
+    </script>
+</body>
+</html>
