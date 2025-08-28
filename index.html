@@ -1077,6 +1077,11 @@
         }
 
         function handlePersonalSetup() {
+            const landing = document.getElementById('landing-root');
+            if (landing) landing.remove();
+            const mainContainer = document.querySelector('.container');
+            if (mainContainer) mainContainer.style.display = 'block';
+            showCreationForm();
             window.location.href = 'personal.html';
         }
 
