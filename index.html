@@ -1032,6 +1032,25 @@
             font-size: 1.25rem;
             cursor: pointer;
         }
+        .category-select {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: .5rem;
+            margin: .5rem 0;
+        }
+        .category-btn {
+            padding: .5rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f5f5f5;
+            cursor: pointer;
+            font-size: .9rem;
+        }
+        .category-btn.selected {
+            background: #667eea;
+            color: #fff;
+            border-color: #667eea;
+        }
 
           body.rtl {
               direction: rtl;
@@ -1635,26 +1654,42 @@
     <div id="notesModal" class="notes-modal">
         <div class="notes-modal-content">
             <span class="notes-modal-close" onclick="closeNotesModal()">&times;</span>
-            <h2>Add a Place Note</h2>
+            <h2>Add a Note</h2>
             <div style="margin:.5rem 0;">
-                <label style="margin-right:1rem;">
-                    <input type="radio" name="placeMode" value="here" checked>
-                    Use my current location
-                </label>
                 <label>
-                    <input type="radio" name="placeMode" value="manual">
-                    Enter coordinates
+                    <input type="checkbox" id="locationToggle">
+                    Save location with this note
                 </label>
             </div>
-            <div id="manualCoords" style="display:none; gap:.5rem; margin:.5rem 0;">
-                <input id="latInput" type="number" step="any" placeholder="Latitude (e.g., 37.781122)" style="width:48%;">
-                <input id="lngInput" type="number" step="any" placeholder="Longitude (e.g., -122.411009)" style="width:48%;">
+            <div id="locationOptions" style="display:none;">
+                <div style="margin:.5rem 0;">
+                    <label style="margin-right:1rem;">
+                        <input type="radio" name="placeMode" value="here" checked>
+                        Use my current location
+                    </label>
+                    <label>
+                        <input type="radio" name="placeMode" value="manual">
+                        Enter coordinates
+                    </label>
+                </div>
+                <div id="manualCoords" style="display:none; gap:.5rem; margin:.5rem 0;">
+                    <input id="latInput" type="number" step="any" placeholder="Latitude (e.g., 37.781122)" style="width:48%;">
+                    <input id="lngInput" type="number" step="any" placeholder="Longitude (e.g., -122.411009)" style="width:48%;">
+                </div>
             </div>
             <input id="titleInput" type="text" placeholder="Title (e.g., Evening sleep spot)" style="width:100%; padding:.5rem; margin:.5rem 0;">
+            <div class="category-select">
+                <button type="button" class="category-btn" data-category="shelter">🏠 Shelter</button>
+                <button type="button" class="category-btn" data-category="food">🍽️ Food</button>
+                <button type="button" class="category-btn" data-category="medical">🏥 Medical</button>
+                <button type="button" class="category-btn" data-category="services">🏪 Services</button>
+                <button type="button" class="category-btn" data-category="contacts">👥 Contacts</button>
+                <button type="button" class="category-btn" data-category="personal">📋 Personal</button>
+            </div>
             <textarea id="noteInput" rows="3" placeholder="Details (e.g., where to sit, who to ask, landmarks)" style="width:100%; padding:.5rem;"></textarea>
-            <button id="savePlaceBtn" style="margin-top:.5rem;">Save Place Note</button>
+            <button id="savePlaceBtn" style="margin-top:.5rem;">Save Note</button>
             <section style="margin-top:1rem;">
-                <h2>My Place Notes</h2>
+                <h2>My Notes</h2>
                 <div id="placeList"></div>
             </section>
         </div>
