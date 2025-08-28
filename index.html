@@ -15,9 +15,6 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
         
@@ -251,119 +248,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">iKey</div>
-            <div class="tagline">Secure Personal Information Vault</div>
-            <div class="security-badge">
-                🔐 Zero-Knowledge Encryption
-            </div>
-        </div>
-        
-        <div class="options-grid">
-            <div class="option-card" onclick="handlePersonalSetup()">
-                <div class="recommended-badge">Recommended</div>
-                <div class="icon">👤</div>
-                <h2 class="option-title">Personal QR Code</h2>
-                <p class="option-description">
-                    Create your own secure iKey QR code to protect and share your personal information with zero-knowledge encryption.
-                </p>
-                <ul class="features-list">
-                    <li>One-time QR generation (never changes)</li>
-                    <li>Three-layer encryption security</li>
-                    <li>Emergency & private info separation</li>
-                    <li>Password-protected access</li>
-                    <li>Auto-archive updates</li>
-                </ul>
-                <button class="action-button">
-                    <span>➜</span>
-                    <span>Get Started</span>
-                </button>
-            </div>
-            
-            <div class="option-card" onclick="handleBulkGeneration()">
-                <div class="icon">📋</div>
-                <h2 class="option-title">Bulk QR Generation</h2>
-                <p class="option-description">
-                    Generate multiple QR codes for organizations, events, or distribution. Perfect for healthcare facilities, schools, or emergency services.
-                </p>
-                <ul class="features-list">
-                    <li>Batch create up to 1000 codes</li>
-                    <li>Print-ready layouts</li>
-                    <li>Customizable page formats</li>
-                    <li>CSV import for bulk data</li>
-                    <li>Admin management dashboard</li>
-                </ul>
-                
-                <div class="bulk-details">
-                    <strong style="color: #4b5563;">Printing Specifications</strong>
-                    <div class="bulk-specs">
-                        <div class="spec-item">
-                            <span class="spec-value">15mm</span>
-                            <span class="spec-label">Min. QR Size</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-value">1-30</span>
-                            <span class="spec-label">Codes per Page</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-value">A4/Letter</span>
-                            <span class="spec-label">Page Formats</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="action-button" style="margin-top: 20px;">
-                    <span>⚡</span>
-                    <span>Configure Bulk</span>
-                </button>
-            </div>
-        </div>
-        
-        <div class="footer-info">
-            <strong>Security First</strong>
-            <div class="encryption-info">
-                <div class="encryption-item">
-                    <span>🔑</span>
-                    <span>256-bit Encryption</span>
-                </div>
-                <div class="encryption-item">
-                    <span>🛡️</span>
-                    <span>PBKDF2 Key Derivation</span>
-                </div>
-                <div class="encryption-item">
-                    <span>📦</span>
-                    <span>Zero-Knowledge Architecture</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        function handlePersonalSetup() {
-            window.location.href = 'personal.html';
-        }
-        
-        function handleBulkGeneration() {
-            window.location.href = 'bulk.html';
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            const cards = document.querySelectorAll('.option-card');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    card.style.transition = 'all 0.5s ease';
-                    
-                    setTimeout(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 100);
-                }, index * 100);
-            });
-        });
-    </script>
-        <style>
+    <style>
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -1453,6 +1338,7 @@
                 <button class="lang-button" onclick="toggleLangDropdown()"><span id="current-language">EN</span> ▼</button>
                 <div class="lang-dropdown"></div>
             </div>
+            <button class="home-btn" onclick="window.location='landing.html'">Home</button>
             <button class="dashboard-btn" style="display:none;" onclick="showOwnerDashboard()">Dashboard</button>
             <button class="health-records-btn" style="display:none;" onclick="showHealthRecordsTab()">🩺 EHR</button>
             <button class="notes-tab-btn" style="display:none;" onclick="window.location='notes.html'">📝 Notes</button>
