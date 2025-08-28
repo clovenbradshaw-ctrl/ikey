@@ -437,32 +437,36 @@
                 'app.bundle.js'
             ];
 
-            const loadNext = () => {
-                const src = scripts.shift();
-                if (!src) return;
-                window.modulePromises[src] = new Promise((resolve, reject) => {
-                    const s = document.createElement('script');
-                    s.src = src;
-                    s.onload = () => {
-                        window.loadedModules = window.loadedModules || {};
-                        window.loadedModules[src] = true;
+            window.allModulesPromise = new Promise((resolve, reject) => {
+                const loadNext = () => {
+                    const src = scripts.shift();
+                    if (!src) {
+                        window.appLoaded = true;
+                        window.appLoading = false;
+                        hideLoadingOverlay();
                         resolve();
-                        document.dispatchEvent(new CustomEvent('moduleLoaded', { detail: { src } }));
-                        loadNext();
-                    };
-                    s.onerror = () => {
-                        reject(new Error(`Failed to load ${src}`));
-                        showModuleError(src);
-                    };
-                    document.body.appendChild(s);
-                });
-            };
-
-            loadNext();
-            window.appLoaded = true;
-            window.allModulesPromise = Promise.all(Object.values(window.modulePromises)).finally(() => {
-                hideLoadingOverlay();
-                window.appLoading = false;
+                        return;
+                    }
+                    window.modulePromises[src] = new Promise((res, rej) => {
+                        const s = document.createElement('script');
+                        s.src = src;
+                        s.onload = () => {
+                            window.loadedModules = window.loadedModules || {};
+                            window.loadedModules[src] = true;
+                            res();
+                            document.dispatchEvent(new CustomEvent('moduleLoaded', { detail: { src } }));
+                            loadNext();
+                        };
+                        s.onerror = () => {
+                            const err = new Error(`Failed to load ${src}`);
+                            rej(err);
+                            showModuleError(src);
+                            reject(err);
+                        };
+                        document.body.appendChild(s);
+                    });
+                };
+                loadNext();
             });
             return window.allModulesPromise;
         }
