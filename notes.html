@@ -138,7 +138,7 @@
         let currentFilter = 'all';
         let editingId = null;
 
-        document.addEventListener('DOMContentLoaded', loadNotes);
+        window.notesPage = { init: loadNotes };
 
         async function loadNotes(){
             const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
@@ -239,5 +239,6 @@
         function showSuccessMessage(){ const msg=document.getElementById('successMessage'); msg.style.display='block'; setTimeout(()=>{msg.style.display='none';},3000); }
         function exportNotes(){ const dataStr=JSON.stringify(notes,null,2); const dataUri='data:application/json;charset=utf-8,'+encodeURIComponent(dataStr); const exportFileDefaultName='ikey-notes-'+new Date().toISOString().slice(0,10)+'.json'; const linkElement=document.createElement('a'); linkElement.setAttribute('href',dataUri); linkElement.setAttribute('download',exportFileDefaultName); linkElement.click(); }
     </script>
+    <script src="boot.js"></script>
 </body>
 </html>

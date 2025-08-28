@@ -300,131 +300,133 @@ async function savePlaceNote(place) {
 }
 
 // ----------------- init -----------------
-document.addEventListener("DOMContentLoaded", () => {
-  const modeRadios = Array.from(document.querySelectorAll('input[name="placeMode"]'));
-  const manualRow = document.getElementById("manualCoords");
-  const latInput = document.getElementById("latInput");
-  const lngInput = document.getElementById("lngInput");
-  const titleInput = document.getElementById("titleInput");
-  const noteInput = document.getElementById("noteInput");
-  const saveBtn = document.getElementById("savePlaceBtn");
-  const locationToggle = document.getElementById("locationToggle");
-  const locationOptions = document.getElementById("locationOptions");
-  const categoryButtons = Array.from(document.querySelectorAll(".category-btn"));
-  let selectedCategory = null;
+window.appModule = {
+  init() {
+    const modeRadios = Array.from(document.querySelectorAll('input[name="placeMode"]'));
+    const manualRow = document.getElementById("manualCoords");
+    const latInput = document.getElementById("latInput");
+    const lngInput = document.getElementById("lngInput");
+    const titleInput = document.getElementById("titleInput");
+    const noteInput = document.getElementById("noteInput");
+    const saveBtn = document.getElementById("savePlaceBtn");
+    const locationToggle = document.getElementById("locationToggle");
+    const locationOptions = document.getElementById("locationOptions");
+    const categoryButtons = Array.from(document.querySelectorAll(".category-btn"));
+    let selectedCategory = null;
 
-  if (!saveBtn) return;
+    if (!saveBtn) return;
 
-  const updateModeUI = () => {
-    const mode = modeRadios.find(r => r.checked)?.value || "here";
-    manualRow.style.display = mode === "manual" ? "flex" : "none";
-  };
-  modeRadios.forEach(r => r.addEventListener("change", updateModeUI));
-  updateModeUI();
-
-  const updateLocationUI = () => {
-    locationOptions.style.display = locationToggle.checked ? "block" : "none";
-  };
-  locationToggle.addEventListener("change", updateLocationUI);
-  updateLocationUI();
-
-  categoryButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (btn.classList.contains("selected")) {
-        btn.classList.remove("selected");
-        selectedCategory = null;
-      } else {
-        categoryButtons.forEach(b => b.classList.remove("selected"));
-        btn.classList.add("selected");
-        selectedCategory = btn.dataset.category;
-      }
-    });
-  });
-
-  try {
-    const cached = JSON.parse(localStorage.getItem("ikey.places.draft") || "[]");
-    if (Array.isArray(cached)) state.locations = cached;
-  } catch {}
-
-  saveBtn.addEventListener("click", async () => {
-    const title = (titleInput.value || "").trim();
-    const note = (noteInput.value || "").trim();
-    const includeLocation = locationToggle.checked;
-
-    const reset = () => {
-      titleInput.value = "";
-      noteInput.value = "";
-      latInput.value = "";
-      lngInput.value = "";
-      categoryButtons.forEach(b => b.classList.remove("selected"));
-      selectedCategory = null;
-      locationToggle.checked = false;
-      updateLocationUI();
-    };
-
-    if (includeLocation) {
+    const updateModeUI = () => {
       const mode = modeRadios.find(r => r.checked)?.value || "here";
-      if (mode === "manual") {
-        const lat = parseFloat(latInput.value);
-        const lng = parseFloat(lngInput.value);
-        if (!validLatLng(lat, lng)) {
-          alert("Please enter valid coordinates:\n-90 ≤ latitude ≤ 90\n-180 ≤ longitude ≤ 180");
-          return;
-        }
-        const place = {
-          id: uid(),
-          title,
-          note,
-          category: selectedCategory,
-          type: "coords",
-          coords: { lat: round6(lat), lng: round6(lng) },
-          createdAt: Date.now()
-        };
-        await savePlaceNote(place);
-        reset();
-        return;
-      }
-
-      if (!("geolocation" in navigator)) {
-        alert("Geolocation not available on this device/browser.");
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(async pos => {
-        const lat = round6(pos.coords.latitude);
-        const lng = round6(pos.coords.longitude);
-        if (!validLatLng(lat, lng)) {
-          alert("Got invalid coordinates from the device.");
-          return;
-        }
-        const place = {
-          id: uid(),
-          title,
-          note,
-          category: selectedCategory,
-          type: "coords",
-          coords: { lat, lng },
-          createdAt: Date.now()
-        };
-        await savePlaceNote(place);
-        reset();
-      }, err => {
-        alert("Couldn't get your location. You can switch to 'Enter coordinates'.");
-        console.error(err);
-      }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-      return;
-    }
-
-    const place = {
-      id: uid(),
-      title,
-      note,
-      category: selectedCategory,
-      type: "note",
-      createdAt: Date.now()
+      manualRow.style.display = mode === "manual" ? "flex" : "none";
     };
-    await savePlaceNote(place);
-    reset();
-  });
+    modeRadios.forEach(r => r.addEventListener("change", updateModeUI));
+    updateModeUI();
 
-  renderPlaces();
-});
+    const updateLocationUI = () => {
+      locationOptions.style.display = locationToggle.checked ? "block" : "none";
+    };
+    locationToggle.addEventListener("change", updateLocationUI);
+    updateLocationUI();
+
+    categoryButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (btn.classList.contains("selected")) {
+          btn.classList.remove("selected");
+          selectedCategory = null;
+        } else {
+          categoryButtons.forEach(b => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          selectedCategory = btn.dataset.category;
+        }
+      });
+    });
+
+    try {
+      const cached = JSON.parse(localStorage.getItem("ikey.places.draft") || "[]");
+      if (Array.isArray(cached)) state.locations = cached;
+    } catch {}
+
+    saveBtn.addEventListener("click", async () => {
+      const title = (titleInput.value || "").trim();
+      const note = (noteInput.value || "").trim();
+      const includeLocation = locationToggle.checked;
+
+      const reset = () => {
+        titleInput.value = "";
+        noteInput.value = "";
+        latInput.value = "";
+        lngInput.value = "";
+        categoryButtons.forEach(b => b.classList.remove("selected"));
+        selectedCategory = null;
+        locationToggle.checked = false;
+        updateLocationUI();
+      };
+
+      if (includeLocation) {
+        const mode = modeRadios.find(r => r.checked)?.value || "here";
+        if (mode === "manual") {
+          const lat = parseFloat(latInput.value);
+          const lng = parseFloat(lngInput.value);
+          if (!validLatLng(lat, lng)) {
+            alert("Please enter valid coordinates:\n-90 ≤ latitude ≤ 90\n-180 ≤ longitude ≤ 180");
+            return;
+          }
+          const place = {
+            id: uid(),
+            title,
+            note,
+            category: selectedCategory,
+            type: "coords",
+            coords: { lat: round6(lat), lng: round6(lng) },
+            createdAt: Date.now()
+          };
+          await savePlaceNote(place);
+          reset();
+          return;
+        }
+
+        if (!("geolocation" in navigator)) {
+          alert("Geolocation not available on this device/browser.");
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(async pos => {
+          const lat = round6(pos.coords.latitude);
+          const lng = round6(pos.coords.longitude);
+          if (!validLatLng(lat, lng)) {
+            alert("Got invalid coordinates from the device.");
+            return;
+          }
+          const place = {
+            id: uid(),
+            title,
+            note,
+            category: selectedCategory,
+            type: "coords",
+            coords: { lat, lng },
+            createdAt: Date.now()
+          };
+          await savePlaceNote(place);
+          reset();
+        }, err => {
+          alert("Couldn't get your location. You can switch to 'Enter coordinates'.");
+          console.error(err);
+        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+        return;
+      }
+
+      const place = {
+        id: uid(),
+        title,
+        note,
+        category: selectedCategory,
+        type: "note",
+        createdAt: Date.now()
+      };
+      await savePlaceNote(place);
+      reset();
+    });
+
+    renderPlaces();
+  }
+};

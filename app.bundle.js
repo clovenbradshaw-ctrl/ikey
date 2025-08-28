@@ -219,8 +219,7 @@
             }
         }
 
-        // Initialize on page load
-        window.addEventListener('DOMContentLoaded', async function() {
+        async function init() {
             if (Object.keys(translations).length === 0) {
                 try {
                     const response = await fetch('translations.json');
@@ -238,6 +237,9 @@
                 navigator.language.substring(0, 2) ||
                 'en';
             setLanguage(savedLang);
+
+            const logo = document.querySelector('.logo');
+            if (logo) logo.addEventListener('click', showQRTab);
 
             await parseAndDisplay();
 
@@ -258,7 +260,9 @@
                     sessionStorage.removeItem('ownerSessionExpires');
                 }
             }
-        });
+        }
+
+        window.appBundle = { init };
 
         async function loadEmergencyInfo(guid, key, permanentDataStr) {
             currentGUID = guid;
@@ -2310,11 +2314,6 @@
                 alert('Unable to access location. Please check your browser settings.');
             }
         }
-
-         // Add click handler for logo to return to QR
-         document.addEventListener('DOMContentLoaded', function() {
-             document.querySelector('.logo').addEventListener('click', showQRTab);
-         });
 
          // Allow closing dev tools
          document.addEventListener('keydown', function(e) {

@@ -243,8 +243,10 @@ class SessionManager {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('session-timer')) {
-        window.sessionManager = new SessionManager();
+window.sessionModule = {
+    init() {
+        if (document.getElementById('session-timer')) {
+            window.sessionManager = new SessionManager();
+        }
     }
-});
+};

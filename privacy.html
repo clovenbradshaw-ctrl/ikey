@@ -296,13 +296,14 @@
     document.getElementById('runBtn').addEventListener('click', runDemo);
     document.getElementById('recalc').addEventListener('click', updateBruteforceEstimate);
 
-    // Auto-run: detect GUID and fetch on load (no typing).
-    window.addEventListener('DOMContentLoaded', () => {
-      setGuidTag(getGuid());
-      updateBruteforceEstimate();
-      // Auto-run if we have a GUID ready:
-      if (getGuid()) runDemo();
-    });
+    window.privacyPage = {
+      init() {
+        setGuidTag(getGuid());
+        updateBruteforceEstimate();
+        if (getGuid()) runDemo();
+      }
+    };
   </script>
+  <script src="boot.js"></script>
 </body>
 </html>
