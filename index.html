@@ -924,6 +924,95 @@
                 padding: 40px 20px;
             }
         }
+
+        /* Session Manager Styles */
+        .session-timer {
+            --progress: 0deg;
+            --ring-color: #4caf50;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: conic-gradient(var(--ring-color) var(--progress), #e0e0e0 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .session-timer::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: white;
+            border-radius: 50%;
+        }
+        .session-timer span {
+            font-size: 10px;
+            position: relative;
+        }
+        .session-timer.pulse {
+            animation: ehr-timer-pulse 1s infinite;
+        }
+        @keyframes ehr-timer-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+        }
+        .session-banner {
+            position: fixed;
+            top: -100px;
+            left: 0;
+            right: 0;
+            background: #fff3cd;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: top 0.3s;
+            z-index: 1000;
+        }
+        .session-banner.active { top: 0; }
+        .session-banner button { margin-left: 10px; }
+        .session-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .session-modal.active { display: flex; }
+        .session-modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            animation: modalPulse 1s infinite alternate;
+        }
+        @keyframes modalPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
+        }
+        .session-expired {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+        }
+        .session-expired.active { display: flex; }
     </style>
 </head>
 <body>
@@ -932,7 +1021,11 @@
             <!-- Content will be dynamically inserted here -->
         </div>
     </div>
-    
+
+    <div id="session-timer" class="session-timer">
+        <span id="session-countdown"></span>
+    </div>
+
     <!-- Dev Tools Panel -->
     <div class="dev-trigger" onclick="toggleDevTools()">🛠️</div>
     <div id="dev-panel" class="dev-panel">
@@ -962,8 +1055,11 @@
     <!-- QR Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="session.js"></script>
 
     <script>
+        window.sessionManager = new SessionManager();
+
         // Configuration
         const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
         const BEACON_TEXT = 'SQR:1';
