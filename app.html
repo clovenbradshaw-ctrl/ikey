@@ -87,11 +87,13 @@
       <p>Your secure information vault.</p>
     </main>
 
-    function updateTopBarOffset() {
-      const topBar = document.querySelector('.top-bar');
-      const height = topBar ? topBar.offsetHeight : 0;
-      document.documentElement.style.setProperty('--top-bar-height', height + 'px');
-    }
+    <script>
+      function updateTopBarOffset() {
+        const topBar = document.querySelector('.top-bar');
+        const height = topBar ? topBar.offsetHeight : 0;
+        document.documentElement.style.setProperty('--top-bar-height', height + 'px');
+      }
+
       window.addEventListener('load', updateTopBarOffset);
       window.addEventListener('resize', updateTopBarOffset);
     </script>
@@ -109,6 +111,6 @@
     <script src="app.js"></script>
     <script src="form-init.js"></script>
 
-    <script src="app.bundle.js"></script>
+    <script type="module" src="app.bundle.js"></script>
   </body>
 </html>

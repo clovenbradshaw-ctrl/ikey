@@ -57,7 +57,29 @@
   </div>
   <div class="container">
     <h1>Bulk QR Generation</h1>
+
     <p>This feature is under construction.</p>
   </div>
+
+    <p>Select a CSV file to begin generating QR codes.</p>
+    <input type="file" id="bulk-file" accept=".csv">
+    <div id="file-info"></div>
+    <div style="margin-top: 20px;">
+      <button id="single-qr-btn">Create Single QR</button>
+    </div>
+  </div>
+  <script>
+    const fileInput = document.getElementById('bulk-file');
+    const info = document.getElementById('file-info');
+    const singleBtn = document.getElementById('single-qr-btn');
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      info.textContent = file ? `Selected: ${file.name}` : '';
+    });
+    singleBtn.addEventListener('click', () => {
+      window.location.href = 'index.html?create=1';
+    });
+  </script>
+
 </body>
 </html>
