@@ -41,6 +41,21 @@
       text-align: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+    #wizard {
+      margin-top: 20px;
+    }
+    .wizard-step {
+      display: none;
+    }
+    .wizard-step.active {
+      display: block;
+    }
+    .wizard-step input {
+      padding: 8px;
+      margin: 10px 0;
+      width: 100%;
+      max-width: 300px;
+    }
     button {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -66,12 +81,32 @@
         <p><strong>Key:</strong> <span id="key"></span></p>
         <button id="download">Download QR</button>
         <button id="test">Test QR</button>
-        <button id="share">Share QR</button>
+      <button id="share">Share QR</button>
+      </div>
+      <div id="wizard" style="display:none;">
+        <div class="wizard-step" data-step="0">
+          <h2>Step 1: Your Name</h2>
+          <input id="wiz-name" placeholder="Full Name">
+          <div><button class="next-btn">Next</button></div>
+        </div>
+        <div class="wizard-step" data-step="1">
+          <h2>Step 2: Emergency Contact</h2>
+          <input id="wiz-contact" placeholder="Contact Info">
+          <div>
+            <button class="prev-btn">Back</button>
+            <button class="finish-btn">Finish</button>
+          </div>
+        </div>
+        <div id="wizard-summary" style="display:none;">
+          <h2>Saved!</h2>
+          <p id="summary-text"></p>
+        </div>
       </div>
   </div>
   <script>
       const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
       let currentQRUrl = null;
+      const wizardData = {};
 
       function generateKey(length = 32) {
         const array = new Uint8Array(length);
@@ -100,7 +135,55 @@
       document.getElementById('guid').textContent = guid;
       document.getElementById('key').textContent = key;
       document.getElementById('result').style.display = 'block';
+      ensurePin(guid);
+      startWizard(guid);
     });
+
+      function ensurePin(guid) {
+        const storageKey = 'pin_' + guid;
+        let pin = localStorage.getItem(storageKey);
+        if (!pin) {
+          pin = prompt('Set a PIN to protect this QR:');
+          if (pin) {
+            localStorage.setItem(storageKey, pin.trim());
+            alert('PIN set. Keep it safe.');
+          }
+        }
+      }
+
+      function startWizard(guid) {
+        const wizard = document.getElementById('wizard');
+        const steps = wizard.querySelectorAll('.wizard-step');
+        let currentStep = 0;
+
+        function showStep(n) {
+          steps.forEach((step, i) => {
+            step.classList.toggle('active', i === n);
+          });
+          currentStep = n;
+        }
+
+        wizard.style.display = 'block';
+        showStep(0);
+
+        wizard.querySelector('.next-btn').onclick = () => {
+          wizardData.name = document.getElementById('wiz-name').value.trim();
+          showStep(1);
+        };
+
+        wizard.querySelector('.prev-btn').onclick = () => {
+          showStep(0);
+        };
+
+        wizard.querySelector('.finish-btn').onclick = () => {
+          wizardData.contact = document.getElementById('wiz-contact').value.trim();
+          localStorage.setItem('info_' + guid, JSON.stringify(wizardData));
+          steps.forEach(step => step.style.display = 'none');
+          const summary = document.getElementById('wizard-summary');
+          document.getElementById('summary-text').textContent = `Name: ${wizardData.name}\nContact: ${wizardData.contact}`;
+          summary.style.display = 'block';
+        };
+      }
 
       document.getElementById('download').addEventListener('click', () => {
         const canvas = document.querySelector('#qrcode canvas');
