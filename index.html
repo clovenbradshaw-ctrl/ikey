@@ -1094,6 +1094,8 @@
         let currentKey = null;
         let currentData = null; // minimal {id, data, auth}
         let currentBlob = null; // decrypted full data
+        let currentPin = null;
+        let currentPassword = null;
         let currentMode = null;
         let currentCreated = null;
         let currentName = null;
@@ -1362,7 +1364,7 @@
             if (!password) return;
 
             try {
-                const hash = await sha256Hash(currentKey + password);
+                const hash = await sha256Hash(currentBlob.passwordSalt + password);
                 if (!currentBlob.privateInfo || hash !== currentBlob.privateInfo.encryptedWith) {
                     throw new Error('Incorrect password');
                 }
@@ -1410,6 +1412,14 @@
         }
 
         async function showUpdateForm() {
+            const pin = prompt("Enter your current PIN to update this emergency QR:");
+            if (!pin) return;
+            const pinHash = await sha256Hash(currentBlob.pinSalt + pin);
+            if (pinHash !== currentBlob.pinVerifier) {
+                alert("Incorrect PIN!");
+                return;
+            }
+
             const password = prompt("Enter your password to update this emergency QR:");
             if (!password) return;
 
@@ -1419,12 +1429,15 @@
 
                 // Validate password against stored hash
                 if (currentBlob.privateInfo) {
-                    const hash = await sha256Hash(currentKey + password);
+                    const hash = await sha256Hash(currentBlob.passwordSalt + password);
                     if (hash !== currentBlob.privateInfo.encryptedWith) {
                         alert("Incorrect password!");
                         return;
                     }
                 }
+
+                currentPin = pin;
+                currentPassword = password;
 
                 // Show update form (reuse creation form with pre-filled data)
                 showCreationForm();
@@ -1446,9 +1459,24 @@
                     document.getElementById('medical-notes').value = privateInfo.notes || '';
                 }
 
+                // Make credential changes optional
+                document.getElementById('pin').required = false;
+                document.getElementById('pin-confirm').required = false;
+                document.getElementById('pin').value = '';
+                document.getElementById('pin-confirm').value = '';
+                document.getElementById('pin').placeholder = 'Leave blank to keep current PIN';
+                document.getElementById('pin-confirm').placeholder = 'Leave blank to keep current PIN';
+                document.getElementById('password').required = false;
+                document.getElementById('password-confirm').required = false;
+                document.getElementById('password').value = '';
+                document.getElementById('password-confirm').value = '';
+                document.getElementById('password').placeholder = 'Leave blank to keep current password';
+                document.getElementById('password-confirm').placeholder = 'Leave blank to keep current password';
+                document.getElementById('password-req').style.display = 'none';
+
                 // Change form handler to update instead of create
                 document.getElementById('create-form').removeEventListener('submit', handleCreateForm);
-                document.getElementById('create-form').addEventListener('submit', (e) => handleUpdateForm(e, password, updateToken));
+                document.getElementById('create-form').addEventListener('submit', (e) => handleUpdateForm(e, updateToken));
 
                 // Change button text
                 document.querySelector('#create-form button[type="submit"]').innerHTML = '<span>Update QR</span>';
@@ -1459,7 +1487,7 @@
             }
         }
 
-        async function handleUpdateForm(e, password, updateToken) {
+        async function handleUpdateForm(e, updateToken) {
             e.preventDefault();
 
             const button = e.target.querySelector('button[type="submit"]');
@@ -1481,11 +1509,35 @@
 
                 const newHint = document.getElementById('password-hint').value;
 
-                const privateInfo = password ? {
+                let pinSalt = currentBlob.pinSalt;
+                let pinVerifier = currentBlob.pinVerifier;
+                let passwordSalt = currentBlob.passwordSalt;
+                let passwordVerifier = currentBlob.privateInfo.encryptedWith;
+
+                const newPin = document.getElementById('pin').value;
+                const confirmPin = document.getElementById('pin-confirm').value;
+                if (newPin || confirmPin) {
+                    if (newPin !== confirmPin) throw new Error('PINs do not match');
+                    pinSalt = generateKey(16);
+                    pinVerifier = await sha256Hash(pinSalt + newPin);
+                    currentPin = newPin;
+                    currentKey = generateKey();
+                }
+
+                const newPassword = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('password-confirm').value;
+                if (newPassword || confirmPassword) {
+                    if (newPassword !== confirmPassword) throw new Error('Passwords do not match');
+                    passwordSalt = generateKey(16);
+                    passwordVerifier = await sha256Hash(passwordSalt + newPassword);
+                    currentPassword = newPassword;
+                }
+
+                const privateInfo = {
                     ssn: document.getElementById('ssn').value,
                     notes: document.getElementById('medical-notes').value,
-                    encryptedWith: await sha256Hash(currentKey + password)
-                } : null;
+                    encryptedWith: passwordVerifier
+                };
 
                 const fullData = {
                     version: currentBlob.version,
@@ -1493,16 +1545,20 @@
                     name: currentBlob.name,
                     updated: new Date().toISOString(),
                     beacon: BEACON_TEXT,
+                    pinSalt,
+                    pinVerifier,
+                    passwordSalt,
                     publicInfo,
                     passwordHint: newHint ? await encrypt(newHint, currentKey) : null,
                     privateInfo
                 };
 
                 const encryptedBlob = await encrypt(JSON.stringify(fullData), currentKey);
+                const wrappedBlob = Kqr(encryptedBlob, currentKey);
                 const auth = await sha256Hash(updateToken);
                 const updatedData = {
                     id: currentGUID,
-                    data: encryptedBlob,
+                    data: wrappedBlob,
                     auth
                 };
 
@@ -1591,7 +1647,19 @@
                             <label for="contact-phone">Emergency Contact Phone *</label>
                             <input type="tel" id="contact-phone" required placeholder="(555) 123-4567">
                         </div>
-                        
+
+                        <div class="section-title">PIN Protection</div>
+
+                        <div class="form-group">
+                            <label for="pin">PIN *</label>
+                            <input type="password" id="pin" required placeholder="4-digit PIN" pattern="\d{4}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="pin-confirm">Confirm PIN *</label>
+                            <input type="password" id="pin-confirm" required placeholder="Re-enter PIN" pattern="\d{4}">
+                        </div>
+
                         <div class="section-title">Password Protected</div>
                         
                         <div class="form-group">
@@ -1670,9 +1738,17 @@
             button.innerHTML = '<span>Creating...</span>';
             
             try {
+                const pin = document.getElementById('pin').value;
+                const confirmPin = document.getElementById('pin-confirm').value;
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('password-confirm').value;
 
+                if (!pin) {
+                    throw new Error('PIN is required');
+                }
+                if (pin !== confirmPin) {
+                    throw new Error('PINs do not match');
+                }
                 if (!password) {
                     throw new Error('Password is required');
                 }
@@ -1682,10 +1758,17 @@
                 if (password !== confirmPassword) {
                     throw new Error('Passwords do not match');
                 }
-                
+
                 // Generate unique identifiers
                 currentGUID = generateGUID();
                 currentKey = generateKey();
+                currentPin = pin;
+                currentPassword = password;
+
+                const pinSalt = generateKey(16);
+                const pinVerifier = await sha256Hash(pinSalt + pin);
+                const passwordSalt = generateKey(16);
+                const passwordVerifier = await sha256Hash(passwordSalt + password);
 
                 // Collect form data
                 const publicInfo = {
@@ -1704,7 +1787,7 @@
                 const privateInfo = {
                     ssn: document.getElementById('ssn').value,
                     notes: document.getElementById('medical-notes').value,
-                    encryptedWith: await sha256Hash(currentKey + password)
+                    encryptedWith: passwordVerifier
                 };
 
                 const created = new Date().toISOString();
@@ -1713,6 +1796,9 @@
                     created,
                     name: publicInfo.name,
                     beacon: BEACON_TEXT,
+                    pinSalt,
+                    pinVerifier,
+                    passwordSalt,
                     publicInfo,
                     passwordHint: encryptedHint,
                     privateInfo
@@ -2186,6 +2272,10 @@
             );
             
             return dec.decode(decrypted);
+        }
+
+        function Kqr(data, key) {
+            return JSON.stringify({ k: key, q: data });
         }
 
         async function generateUpdateToken(password, guid) {
