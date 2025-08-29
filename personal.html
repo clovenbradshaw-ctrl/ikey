@@ -85,9 +85,11 @@
     document.getElementById('generate').addEventListener('click', () => {
       const guid = crypto.randomUUID();
       const key = generateKey();
-        const url = `${VIEWER_URL}#v2:${guid}:${key}`;
-        currentQRUrl = url;
-        const qrDiv = document.getElementById('qrcode');
+      const name = prompt('Name for QR:', '') || '';
+      const createdISO = new Date().toISOString();
+      const url = `${VIEWER_URL}#${guid}|${key}|${encodeURIComponent(name)}|${createdISO}`;
+      currentQRUrl = url;
+      const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = '';
       new QRCode(qrDiv, {
         text: url,

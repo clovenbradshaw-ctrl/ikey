@@ -1202,17 +1202,17 @@
             // Check hash first
             const hash = window.location.hash.substring(1);
 
-            // Newer format: #v2:guid:key
+            // Four-part format: #guid|key|name|created
+            if (hash && hash.includes('|')) {
+                [guid, key, name, created] = hash.split('|').map(decodeURIComponent);
+                return { guid, key, name, created };
+            }
+
+            // Legacy v2 format: v2:guid:key
             if (hash.startsWith('v2:')) {
                 const parts = hash.split(':');
                 guid = decodeURIComponent(parts[1] || '');
                 key = decodeURIComponent(parts[2] || '');
-                return { guid, key, name, created };
-            }
-
-            // Legacy format: #guid|key|name|created
-            if (hash && hash.includes('|')) {
-                [guid, key, name, created] = hash.split('|').map(decodeURIComponent);
                 return { guid, key, name, created };
             }
 

@@ -199,16 +199,31 @@
                 return;
             }
 
-            // Handle legacy format and v2 encoded hashes
-            if (!hash.startsWith('v2:')) {
-                return handleLegacyFormat(hash);
+            if (hash.includes('|')) {
+                const parts = hash.split('|').map(decodeURIComponent);
+                if (parts.length >= 4) {
+                    const [guid, key, name, created] = parts;
+                    currentGUID = guid;
+                    currentKey = key;
+                    currentMode = 'view';
+                    await loadAndDisplayEmergencyInfo(guid, key, name, created);
+                } else {
+                    handleLegacyFormat(hash);
+                }
+                return;
             }
 
-            const [version, guid, key] = hash.split(':');
-            currentGUID = guid;
-            currentKey = key;
-            currentMode = 'view';
-            await loadAndDisplayEmergencyInfo(guid, key, null, null);
+            if (hash.startsWith('v2:')) {
+                const [version, guid, key] = hash.split(':');
+                currentGUID = guid;
+                currentKey = key;
+                currentMode = 'view';
+                await loadAndDisplayEmergencyInfo(guid, key, null, null);
+                return;
+            }
+
+            currentMode = 'create';
+            showCreationForm();
         }
 
         async function displayFullInfo(full) {
@@ -1676,8 +1691,8 @@
                 updateSourceLabel();
 
                 // Only generate QR after successful upload
-                const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
-                window.location.hash = `v2:${currentGUID}:${currentKey}`;
+                const qrUrl = `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(formData.name)}|${created}`;
+                window.location.hash = `${currentGUID}|${currentKey}|${encodeURIComponent(formData.name)}|${created}`;
 
                 // Generate QR code
                 const qrContainer = document.getElementById('qrcode');
@@ -2016,7 +2031,9 @@
         }
 
         function viewQR() {
-            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
+            const created = currentBlob?.created || new Date().toISOString();
+            const name = currentBlob?.name || '';
+            const url = window.currentQRUrl || `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(name)}|${created}`;
             const existing = document.getElementById('qr-viewer');
             if (existing) existing.remove();
             const overlay = document.createElement('div');
@@ -2034,7 +2051,9 @@
 
         function downloadQRFixed() {
             const canvas = document.querySelector('#qrcode canvas, #owner-qr canvas');
-            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
+            const created = currentBlob?.created || new Date().toISOString();
+            const name = currentBlob?.name || '';
+            const url = window.currentQRUrl || `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(name)}|${created}`;
             if (!canvas) {
                 const tempDiv = document.createElement('div');
                 new QRCode(tempDiv, {
@@ -2060,7 +2079,9 @@
         }
 
         function shareQR() {
-            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
+            const created = currentBlob?.created || new Date().toISOString();
+            const name = currentBlob?.name || '';
+            const url = window.currentQRUrl || `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(name)}|${created}`;
             if (navigator.share && url) {
                 navigator.share({ title: 'iKey', url }).catch(() => {});
             } else if (url) {
@@ -2219,7 +2240,10 @@
 
         function parseQRData(text) {
             let guid, key;
-            if (text.includes('v2:')) {
+            if (text.includes('#') && text.includes('|')) {
+                const hash = text.split('#')[1];
+                [guid, key] = hash.split('|');
+            } else if (text.includes('v2:')) {
                 const hash = text.split('#')[1];
                 const parts = hash.split(':');
                 guid = parts[1];
