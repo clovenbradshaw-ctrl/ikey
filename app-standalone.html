@@ -1672,13 +1672,18 @@
                     encryptedWith: await sha256Hash(currentKey + password)
                 } : null;
 
+                // Encrypt the password hint separately with the QR key
+                const encryptedHint = formData.passwordHint ? await encrypt(formData.passwordHint, currentKey) : null;
+
                 const payload = {
+                    beacon: BEACON_TEXT,
+                    created,
                     name: formData.name,
                     pronouns: formData.pronouns,
                     criticalInfo: formData.criticalInfo,
                     publicInfo,
                     privateInfo,
-                    passwordHint: formData.passwordHint,
+                    passwordHint: encryptedHint,
                     vault: window.healthApp.exportVault()
                 };
                 const encryptedData = await encrypt(JSON.stringify(payload), currentKey);
@@ -1694,6 +1699,16 @@
                 }
 
                 currentData = archivePayload;
+
+                // Store a public-only snapshot locally in case upload fails
+                const fallbackData = {
+                    version: "3.0",
+                    created,
+                    name: formData.name,
+                    beacon: BEACON_TEXT,
+                    publicInfo
+                };
+                localStorage.setItem('pending_' + currentGUID, JSON.stringify(fallbackData));
 
                 // IMMEDIATELY upload to server
                 showStatus('⏳ Securing your data online...', 'info');
@@ -1714,6 +1729,9 @@
                 if (!response.ok) {
                     throw new Error('Failed to secure data online');
                 }
+
+                // Remove local snapshot after successful upload
+                localStorage.removeItem('pending_' + currentGUID);
 
                 currentSource = 'Server cache';
                 updateSourceLabel();
@@ -1737,11 +1755,13 @@
                 currentBlob = {
                     version: 'v2',
                     created,
+                    beacon: BEACON_TEXT,
                     name: formData.name,
                     pronouns: formData.pronouns,
                     criticalInfo: formData.criticalInfo,
                     publicInfo,
                     privateInfo,
+                    passwordHint: formData.passwordHint,
                     vault: window.healthApp.exportVault()
                 };
 
