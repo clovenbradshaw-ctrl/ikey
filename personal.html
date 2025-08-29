@@ -58,30 +58,36 @@
   </div>
   <div class="container">
     <h1>Personal QR Setup</h1>
-    <p>Create and save your personal iKey QR code.</p>
-    <button id="generate">Generate QR</button>
-    <div id="result" style="display:none;margin-top:20px;">
-      <div id="qrcode" style="margin:20px auto;"></div>
-      <p><strong>GUID:</strong> <span id="guid"></span></p>
-      <p><strong>Key:</strong> <span id="key"></span></p>
-      <button id="download">Download QR</button>
-    </div>
+      <p>Create and save your personal iKey QR code.</p>
+      <button id="generate">Generate QR</button>
+      <div id="result" style="display:none;margin-top:20px;">
+        <div id="qrcode" style="margin:20px auto;"></div>
+        <p><strong>GUID:</strong> <span id="guid"></span></p>
+        <p><strong>Key:</strong> <span id="key"></span></p>
+        <button id="download">Download QR</button>
+        <button id="test">Test QR</button>
+        <button id="share">Share QR</button>
+      </div>
   </div>
   <script>
-    const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
+      const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
+      let currentQRUrl = null;
 
-    function generateKey() {
-      const buf = crypto.getRandomValues(new Uint8Array(32));
-      let binary = '';
-      buf.forEach(b => binary += String.fromCharCode(b));
-      return btoa(binary);
-    }
+      function generateKey(length = 32) {
+        const array = new Uint8Array(length);
+        crypto.getRandomValues(array);
+        return btoa(String.fromCharCode.apply(null, array))
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+/g, '');
+      }
 
     document.getElementById('generate').addEventListener('click', () => {
       const guid = crypto.randomUUID();
       const key = generateKey();
-      const url = `${VIEWER_URL}#v2:${guid}:${key}`;
-      const qrDiv = document.getElementById('qrcode');
+        const url = `${VIEWER_URL}#v2:${guid}:${key}`;
+        currentQRUrl = url;
+        const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = '';
       new QRCode(qrDiv, {
         text: url,
@@ -94,15 +100,29 @@
       document.getElementById('result').style.display = 'block';
     });
 
-    document.getElementById('download').addEventListener('click', () => {
-      const canvas = document.querySelector('#qrcode canvas');
-      if (canvas) {
-        const link = document.createElement('a');
-        link.download = 'personal-qr.png';
-        link.href = canvas.toDataURL();
-        link.click();
-      }
-    });
+      document.getElementById('download').addEventListener('click', () => {
+        const canvas = document.querySelector('#qrcode canvas');
+        if (canvas) {
+          const link = document.createElement('a');
+          link.download = 'personal-qr.png';
+          link.href = canvas.toDataURL();
+          link.click();
+        }
+      });
+
+      document.getElementById('test').addEventListener('click', () => {
+        if (currentQRUrl) {
+          window.open(currentQRUrl, '_blank');
+        }
+      });
+
+      document.getElementById('share').addEventListener('click', () => {
+        if (navigator.share && currentQRUrl) {
+          navigator.share({ title: 'iKey', url: currentQRUrl }).catch(() => {});
+        } else if (currentQRUrl) {
+          prompt('QR URL', currentQRUrl);
+        }
+      });
   </script>
 </body>
 </html>
