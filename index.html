@@ -1541,13 +1541,6 @@
             return until > Date.now() ? until - Date.now() : 0;
         }
 
-
-            try {
-                const hash = await sha256Hash(currentBlob.passwordSalt + password);
-                if (!currentBlob.privateInfo || hash !== currentBlob.privateInfo.encryptedWith) {
-                    throw new Error('Incorrect password');
-                }
-
         function registerFailure(key) {
             const attempts = Number(sessionStorage.getItem(key) || '0') + 1;
             const delay = Math.min(2 ** attempts, 32) * 1000;
