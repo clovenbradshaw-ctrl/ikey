@@ -92,9 +92,11 @@ class SessionManager {
         );
         document.addEventListener('scroll', activity, { passive: true });
         resetIdle();
-        document.querySelectorAll('input, textarea').forEach(el =>
-            el.addEventListener('input', () => this.scheduleAutoSave())
-        );
+        document.addEventListener('input', e => {
+            if (e.target.matches('input, textarea, select')) {
+                this.scheduleAutoSave();
+            }
+        });
     }
 
     reset() {
@@ -206,7 +208,7 @@ class SessionManager {
         if (status) status.textContent = 'Saving...';
 
         const draft = {};
-        document.querySelectorAll('input, textarea').forEach(el => {
+        document.querySelectorAll('input, textarea, select').forEach(el => {
             draft[el.id || el.name] = el.value;
         });
         localStorage.setItem('sessionDraft', JSON.stringify(draft));
@@ -244,7 +246,7 @@ class SessionManager {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('session-timer')) {
+    if (!window.sessionManager && document.getElementById('session-timer')) {
         window.sessionManager = new SessionManager();
     }
 });
