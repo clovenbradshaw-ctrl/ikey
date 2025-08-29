@@ -1512,7 +1512,7 @@
                 let pinSalt = currentBlob.pinSalt;
                 let pinVerifier = currentBlob.pinVerifier;
                 let passwordSalt = currentBlob.passwordSalt;
-                let passwordVerifier = currentBlob.privateInfo.encryptedWith;
+                let passwordVerifier = currentBlob.privateInfo?.encryptedWith || null;
 
                 const newPin = document.getElementById('pin').value;
                 const confirmPin = document.getElementById('pin-confirm').value;
@@ -1533,11 +1533,15 @@
                     currentPassword = newPassword;
                 }
 
-                const privateInfo = {
-                    ssn: document.getElementById('ssn').value,
-                    notes: document.getElementById('medical-notes').value,
-                    encryptedWith: passwordVerifier
-                };
+                const privateInfo = (passwordVerifier ||
+                    document.getElementById('ssn').value ||
+                    document.getElementById('medical-notes').value)
+                    ? {
+                        ssn: document.getElementById('ssn').value,
+                        notes: document.getElementById('medical-notes').value,
+                        encryptedWith: passwordVerifier
+                    }
+                    : null;
 
                 const fullData = {
                     version: currentBlob.version,
