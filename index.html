@@ -1240,6 +1240,12 @@
                     throw new Error('Invalid QR code');
                 }
 
+                // Upgrade legacy blobs lacking version 4.0
+                if (!fullData.version || parseFloat(fullData.version) < 4.0) {
+                    await upgradeLegacyBlob(fullData);
+                    return;
+                }
+
                 // Decrypt password hint if it exists
                 let passwordHint = null;
                 if (fullData.passwordHint) {
@@ -1258,6 +1264,66 @@
                 console.error('Error loading data:', error);
                 showError('Unable to load emergency information. Please check the QR code.');
             }
+        }
+
+        // Upgrade older blobs to the v4.0 schema
+        async function upgradeLegacyBlob(fullData) {
+            alert('This record uses an older format and needs to be upgraded.');
+
+            const pin = prompt('Create a new PIN');
+            const password = prompt('Create a new password');
+            if (!pin || !password) {
+                showError('Upgrade cancelled');
+                return;
+            }
+
+            const { notes, ...profileRest } = fullData.privateInfo || {};
+            const profile = profileRest;
+            const ehr = {};
+            if (notes) ehr.notes = notes;
+
+            const pinKey = await sha256Hash(currentKey + pin);
+            const passKey = await sha256Hash(currentKey + password);
+
+            const payloads = {
+                profile: await encrypt(JSON.stringify(profile), pinKey),
+                ehr: await encrypt(JSON.stringify(ehr), passKey)
+            };
+
+            const upgraded = {
+                version: '4.0',
+                created: fullData.created,
+                updated: new Date().toISOString(),
+                name: fullData.name,
+                beacon: BEACON_TEXT,
+                publicInfo: fullData.publicInfo,
+                passwordHint: fullData.passwordHint,
+                payloads,
+                pinHash: pinKey,
+                passHash: passKey
+            };
+
+            const encryptedBlob = await encrypt(JSON.stringify(upgraded), currentKey);
+            const updateToken = await generateUpdateToken(password, currentGUID);
+            const auth = await sha256Hash(updateToken);
+
+            try {
+                await fetch(WEBHOOK_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        guid: currentGUID,
+                        updateToken,
+                        data: { id: currentGUID, data: encryptedBlob, auth }
+                    })
+                });
+            } catch (e) {
+                console.log('Upgrade upload failed', e);
+            }
+
+            currentData = { id: currentGUID, data: encryptedBlob };
+            currentBlob = upgraded;
+            await displayEmergencyInfo(upgraded, { banner: '✅ Data upgraded to v4.0' });
         }
 
         // Display emergency information
