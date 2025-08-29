@@ -1265,7 +1265,6 @@
             const container = document.getElementById('main-content');
 
             const publicInfo = fullData.publicInfo || {};
-            const passwordHint = fullData.passwordHint;
             const nameToShow = options.overrideName || fullData.name || publicInfo.name || 'Unknown';
 
             let html = `
@@ -1331,14 +1330,24 @@
                 `;
             }
             
-            if (currentBlob && currentBlob.privateInfo) {
+            if (currentBlob && currentBlob.profile) {
                 html += `
-                        <div class="private-section">
-                            <h3>🔒 Private Information</h3>
-                            ${passwordHint ? `<div class="hint">Hint: ${passwordHint}</div>` : ''}
-                            <input type="password" class="password-input" id="vault-password" placeholder="Enter password">
-                            <button class="btn" onclick="unlockPrivateInfo()">Unlock</button>
-                            <div id="private-content"></div>
+                        <div class="private-section" id="profile-section">
+                            <h3>🔒 Profile — Unlock with PIN</h3>
+                            <input type="password" class="password-input" id="profile-pin" placeholder="Enter PIN">
+                            <button class="btn" id="profile-unlock-btn" onclick="unlockProfileWithPIN()">Unlock</button>
+                            <div id="profile-content"></div>
+                        </div>
+                `;
+            }
+
+            if (currentBlob && currentBlob.ehr) {
+                html += `
+                        <div class="private-section" id="ehr-section">
+                            <h3>🛡️ EHR — Unlock with Password</h3>
+                            <input type="password" class="password-input" id="ehr-password" placeholder="Enter password">
+                            <button class="btn" id="ehr-unlock-btn" onclick="unlockEHRWithPassword()">Unlock</button>
+                            <div id="ehr-content"></div>
                         </div>
                 `;
             }
@@ -1356,53 +1365,93 @@
             container.innerHTML = html;
         }
         
-        // Unlock private information
-        async function unlockPrivateInfo() {
-            const password = document.getElementById('vault-password').value;
-            if (!password) return;
+        function checkBackoff(key) {
+            const until = Number(sessionStorage.getItem(key + '_until') || '0');
+            return until > Date.now() ? until - Date.now() : 0;
+        }
 
-            try {
-                const hash = await sha256Hash(currentKey + password);
-                if (!currentBlob.privateInfo || hash !== currentBlob.privateInfo.encryptedWith) {
-                    throw new Error('Incorrect password');
-                }
+        function registerFailure(key) {
+            const attempts = Number(sessionStorage.getItem(key) || '0') + 1;
+            const delay = Math.min(2 ** attempts, 32) * 1000;
+            sessionStorage.setItem(key, attempts);
+            sessionStorage.setItem(key + '_until', Date.now() + delay);
+            return delay;
+        }
 
-                const privateInfo = currentBlob.privateInfo;
-                let html = '<div style="margin-top: 15px;">';
+        function clearBackoff(key) {
+            sessionStorage.removeItem(key);
+            sessionStorage.removeItem(key + '_until');
+        }
 
-                if (privateInfo.ssn) {
-                    html += `
+        async function unlockProfileWithPIN() {
+            const wait = checkBackoff('profileAttempts');
+            if (wait > 0) {
+                alert(`Please wait ${Math.ceil(wait / 1000)}s before trying again.`);
+                return;
+            }
+
+            const pin = document.getElementById('profile-pin').value;
+            if (!pin) return;
+
+            const hash = await sha256Hash(currentKey + pin);
+            if (!currentBlob.profile || hash !== currentBlob.profile.pinHash) {
+                const delay = registerFailure('profileAttempts');
+                alert(`Incorrect PIN. Try again in ${Math.ceil(delay / 1000)}s.`);
+                return;
+            }
+
+            const info = currentBlob.profile;
+            let html = '<div style="margin-top: 15px;">';
+            if (info.ssn) {
+                html += `
                         <div class="info-item">
                             <span class="info-icon">🆔</span>
                             <div class="info-content">
                                 <div class="info-label">SSN</div>
-                                <div class="info-value">${privateInfo.ssn}</div>
+                                <div class="info-value">${info.ssn}</div>
                             </div>
-                        </div>
-                    `;
-                }
-
-                if (privateInfo.notes) {
-                    html += `
+                        </div>`;
+            }
+            if (info.notes) {
+                html += `
                         <div class="info-item">
                             <span class="info-icon">📝</span>
                             <div class="info-content">
                                 <div class="info-label">Medical Notes</div>
-                                <div class="info-value">${privateInfo.notes}</div>
+                                <div class="info-value">${info.notes}</div>
                             </div>
-                        </div>
-                    `;
-                }
-
-                html += '</div>';
-
-                document.getElementById('private-content').innerHTML = html;
-                document.getElementById('vault-password').style.display = 'none';
-                document.querySelector('.private-section button').style.display = 'none';
-
-            } catch (error) {
-                alert('Incorrect password');
+                        </div>`;
             }
+            html += '</div>';
+
+            document.getElementById('profile-content').innerHTML = html;
+            document.getElementById('profile-pin').style.display = 'none';
+            document.getElementById('profile-unlock-btn').style.display = 'none';
+            clearBackoff('profileAttempts');
+        }
+
+        async function unlockEHRWithPassword() {
+            const wait = checkBackoff('ehrAttempts');
+            if (wait > 0) {
+                alert(`Please wait ${Math.ceil(wait / 1000)}s before trying again.`);
+                return;
+            }
+
+            const password = document.getElementById('ehr-password').value;
+            if (!password) return;
+
+            const hash = await sha256Hash(currentKey + password);
+            if (!currentBlob.ehr || hash !== currentBlob.ehr.passwordHash) {
+                const delay = registerFailure('ehrAttempts');
+                alert(`Incorrect password. Try again in ${Math.ceil(delay / 1000)}s.`);
+                return;
+            }
+
+            const data = currentBlob.ehr.data || {};
+            document.getElementById('ehr-content').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            document.getElementById('ehr-password').style.display = 'none';
+            document.getElementById('ehr-unlock-btn').style.display = 'none';
+            clearBackoff('ehrAttempts');
         }
 
         function ownerLogin() {
@@ -1418,9 +1467,9 @@
                 const updateToken = await generateUpdateToken(password, currentGUID);
 
                 // Validate password against stored hash
-                if (currentBlob.privateInfo) {
+                if (currentBlob.ehr) {
                     const hash = await sha256Hash(currentKey + password);
-                    if (hash !== currentBlob.privateInfo.encryptedWith) {
+                    if (hash !== currentBlob.ehr.passwordHash) {
                         alert("Incorrect password!");
                         return;
                     }
@@ -1440,10 +1489,10 @@
                 document.getElementById('contact-phone').value = publicInfo.contact?.phone || '';
                 document.getElementById('password-hint').value = currentBlob.passwordHint || '';
 
-                if (currentBlob.privateInfo) {
-                    const privateInfo = currentBlob.privateInfo;
-                    document.getElementById('ssn').value = privateInfo.ssn || '';
-                    document.getElementById('medical-notes').value = privateInfo.notes || '';
+                if (currentBlob.profile) {
+                    const profile = currentBlob.profile;
+                    document.getElementById('ssn').value = profile.ssn || '';
+                    document.getElementById('medical-notes').value = profile.notes || '';
                 }
 
                 // Change form handler to update instead of create
@@ -1481,10 +1530,10 @@
 
                 const newHint = document.getElementById('password-hint').value;
 
-                const privateInfo = password ? {
+                const profile = currentBlob.profile ? {
                     ssn: document.getElementById('ssn').value,
                     notes: document.getElementById('medical-notes').value,
-                    encryptedWith: await sha256Hash(currentKey + password)
+                    pinHash: currentBlob.profile.pinHash
                 } : null;
 
                 const fullData = {
@@ -1495,7 +1544,8 @@
                     beacon: BEACON_TEXT,
                     publicInfo,
                     passwordHint: newHint ? await encrypt(newHint, currentKey) : null,
-                    privateInfo
+                    profile,
+                    ehr: currentBlob.ehr
                 };
 
                 const encryptedBlob = await encrypt(JSON.stringify(fullData), currentKey);
@@ -1701,10 +1751,10 @@
                 const passwordHint = document.getElementById('password-hint').value;
                 const encryptedHint = passwordHint ? await encrypt(passwordHint, currentKey) : null;
 
-                const privateInfo = {
+                const profile = {
                     ssn: document.getElementById('ssn').value,
                     notes: document.getElementById('medical-notes').value,
-                    encryptedWith: await sha256Hash(currentKey + password)
+                    pinHash: await sha256Hash(currentKey + password)
                 };
 
                 const created = new Date().toISOString();
@@ -1715,7 +1765,8 @@
                     beacon: BEACON_TEXT,
                     publicInfo,
                     passwordHint: encryptedHint,
-                    privateInfo
+                    profile,
+                    ehr: { data: {}, passwordHash: await sha256Hash(currentKey + password) }
                 };
 
                 // Encrypt entire blob
@@ -2221,11 +2272,14 @@
                         phone: "(555) 123-4567"
                     }
                 },
-                passwordHint: await encrypt("Password is: demo", key),
-                privateInfo: {
+                profile: {
                     ssn: "XXX-XX-XXXX",
-                    notes: "This is demo data. Password is: demo",
-                    encryptedWith: await sha256Hash(key + "demo")
+                    notes: "This is demo data. PIN is: 1234",
+                    pinHash: await sha256Hash(key + "1234")
+                },
+                ehr: {
+                    data: { example: "Demo health record" },
+                    passwordHash: await sha256Hash(key + "demo")
                 }
             };
 
