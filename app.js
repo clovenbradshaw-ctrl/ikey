@@ -57,7 +57,13 @@ class ThreeLayerEncryption {
     return this.arrayBufferToBase64(raw);
   }
 
-  static async encryptObject(obj, keyBase64) {
+  static async sha256(text) {
+    const data = new TextEncoder().encode(text);
+    const hash = await self.crypto.subtle.digest('SHA-256', data);
+    return this.arrayBufferToBase64(hash);
+  }
+
+  static async encrypt(obj, keyBase64) {
     const key = await this.importKey(keyBase64);
     const iv = self.crypto.getRandomValues(new Uint8Array(12));
     const data = new TextEncoder().encode(JSON.stringify(obj));
@@ -72,7 +78,7 @@ class ThreeLayerEncryption {
     };
   }
 
-  static async decryptObject(encObj, keyBase64) {
+  static async decrypt(encObj, keyBase64) {
     const key = await this.importKey(keyBase64);
     const iv = new Uint8Array(this.base64ToArrayBuffer(encObj.iv));
     const data = this.base64ToArrayBuffer(encObj.data);
@@ -86,11 +92,28 @@ class ThreeLayerEncryption {
   }
 
   // Build encrypted record and return GUID + qrKey
-  // Build encrypted record using a single password for both profile and vault
   static async buildRecord(emergencyInfo, privateInfo, healthRecords, password) {
     const guid = self.crypto.randomUUID();
     const qrKey = this.generateQrKey();
 
+    const publicData = await this.encrypt(emergencyInfo, qrKey);
+
+    const gate = await this.sha256(qrKey + password);
+    const gatedPrivate = { ...privateInfo, encryptedWith: gate };
+
+    const vaultSalt = self.crypto.getRandomValues(new Uint8Array(16));
+    const vaultKey = await this.deriveKey(qrKey, vaultSalt, 100000);
+    const vaultEnc = await this.encrypt(healthRecords, vaultKey);
+
+    return {
+      guid,
+      qrKey,
+      storedData: {
+        publicData,
+        privateInfo: gatedPrivate,
+        vault: {
+          iv: vaultEnc.iv,
+          data: vaultEnc.data,
     const profileSalt = self.crypto.getRandomValues(new Uint8Array(16));
     const vaultSalt = self.crypto.getRandomValues(new Uint8Array(16));
 
@@ -133,6 +156,22 @@ class ThreeLayerEncryption {
   }
 
   static async unlockPublic(storedData, qrKey) {
+    return await this.decrypt(storedData.publicData, qrKey);
+  }
+
+  static async unlockPrivate(storedData, qrKey, password) {
+    const gate = await this.sha256(qrKey + password);
+    if (!storedData.privateInfo || storedData.privateInfo.encryptedWith !== gate) {
+      throw new Error('Invalid password');
+    }
+    const { encryptedWith, ...info } = storedData.privateInfo;
+    return info;
+  }
+
+  static async unlockVault(storedData, qrKey) {
+    const vaultSalt = new Uint8Array(this.base64ToArrayBuffer(storedData.vault.salt));
+    const vaultKey = await this.deriveKey(qrKey, vaultSalt, 100000);
+    return await this.decrypt({ iv: storedData.vault.iv, data: storedData.vault.data }, vaultKey);
     const blob = await this.decryptObject(storedData.Kqr, qrKey);
     return blob.publicInfo;
   }

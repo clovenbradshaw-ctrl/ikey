@@ -148,7 +148,7 @@
                 try{
                     const saltBuf = new Uint8Array(ThreeLayerEncryption.base64ToArrayBuffer(enc.salt));
                     const key = await ThreeLayerEncryption.deriveKey(password, saltBuf, 150000);
-                    const dec = await ThreeLayerEncryption.decryptObject({iv:enc.iv,data:enc.data}, key);
+                    const dec = await ThreeLayerEncryption.decrypt({iv:enc.iv,data:enc.data}, key);
                     notes.push({...dec,id:enc.id,salt:enc.salt});
                 }catch(e){console.error('decrypt fail',e);}
             }
@@ -191,7 +191,7 @@
             const id=self.crypto.randomUUID();
             const salt=self.crypto.getRandomValues(new Uint8Array(16));
             const key=await ThreeLayerEncryption.deriveKey(password,salt,150000);
-            const enc=await ThreeLayerEncryption.encryptObject(note,key);
+            const enc=await ThreeLayerEncryption.encrypt(note,key);
             const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
             stored.unshift({id,salt:ThreeLayerEncryption.arrayBufferToBase64(salt.buffer),iv:enc.iv,data:enc.data});
             localStorage.setItem(STORAGE_KEY,JSON.stringify(stored));
@@ -203,7 +203,7 @@
             if(idx===-1) return;
             const saltBuf=new Uint8Array(ThreeLayerEncryption.base64ToArrayBuffer(stored[idx].salt));
             const key=await ThreeLayerEncryption.deriveKey(password,saltBuf,150000);
-            const enc=await ThreeLayerEncryption.encryptObject(note,key);
+            const enc=await ThreeLayerEncryption.encrypt(note,key);
             stored[idx].iv=enc.iv; stored[idx].data=enc.data;
             localStorage.setItem(STORAGE_KEY,JSON.stringify(stored));
         }
