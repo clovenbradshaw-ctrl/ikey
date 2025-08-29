@@ -2,6 +2,63 @@ class IKeyApp {
   // Placeholder base class representing existing iKey functionality.
 }
 
+async function pbkdf2KeyFromSecret(secret, salt, iterations) {
+  const enc = new TextEncoder();
+  const keyMaterial = await self.crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+
+  return await self.crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt,
+      iterations,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function sha256Hex(data) {
+  const buffer = data instanceof ArrayBuffer ? data : data.buffer;
+  const hash = await self.crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function aesEncryptJson(key, obj) {
+  const iv = self.crypto.getRandomValues(new Uint8Array(12));
+  const data = new TextEncoder().encode(JSON.stringify(obj));
+  const encrypted = await self.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    data
+  );
+  return {
+    iv: ThreeLayerEncryption.arrayBufferToBase64(iv.buffer),
+    data: ThreeLayerEncryption.arrayBufferToBase64(encrypted)
+  };
+}
+
+async function aesDecryptJson(key, payload) {
+  const iv = new Uint8Array(ThreeLayerEncryption.base64ToArrayBuffer(payload.iv));
+  const data = ThreeLayerEncryption.base64ToArrayBuffer(payload.data);
+  const decrypted = await self.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    data
+  );
+  return JSON.parse(new TextDecoder().decode(decrypted));
+}
+
 // Implements the three-layer encryption architecture used for QR data,
 // profile details and the double-wrapped health vault.
 class ThreeLayerEncryption {
@@ -30,114 +87,63 @@ class ThreeLayerEncryption {
     );
   }
 
-  static async deriveKey(material, salt, iterations) {
-    const enc = new TextEncoder();
-    const keyMaterial = await self.crypto.subtle.importKey(
-      'raw',
-      enc.encode(material),
-      'PBKDF2',
-      false,
-      ['deriveBits', 'deriveKey']
-    );
-
-    const key = await self.crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt,
-        iterations,
-        hash: 'SHA-256'
-      },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 },
-      true,
-      ['encrypt', 'decrypt']
-    );
-
-    const raw = await self.crypto.subtle.exportKey('raw', key);
-    return this.arrayBufferToBase64(raw);
-  }
-
-  static async encryptObject(obj, keyBase64) {
-    const key = await this.importKey(keyBase64);
-    const iv = self.crypto.getRandomValues(new Uint8Array(12));
-    const data = new TextEncoder().encode(JSON.stringify(obj));
-    const encrypted = await self.crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      data
-    );
-    return {
-      iv: this.arrayBufferToBase64(iv.buffer),
-      data: this.arrayBufferToBase64(encrypted)
-    };
-  }
-
-  static async decryptObject(encObj, keyBase64) {
-    const key = await this.importKey(keyBase64);
-    const iv = new Uint8Array(this.base64ToArrayBuffer(encObj.iv));
-    const data = this.base64ToArrayBuffer(encObj.data);
-    const decrypted = await self.crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      data
-    );
-    const decoded = new TextDecoder().decode(decrypted);
-    return JSON.parse(decoded);
-  }
-
-  // Build encrypted record and return GUID + qrKey
-  // Build encrypted record using a single password for both profile and vault
-  static async buildRecord(emergencyInfo, privateInfo, healthRecords, password) {
+  // Build encrypted record using separate PIN and password
+  static async buildRecord(emergencyInfo, profile, ehr, pin, password) {
     const guid = self.crypto.randomUUID();
     const qrKey = this.generateQrKey();
 
-    const profileSalt = self.crypto.getRandomValues(new Uint8Array(16));
-    const profileKey = await this.deriveKey(qrKey + password, profileSalt, 100000);
+    const pinSalt = self.crypto.getRandomValues(new Uint8Array(16));
+    const pwSalt = self.crypto.getRandomValues(new Uint8Array(16));
 
-    const vaultSalt = self.crypto.getRandomValues(new Uint8Array(16));
-    const vaultKey = await this.deriveKey(password, vaultSalt, 200000);
+    const Kpin = await pbkdf2KeyFromSecret(qrKey + pin, pinSalt, 100000);
+    const Kpw = await pbkdf2KeyFromSecret(password, pwSalt, 200000);
 
-    const publicData = await this.encryptObject(emergencyInfo, qrKey);
-    const privateData = await this.encryptObject(privateInfo, profileKey);
+    const publicKey = await this.importKey(qrKey);
+    const publicData = await aesEncryptJson(publicKey, emergencyInfo);
+    const encryptedProfile = await aesEncryptJson(Kpin, profile);
+    const encryptedEhr = await aesEncryptJson(Kpw, ehr);
 
-    const innerVault = await this.encryptObject(healthRecords, vaultKey);
-    innerVault.salt = this.arrayBufferToBase64(vaultSalt.buffer);
-
-    const vault = await this.encryptObject(innerVault, profileKey);
+    const pinVerifier = await sha256Hex(await self.crypto.subtle.exportKey('raw', Kpin));
+    const pwVerifier = await sha256Hex(await self.crypto.subtle.exportKey('raw', Kpw));
 
     return {
       guid,
       qrKey,
       storedData: {
         publicData,
-        privateData,
-        vault,
-        profileSalt: this.arrayBufferToBase64(profileSalt.buffer)
+        profile: encryptedProfile,
+        ehr: encryptedEhr,
+        salts: {
+          pin: this.arrayBufferToBase64(pinSalt.buffer),
+          password: this.arrayBufferToBase64(pwSalt.buffer)
+        },
+        verifiers: {
+          pin: pinVerifier,
+          password: pwVerifier
+        }
       }
     };
   }
 
   static async unlockPublic(storedData, qrKey) {
-    return await this.decryptObject(storedData.publicData, qrKey);
+    const key = await this.importKey(qrKey);
+    return await aesDecryptJson(key, storedData.publicData);
   }
 
-  // Unlock both private info and wrapped vault using a single password
-  static async unlockPrivate(storedData, qrKey, password) {
-    const profileSalt = new Uint8Array(this.base64ToArrayBuffer(storedData.profileSalt));
-    const profileKey = await this.deriveKey(qrKey + password, profileSalt, 100000);
-    const privateInfo = await this.decryptObject(storedData.privateData, profileKey);
-    const vaultWrapper = await this.decryptObject(storedData.vault, profileKey);
-    return { privateInfo, vault: vaultWrapper };
+  static async unlockProfileWithPIN(storedData, qrKey, pin) {
+    const pinSalt = new Uint8Array(this.base64ToArrayBuffer(storedData.salts.pin));
+    const Kpin = await pbkdf2KeyFromSecret(qrKey + pin, pinSalt, 100000);
+    const verifier = await sha256Hex(await self.crypto.subtle.exportKey('raw', Kpin));
+    if (verifier !== storedData.verifiers.pin) throw new Error('Invalid PIN');
+    return await aesDecryptJson(Kpin, storedData.profile);
   }
 
-  // Fully unlock the health vault using the same password
-  static async unlockVault(storedData, qrKey, password) {
-    const profileSalt = new Uint8Array(this.base64ToArrayBuffer(storedData.profileSalt));
-    const profileKey = await this.deriveKey(qrKey + password, profileSalt, 100000);
-    const vaultWrapper = await this.decryptObject(storedData.vault, profileKey);
-    const vaultSalt = new Uint8Array(this.base64ToArrayBuffer(vaultWrapper.salt));
-    const vaultKey = await this.deriveKey(password, vaultSalt, 200000);
-    return await this.decryptObject({ iv: vaultWrapper.iv, data: vaultWrapper.data }, vaultKey);
+  static async unlockEHRWithPassword(storedData, password) {
+    const pwSalt = new Uint8Array(this.base64ToArrayBuffer(storedData.salts.password));
+    const Kpw = await pbkdf2KeyFromSecret(password, pwSalt, 200000);
+    const verifier = await sha256Hex(await self.crypto.subtle.exportKey('raw', Kpw));
+    if (verifier !== storedData.verifiers.password) throw new Error('Invalid password');
+    return await aesDecryptJson(Kpw, storedData.ehr);
   }
 }
 
