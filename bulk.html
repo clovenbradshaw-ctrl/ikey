@@ -1,6 +1,902 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iKey - Bulk QR Generation Setup</title>
+    <script src="router.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .back-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f3f4f6;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .back-button:hover {
+            background: #e5e7eb;
+            transform: translateX(-3px);
+        }
+        
+        h1 {
+            font-size: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .setup-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+        
+        .main-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        /* Quantity Section */
+        .quantity-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .quantity-btn {
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .quantity-btn:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        
+        .quantity-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .quantity-btn .number {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .quantity-btn .label {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        
+        .custom-quantity {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .custom-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        
+        /* Layout Section */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .layout-option {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .layout-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .layout-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .layout-preview {
+            width: 100%;
+            height: 80px;
+            background: #f9fafb;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mini-qr {
+            width: 12px;
+            height: 12px;
+            background: #4b5563;
+            margin: 2px;
+        }
+        
+        .layout-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .layout-specs {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        /* Format Options */
+        .format-options {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .format-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+        
+        .format-label {
+            font-weight: 500;
+            color: #4b5563;
+        }
+        
+        .format-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        select, input[type="number"] {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #d1d5db;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle-switch.active {
+            background: #667eea;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(24px);
+        }
+        
+        /* Security Features */
+        .security-features {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .feature-item:hover {
+            background: #f3f4f6;
+        }
+        
+        .feature-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .feature-item.active .feature-checkbox {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .feature-item.active .feature-checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+        }
+        
+        .feature-info {
+            flex: 1;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .feature-desc {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        /* Preview Panel */
+        .preview-panel {
+            position: sticky;
+            top: 20px;
+        }
+        
+        .preview-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .preview-title {
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .preview-canvas {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 300px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-content: flex-start;
+        }
+        
+        .preview-qr {
+            background: #1f2937;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            position: relative;
+        }
+        
+        .preview-qr.small { width: 30px; height: 30px; }
+        .preview-qr.medium { width: 40px; height: 40px; }
+        .preview-qr.large { width: 50px; height: 50px; }
+        
+        .summary-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .summary-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .summary-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .summary-value {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 14px;
+        }
+        
+        /* Action Buttons */
+        .action-bar {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .info-box {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #92400e;
+        }
+        
+        @media (max-width: 1024px) {
+            .setup-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .preview-panel {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <button class="back-button" onclick="goBack()">←</button>
+                <h1>Bulk QR Generation</h1>
+            </div>
+            <div style="color: #6b7280; font-size: 14px;">
+                Each QR contains unique GUID + 256-bit encryption key
+            </div>
+        </div>
+        
+        <div class="setup-grid">
+            <div class="main-settings">
+                <!-- Quantity Section -->
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-icon">#</div>
+                        <span>Quantity</span>
+                    </div>
+                    
+                    <div class="quantity-options">
+                        <div class="quantity-btn" onclick="selectQuantity(this, 10)">
+                            <span class="number">10</span>
+                            <span class="label">Testing</span>
+                        </div>
+                        <div class="quantity-btn" onclick="selectQuantity(this, 25)">
+                            <span class="number">25</span>
+                            <span class="label">Small Batch</span>
+                        </div>
+                        <div class="quantity-btn active" onclick="selectQuantity(this, 50)">
+                            <span class="number">50</span>
+                            <span class="label">Standard</span>
+                        </div>
+                        <div class="quantity-btn" onclick="selectQuantity(this, 100)">
+                            <span class="number">100</span>
+                            <span class="label">Department</span>
+                        </div>
+                        <div class="quantity-btn" onclick="selectQuantity(this, 250)">
+                            <span class="number">250</span>
+                            <span class="label">Organization</span>
+                        </div>
+                        <div class="quantity-btn" onclick="selectQuantity(this, 500)">
+                            <span class="number">500</span>
+                            <span class="label">Enterprise</span>
+                        </div>
+                    </div>
+                    
+                    <div class="custom-quantity">
+                        <input type="number" class="custom-input" placeholder="Custom quantity (max 1000)" min="1" max="1000" id="customQuantity">
+                        <button class="btn btn-secondary" onclick="setCustomQuantity()">Set</button>
+                    </div>
+                </div>
+                
+                <!-- Layout Section -->
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-icon">📄</div>
+                        <span>Print Layout</span>
+                    </div>
+                    
+                    <div class="layout-grid">
+                        <div class="layout-option selected" onclick="selectLayout(this, 'cards')">
+                            <div class="layout-preview">
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                                    <div class="mini-qr"></div>
+                                    <div class="mini-qr"></div>
+                                    <div class="mini-qr"></div>
+                                    <div class="mini-qr"></div>
+                                </div>
+                            </div>
+                            <div class="layout-name">ID Cards</div>
+                            <div class="layout-specs">4 per page<br>85×54mm each</div>
+                        </div>
+                        
+                        <div class="layout-option" onclick="selectLayout(this, 'labels')">
+                            <div class="layout-preview">
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;">
+                                    <div class="mini-qr"></div>
+                                    <div class="mini-qr"></div>
+                                    <div class="mini-qr"></div>
+                                    <div class="mini-qr"></div>
+                                    <div class="mini-qr"></div>
+                                    <div class="mini-qr"></div>
+                                </div>
+                            </div>
+                            <div class="layout-name">Sheet Labels</div>
+                            <div class="layout-specs">30 per page<br>25×25mm each</div>
+                        </div>
+                        
+                        <div class="layout-option" onclick="selectLayout(this, 'stickers')">
+                            <div class="layout-preview">
+                                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px;">
+                                    <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                </div>
+                            </div>
+                            <div class="layout-name">Mini Stickers</div>
+                            <div class="layout-specs">65 per page<br>15×15mm each</div>
+                        </div>
+                        
+                        <div class="layout-option" onclick="selectLayout(this, 'bracelet')">
+                            <div class="layout-preview">
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <div style="width: 60px; height: 8px; background: #d1d5db; border-radius: 4px;"></div>
+                                    <div class="mini-qr"></div>
+                                    <div style="width: 60px; height: 8px; background: #d1d5db; border-radius: 4px;"></div>
+                                </div>
+                            </div>
+                            <div class="layout-name">Wristbands</div>
+                            <div class="layout-specs">8 per page<br>250×25mm strips</div>
+                        </div>
+                        
+                        <div class="layout-option" onclick="selectLayout(this, 'keytags')">
+                            <div class="layout-preview">
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                                    <div style="background: #d1d5db; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">
+                                        <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    </div>
+                                    <div style="background: #d1d5db; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">
+                                        <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    </div>
+                                    <div style="background: #d1d5db; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">
+                                        <div class="mini-qr" style="width: 8px; height: 8px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layout-name">Key Tags</div>
+                            <div class="layout-specs">20 per page<br>30mm diameter</div>
+                        </div>
+                        
+                        <div class="layout-option" onclick="selectLayout(this, 'single')">
+                            <div class="layout-preview">
+                                <div class="mini-qr" style="width: 30px; height: 30px;"></div>
+                            </div>
+                            <div class="layout-name">Single Large</div>
+                            <div class="layout-specs">1 per page<br>100×100mm</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Format Options -->
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-icon">⚙️</div>
+                        <span>Format Options</span>
+                    </div>
+                    
+                    <div class="format-options">
+                        <div class="format-group">
+                            <span class="format-label">Paper Size</span>
+                            <div class="format-control">
+                                <select id="paperSize">
+                                    <option value="a4">A4 (210×297mm)</option>
+                                    <option value="letter">Letter (8.5×11")</option>
+                                    <option value="a5">A5 (148×210mm)</option>
+                                    <option value="legal">Legal (8.5×14")</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="format-group">
+                            <span class="format-label">QR Code Size</span>
+                            <div class="format-control">
+                                <input type="number" value="20" min="15" max="100" id="qrSize" style="width: 60px;">
+                                <span style="color: #6b7280; font-size: 14px;">mm</span>
+                            </div>
+                        </div>
+                        
+                        <div class="format-group">
+                            <span class="format-label">Error Correction Level</span>
+                            <div class="format-control">
+                                <select id="errorCorrection">
+                                    <option value="L">L - 7% recovery</option>
+                                    <option value="M" selected>M - 15% recovery</option>
+                                    <option value="Q">Q - 25% recovery</option>
+                                    <option value="H">H - 30% recovery</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="format-group">
+                            <span class="format-label">Include Serial Numbers</span>
+                            <div class="format-control">
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="format-group">
+                            <span class="format-label">Add Organization Logo</span>
+                            <div class="format-control">
+                                <div class="toggle-switch" onclick="toggleSwitch(this)">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security & Tracking -->
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-icon">🔒</div>
+                        <span>Security & Tracking</span>
+                    </div>
+                    
+                    <div class="security-features">
+                        <div class="feature-item active" onclick="toggleFeature(this)">
+                            <div class="feature-checkbox"></div>
+                            <div class="feature-info">
+                                <div class="feature-title">Generate Master List</div>
+                                <div class="feature-desc">CSV file with all GUIDs and activation URLs for record keeping</div>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item active" onclick="toggleFeature(this)">
+                            <div class="feature-checkbox"></div>
+                            <div class="feature-info">
+                                <div class="feature-title">Activation Required</div>
+                                <div class="feature-desc">QR codes must be activated before first use (prevents unauthorized scanning)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item" onclick="toggleFeature(this)">
+                            <div class="feature-checkbox"></div>
+                            <div class="feature-info">
+                                <div class="feature-title">Expiration Date</div>
+                                <div class="feature-desc">Set automatic expiration after specified time period</div>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item active" onclick="toggleFeature(this)">
+                            <div class="feature-checkbox"></div>
+                            <div class="feature-info">
+                                <div class="feature-title">Batch Identifier</div>
+                                <div class="feature-desc">Tag this batch with ID for tracking (e.g., "HOSPITAL-2025-01")</div>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item" onclick="toggleFeature(this)">
+                            <div class="feature-checkbox"></div>
+                            <div class="feature-info">
+                                <div class="feature-title">Admin Dashboard Access</div>
+                                <div class="feature-desc">Monitor usage statistics and manage distributed codes</div>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item" onclick="toggleFeature(this)">
+                            <div class="feature-checkbox"></div>
+                            <div class="feature-info">
+                                <div class="feature-title">Tamper-Evident Seal</div>
+                                <div class="feature-desc">Add holographic or destructible material indicators to physical prints</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <strong>⚠️ Security Note:</strong> Each QR code contains a unique GUID and 256-bit encryption key. Store the master list securely - it cannot be regenerated if lost.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preview Panel -->
+            <div class="preview-panel">
+                <div class="preview-section">
+                    <div class="preview-title">Live Preview</div>
+                    <div class="preview-canvas" id="previewCanvas">
+                        <!-- Dynamic preview QR codes -->
+                    </div>
+                    
+                    <ul class="summary-list">
+                        <li>
+                            <span class="summary-label">Total QR Codes</span>
+                            <span class="summary-value" id="totalCodes">50</span>
+                        </li>
+                        <li>
+                            <span class="summary-label">Pages Required</span>
+                            <span class="summary-value" id="pagesRequired">13</span>
+                        </li>
+                        <li>
+                            <span class="summary-label">Paper Size</span>
+                            <span class="summary-value" id="paperSummary">A4</span>
+                        </li>
+                        <li>
+                            <span class="summary-label">QR Dimensions</span>
+                            <span class="summary-value" id="qrDimensions">20×20mm</span>
+                        </li>
+                        <li>
+                            <span class="summary-label">Encryption</span>
+                            <span class="summary-value">256-bit AES</span>
+                        </li>
+                        <li>
+                            <span class="summary-label">Estimated Size</span>
+                            <span class="summary-value" id="fileSize">~2.3 MB</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="action-bar">
+                    <button class="btn btn-secondary" onclick="testPrint()">Test Print (5)</button>
+                    <button class="btn btn-primary" onclick="generateBatch()">
+                        Generate Batch
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentQuantity = 50;
+        let currentLayout = 'cards';
+        let codesPerPage = 4;
+        
+        function selectQuantity(btn, quantity) {
+            document.querySelectorAll('.quantity-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentQuantity = quantity;
+            document.getElementById('customQuantity').value = '';
+            updatePreview();
+        }
+        
+        function setCustomQuantity() {
+            const custom = document.getElementById('customQuantity').value;
+            if (custom && custom > 0 && custom <= 1000) {
+                document.querySelectorAll('.quantity-btn').forEach(b => b.classList.remove('active'));
+                currentQuantity = parseInt(custom);
+                updatePreview();
+            }
+        }
+        
+        function selectLayout(element, layout) {
+            document.querySelectorAll('.layout-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            currentLayout = layout;
+            
+            // Update codes per page based on layout
+            const layoutMap = {
+                'cards': 4,
+                'labels': 30,
+                'stickers': 65,
+                'bracelet': 8,
+                'keytags': 20,
+                'single': 1
+            };
+            codesPerPage = layoutMap[layout];
+            updatePreview();
+        }
+        
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+        }
+        
+        function toggleFeature(element) {
+            element.classList.toggle('active');
+        }
+        
+        function updatePreview() {
+            // Update summary
+            document.getElementById('totalCodes').textContent = currentQuantity;
+            document.getElementById('pagesRequired').textContent = Math.ceil(currentQuantity / codesPerPage);
+            document.getElementById('paperSummary').textContent = document.getElementById('paperSize').value.toUpperCase();
+            const qrSize = document.getElementById('qrSize').value;
+            document.getElementById('qrDimensions').textContent = `${qrSize}×${qrSize}mm`;
+            document.getElementById('fileSize').textContent = `~${(currentQuantity * 0.046).toFixed(1)} MB`;
+            
+            // Update preview canvas
+            const canvas = document.getElementById('previewCanvas');
+            canvas.innerHTML = '';
+            
+            // Show sample QR codes based on layout
+            const previewCount = Math.min(codesPerPage, 20);
+            const sizeMap = {
+                'cards': 'large',
+                'labels': 'medium',
+                'stickers': 'small',
+                'bracelet': 'medium',
+                'keytags': 'medium',
+                'single': 'large'
+            };
+            
+            for (let i = 0; i < previewCount; i++) {
+                const qr = document.createElement('div');
+                qr.className = `preview-qr ${sizeMap[currentLayout]}`;
+                qr.textContent = 'QR';
+                canvas.appendChild(qr);
+            }
+        }
+        
+        function goBack() {
+            router.go('home');
+        }
+        
+        function testPrint() {
+            alert(`Generating test print with 5 QR codes in ${currentLayout} layout...`);
+        }
+        
+        function generateBatch() {
+            const features = [];
+            document.querySelectorAll('.feature-item.active .feature-title').forEach(f => {
+                features.push(f.textContent);
+            });
+            
+            alert(`Generating batch:\n\n` +
+                  `• Quantity: ${currentQuantity} codes\n` +
+                  `• Layout: ${currentLayout}\n` +
+                  `• Pages: ${Math.ceil(currentQuantity / codesPerPage)}\n` +
+                  `• Features: ${features.join(', ')}\n\n` +
+                  `Each QR will contain:\n` +
+                  `• Unique GUID\n` +
+                  `• 256-bit encryption key\n` +
+                  `• Zero-knowledge architecture ready`);
+        }
+        
+        // Initialize preview
+        updatePreview();
+    </script>
+
   <meta charset="UTF-8">
   <title>Bulk QR Generation</title>
   <script src="router.js"></script>
@@ -80,6 +976,7 @@
       window.location.href = 'index.html?create=1';
     });
   </script>
+
 
 </body>
 </html>
