@@ -199,16 +199,31 @@
                 return;
             }
 
-            // Handle legacy format and v2 encoded hashes
-            if (!hash.startsWith('v2:')) {
-                return handleLegacyFormat(hash);
+            if (hash.includes('|')) {
+                const parts = hash.split('|').map(decodeURIComponent);
+                if (parts.length >= 4) {
+                    const [guid, key, name, created] = parts;
+                    currentGUID = guid;
+                    currentKey = key;
+                    currentMode = 'view';
+                    await loadAndDisplayEmergencyInfo(guid, key, name, created);
+                } else {
+                    handleLegacyFormat(hash);
+                }
+                return;
             }
 
-            const [version, guid, key] = hash.split(':');
-            currentGUID = guid;
-            currentKey = key;
-            currentMode = 'view';
-            await loadAndDisplayEmergencyInfo(guid, key, null, null);
+            if (hash.startsWith('v2:')) {
+                const [version, guid, key] = hash.split(':');
+                currentGUID = guid;
+                currentKey = key;
+                currentMode = 'view';
+                await loadAndDisplayEmergencyInfo(guid, key, null, null);
+                return;
+            }
+
+            currentMode = 'create';
+            showCreationForm();
         }
 
         async function displayFullInfo(full) {
@@ -538,6 +553,11 @@
                     throw new Error('Invalid QR code');
                 }
 
+                if (!fullData.version || parseFloat(fullData.version) < 4.0) {
+                    await upgradeLegacyBlob(fullData);
+                    return;
+                }
+
                 currentData = data;
                 currentBlob = { ...fullData };
                 currentSource = source;
@@ -548,6 +568,66 @@
                 console.error('Error loading data:', error);
                 showError('Unable to load personal information. Please check the QR code.');
             }
+        }
+
+        // Upgrade legacy blobs to v4.0 schema
+        async function upgradeLegacyBlob(fullData) {
+            alert('This record uses an older format and needs to be upgraded.');
+
+            const pin = prompt('Create a new PIN');
+            const password = prompt('Create a new password');
+            if (!pin || !password) {
+                showError('Upgrade cancelled');
+                return;
+            }
+
+            const { notes, ...profileRest } = fullData.privateInfo || {};
+            const profile = profileRest;
+            const ehr = {};
+            if (notes) ehr.notes = notes;
+
+            const pinKey = await sha256Hash(currentKey + pin);
+            const passKey = await sha256Hash(currentKey + password);
+
+            const payloads = {
+                profile: await encrypt(JSON.stringify(profile), pinKey),
+                ehr: await encrypt(JSON.stringify(ehr), passKey)
+            };
+
+            const upgraded = {
+                version: '4.0',
+                created: fullData.created,
+                updated: new Date().toISOString(),
+                name: fullData.name,
+                beacon: BEACON_TEXT,
+                publicInfo: fullData.publicInfo,
+                passwordHint: fullData.passwordHint,
+                payloads,
+                pinHash: pinKey,
+                passHash: passKey
+            };
+
+            const encryptedBlob = await encrypt(JSON.stringify(upgraded), currentKey);
+            const updateToken = await generateUpdateToken(password, currentGUID);
+            const auth = await sha256Hash(updateToken);
+
+            try {
+                await fetch(WEBHOOK_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        guid: currentGUID,
+                        updateToken,
+                        data: { id: currentGUID, data: encryptedBlob, auth }
+                    })
+                });
+            } catch (e) {
+                console.log('Upgrade upload failed', e);
+            }
+
+            currentData = { id: currentGUID, data: encryptedBlob };
+            currentBlob = upgraded;
+            await displayEmergencyInfo(upgraded, { banner: '✅ Data upgraded to v4.0' });
         }
 
         // Display emergency information
@@ -1611,8 +1691,8 @@
                 updateSourceLabel();
 
                 // Only generate QR after successful upload
-                const qrUrl = `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
-                window.location.hash = `v2:${currentGUID}:${currentKey}`;
+                const qrUrl = `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(formData.name)}|${created}`;
+                window.location.hash = `${currentGUID}|${currentKey}|${encodeURIComponent(formData.name)}|${created}`;
 
                 // Generate QR code
                 const qrContainer = document.getElementById('qrcode');
@@ -1951,7 +2031,9 @@
         }
 
         function viewQR() {
-            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
+            const created = currentBlob?.created || new Date().toISOString();
+            const name = currentBlob?.name || '';
+            const url = window.currentQRUrl || `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(name)}|${created}`;
             const existing = document.getElementById('qr-viewer');
             if (existing) existing.remove();
             const overlay = document.createElement('div');
@@ -1969,7 +2051,9 @@
 
         function downloadQRFixed() {
             const canvas = document.querySelector('#qrcode canvas, #owner-qr canvas');
-            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
+            const created = currentBlob?.created || new Date().toISOString();
+            const name = currentBlob?.name || '';
+            const url = window.currentQRUrl || `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(name)}|${created}`;
             if (!canvas) {
                 const tempDiv = document.createElement('div');
                 new QRCode(tempDiv, {
@@ -1995,7 +2079,9 @@
         }
 
         function shareQR() {
-            const url = window.currentQRUrl || `${VIEWER_URL}#v2:${currentGUID}:${currentKey}`;
+            const created = currentBlob?.created || new Date().toISOString();
+            const name = currentBlob?.name || '';
+            const url = window.currentQRUrl || `${VIEWER_URL}#${currentGUID}|${currentKey}|${encodeURIComponent(name)}|${created}`;
             if (navigator.share && url) {
                 navigator.share({ title: 'iKey', url }).catch(() => {});
             } else if (url) {
@@ -2154,7 +2240,10 @@
 
         function parseQRData(text) {
             let guid, key;
-            if (text.includes('v2:')) {
+            if (text.includes('#') && text.includes('|')) {
+                const hash = text.split('#')[1];
+                [guid, key] = hash.split('|');
+            } else if (text.includes('v2:')) {
                 const hash = text.split('#')[1];
                 const parts = hash.split(':');
                 guid = parts[1];

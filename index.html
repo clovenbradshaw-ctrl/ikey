@@ -924,6 +924,95 @@
                 padding: 40px 20px;
             }
         }
+
+        /* Session Manager Styles */
+        .session-timer {
+            --progress: 0deg;
+            --ring-color: #4caf50;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: conic-gradient(var(--ring-color) var(--progress), #e0e0e0 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .session-timer::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: white;
+            border-radius: 50%;
+        }
+        .session-timer span {
+            font-size: 10px;
+            position: relative;
+        }
+        .session-timer.pulse {
+            animation: ehr-timer-pulse 1s infinite;
+        }
+        @keyframes ehr-timer-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+        }
+        .session-banner {
+            position: fixed;
+            top: -100px;
+            left: 0;
+            right: 0;
+            background: #fff3cd;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: top 0.3s;
+            z-index: 1000;
+        }
+        .session-banner.active { top: 0; }
+        .session-banner button { margin-left: 10px; }
+        .session-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .session-modal.active { display: flex; }
+        .session-modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            animation: modalPulse 1s infinite alternate;
+        }
+        @keyframes modalPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
+        }
+        .session-expired {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+        }
+        .session-expired.active { display: flex; }
     </style>
 </head>
 <body>
@@ -932,7 +1021,11 @@
             <!-- Content will be dynamically inserted here -->
         </div>
     </div>
-    
+
+    <div id="session-timer" class="session-timer">
+        <span id="session-countdown"></span>
+    </div>
+
     <!-- Dev Tools Panel -->
     <div class="dev-trigger" onclick="toggleDevTools()">🛠️</div>
     <div id="dev-panel" class="dev-panel">
@@ -962,8 +1055,11 @@
     <!-- QR Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="session.js"></script>
 
     <script>
+        window.sessionManager = new SessionManager();
+
         // Configuration
         const VIEWER_URL = 'https://clovenbradshaw-ctrl.github.io/ikey/';
         const BEACON_TEXT = 'SQR:1';
@@ -1108,17 +1204,17 @@
             // Check hash first
             const hash = window.location.hash.substring(1);
 
-            // Newer format: #v2:guid:key
+            // Four-part format: #guid|key|name|created
+            if (hash && hash.includes('|')) {
+                [guid, key, name, created] = hash.split('|').map(decodeURIComponent);
+                return { guid, key, name, created };
+            }
+
+            // Legacy v2 format: v2:guid:key
             if (hash.startsWith('v2:')) {
                 const parts = hash.split(':');
                 guid = decodeURIComponent(parts[1] || '');
                 key = decodeURIComponent(parts[2] || '');
-                return { guid, key, name, created };
-            }
-
-            // Legacy format: #guid|key|name|created
-            if (hash && hash.includes('|')) {
-                [guid, key, name, created] = hash.split('|').map(decodeURIComponent);
                 return { guid, key, name, created };
             }
 
@@ -1242,6 +1338,12 @@
                     throw new Error('Invalid QR code');
                 }
 
+                // Upgrade legacy blobs lacking version 4.0
+                if (!fullData.version || parseFloat(fullData.version) < 4.0) {
+                    await upgradeLegacyBlob(fullData);
+                    return;
+                }
+
                 // Decrypt password hint if it exists
                 let passwordHint = null;
                 if (fullData.passwordHint) {
@@ -1262,12 +1364,71 @@
             }
         }
 
+        // Upgrade older blobs to the v4.0 schema
+        async function upgradeLegacyBlob(fullData) {
+            alert('This record uses an older format and needs to be upgraded.');
+
+            const pin = prompt('Create a new PIN');
+            const password = prompt('Create a new password');
+            if (!pin || !password) {
+                showError('Upgrade cancelled');
+                return;
+            }
+
+            const { notes, ...profileRest } = fullData.privateInfo || {};
+            const profile = profileRest;
+            const ehr = {};
+            if (notes) ehr.notes = notes;
+
+            const pinKey = await sha256Hash(currentKey + pin);
+            const passKey = await sha256Hash(currentKey + password);
+
+            const payloads = {
+                profile: await encrypt(JSON.stringify(profile), pinKey),
+                ehr: await encrypt(JSON.stringify(ehr), passKey)
+            };
+
+            const upgraded = {
+                version: '4.0',
+                created: fullData.created,
+                updated: new Date().toISOString(),
+                name: fullData.name,
+                beacon: BEACON_TEXT,
+                publicInfo: fullData.publicInfo,
+                passwordHint: fullData.passwordHint,
+                payloads,
+                pinHash: pinKey,
+                passHash: passKey
+            };
+
+            const encryptedBlob = await encrypt(JSON.stringify(upgraded), currentKey);
+            const updateToken = await generateUpdateToken(password, currentGUID);
+            const auth = await sha256Hash(updateToken);
+
+            try {
+                await fetch(WEBHOOK_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        guid: currentGUID,
+                        updateToken,
+                        data: { id: currentGUID, data: encryptedBlob, auth }
+                    })
+                });
+            } catch (e) {
+                console.log('Upgrade upload failed', e);
+            }
+
+            currentData = { id: currentGUID, data: encryptedBlob };
+            currentBlob = upgraded;
+            await displayEmergencyInfo(upgraded, { banner: '✅ Data upgraded to v4.0' });
+        }
+
         // Display emergency information
         async function displayEmergencyInfo(fullData, options = {}) {
             const container = document.getElementById('main-content');
 
             const publicInfo = fullData.publicInfo || {};
-            const passwordHint = fullData.passwordHint;
             const nameToShow = options.overrideName || fullData.name || publicInfo.name || 'Unknown';
 
             let html = `
@@ -1333,14 +1494,24 @@
                 `;
             }
             
-            if (currentBlob && currentBlob.privateInfo) {
+            if (currentBlob && currentBlob.profile) {
                 html += `
-                        <div class="private-section">
-                            <h3>🔒 Private Information</h3>
-                            ${passwordHint ? `<div class="hint">Hint: ${passwordHint}</div>` : ''}
-                            <input type="password" class="password-input" id="vault-password" placeholder="Enter password">
-                            <button class="btn" onclick="unlockPrivateInfo()">Unlock</button>
-                            <div id="private-content"></div>
+                        <div class="private-section" id="profile-section">
+                            <h3>🔒 Profile — Unlock with PIN</h3>
+                            <input type="password" class="password-input" id="profile-pin" placeholder="Enter PIN">
+                            <button class="btn" id="profile-unlock-btn" onclick="unlockProfileWithPIN()">Unlock</button>
+                            <div id="profile-content"></div>
+                        </div>
+                `;
+            }
+
+            if (currentBlob && currentBlob.ehr) {
+                html += `
+                        <div class="private-section" id="ehr-section">
+                            <h3>🛡️ EHR — Unlock with Password</h3>
+                            <input type="password" class="password-input" id="ehr-password" placeholder="Enter password">
+                            <button class="btn" id="ehr-unlock-btn" onclick="unlockEHRWithPassword()">Unlock</button>
+                            <div id="ehr-content"></div>
                         </div>
                 `;
             }
@@ -1358,10 +1529,11 @@
             container.innerHTML = html;
         }
         
-        // Unlock private information
-        async function unlockPrivateInfo() {
-            const password = document.getElementById('vault-password').value;
-            if (!password) return;
+        function checkBackoff(key) {
+            const until = Number(sessionStorage.getItem(key + '_until') || '0');
+            return until > Date.now() ? until - Date.now() : 0;
+        }
+
 
             try {
                 const hash = await sha256Hash(currentBlob.passwordSalt + password);
@@ -1369,42 +1541,89 @@
                     throw new Error('Incorrect password');
                 }
 
-                const privateInfo = currentBlob.privateInfo;
-                let html = '<div style="margin-top: 15px;">';
+        function registerFailure(key) {
+            const attempts = Number(sessionStorage.getItem(key) || '0') + 1;
+            const delay = Math.min(2 ** attempts, 32) * 1000;
+            sessionStorage.setItem(key, attempts);
+            sessionStorage.setItem(key + '_until', Date.now() + delay);
+            return delay;
+        }
 
-                if (privateInfo.ssn) {
-                    html += `
+        function clearBackoff(key) {
+            sessionStorage.removeItem(key);
+            sessionStorage.removeItem(key + '_until');
+        }
+
+        async function unlockProfileWithPIN() {
+            const wait = checkBackoff('profileAttempts');
+            if (wait > 0) {
+                alert(`Please wait ${Math.ceil(wait / 1000)}s before trying again.`);
+                return;
+            }
+
+
+            const pin = document.getElementById('profile-pin').value;
+            if (!pin) return;
+
+            const hash = await sha256Hash(currentKey + pin);
+            if (!currentBlob.profile || hash !== currentBlob.profile.pinHash) {
+                const delay = registerFailure('profileAttempts');
+                alert(`Incorrect PIN. Try again in ${Math.ceil(delay / 1000)}s.`);
+                return;
+            }
+
+            const info = currentBlob.profile;
+            let html = '<div style="margin-top: 15px;">';
+            if (info.ssn) {
+                html += `
                         <div class="info-item">
                             <span class="info-icon">🆔</span>
                             <div class="info-content">
                                 <div class="info-label">SSN</div>
-                                <div class="info-value">${privateInfo.ssn}</div>
+                                <div class="info-value">${info.ssn}</div>
                             </div>
-                        </div>
-                    `;
-                }
-
-                if (privateInfo.notes) {
-                    html += `
+                        </div>`;
+            }
+            if (info.notes) {
+                html += `
                         <div class="info-item">
                             <span class="info-icon">📝</span>
                             <div class="info-content">
                                 <div class="info-label">Medical Notes</div>
-                                <div class="info-value">${privateInfo.notes}</div>
+                                <div class="info-value">${info.notes}</div>
                             </div>
-                        </div>
-                    `;
-                }
-
-                html += '</div>';
-
-                document.getElementById('private-content').innerHTML = html;
-                document.getElementById('vault-password').style.display = 'none';
-                document.querySelector('.private-section button').style.display = 'none';
-
-            } catch (error) {
-                alert('Incorrect password');
+                        </div>`;
             }
+            html += '</div>';
+
+            document.getElementById('profile-content').innerHTML = html;
+            document.getElementById('profile-pin').style.display = 'none';
+            document.getElementById('profile-unlock-btn').style.display = 'none';
+            clearBackoff('profileAttempts');
+        }
+
+        async function unlockEHRWithPassword() {
+            const wait = checkBackoff('ehrAttempts');
+            if (wait > 0) {
+                alert(`Please wait ${Math.ceil(wait / 1000)}s before trying again.`);
+                return;
+            }
+
+            const password = document.getElementById('ehr-password').value;
+            if (!password) return;
+
+            const hash = await sha256Hash(currentKey + password);
+            if (!currentBlob.ehr || hash !== currentBlob.ehr.passwordHash) {
+                const delay = registerFailure('ehrAttempts');
+                alert(`Incorrect password. Try again in ${Math.ceil(delay / 1000)}s.`);
+                return;
+            }
+
+            const data = currentBlob.ehr.data || {};
+            document.getElementById('ehr-content').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            document.getElementById('ehr-password').style.display = 'none';
+            document.getElementById('ehr-unlock-btn').style.display = 'none';
+            clearBackoff('ehrAttempts');
         }
 
         function ownerLogin() {
@@ -1428,9 +1647,15 @@
                 const updateToken = await generateUpdateToken(password, currentGUID);
 
                 // Validate password against stored hash
+
                 if (currentBlob.privateInfo) {
                     const hash = await sha256Hash(currentBlob.passwordSalt + password);
                     if (hash !== currentBlob.privateInfo.encryptedWith) {
+
+                if (currentBlob.ehr) {
+                    const hash = await sha256Hash(currentKey + password);
+                    if (hash !== currentBlob.ehr.passwordHash) {
+
                         alert("Incorrect password!");
                         return;
                     }
@@ -1453,10 +1678,10 @@
                 document.getElementById('contact-phone').value = publicInfo.contact?.phone || '';
                 document.getElementById('password-hint').value = currentBlob.passwordHint || '';
 
-                if (currentBlob.privateInfo) {
-                    const privateInfo = currentBlob.privateInfo;
-                    document.getElementById('ssn').value = privateInfo.ssn || '';
-                    document.getElementById('medical-notes').value = privateInfo.notes || '';
+                if (currentBlob.profile) {
+                    const profile = currentBlob.profile;
+                    document.getElementById('ssn').value = profile.ssn || '';
+                    document.getElementById('medical-notes').value = profile.notes || '';
                 }
 
                 // Make credential changes optional
@@ -1509,6 +1734,7 @@
 
                 const newHint = document.getElementById('password-hint').value;
 
+
                 let pinSalt = currentBlob.pinSalt;
                 let pinVerifier = currentBlob.pinVerifier;
                 let passwordSalt = currentBlob.passwordSalt;
@@ -1543,6 +1769,13 @@
                     }
                     : null;
 
+                const profile = currentBlob.profile ? {
+                    ssn: document.getElementById('ssn').value,
+                    notes: document.getElementById('medical-notes').value,
+                    pinHash: currentBlob.profile.pinHash
+                } : null;
+
+
                 const fullData = {
                     version: currentBlob.version,
                     created: currentBlob.created,
@@ -1554,7 +1787,8 @@
                     passwordSalt,
                     publicInfo,
                     passwordHint: newHint ? await encrypt(newHint, currentKey) : null,
-                    privateInfo
+                    profile,
+                    ehr: currentBlob.ehr
                 };
 
                 const encryptedBlob = await encrypt(JSON.stringify(fullData), currentKey);
@@ -1788,10 +2022,14 @@
                 const passwordHint = document.getElementById('password-hint').value;
                 const encryptedHint = passwordHint ? await encrypt(passwordHint, currentKey) : null;
 
-                const privateInfo = {
+                const profile = {
                     ssn: document.getElementById('ssn').value,
                     notes: document.getElementById('medical-notes').value,
+
                     encryptedWith: passwordVerifier
+
+                    pinHash: await sha256Hash(currentKey + password)
+
                 };
 
                 const created = new Date().toISOString();
@@ -1805,7 +2043,8 @@
                     passwordSalt,
                     publicInfo,
                     passwordHint: encryptedHint,
-                    privateInfo
+                    profile,
+                    ehr: { data: {}, passwordHash: await sha256Hash(currentKey + password) }
                 };
 
                 // Encrypt entire blob
@@ -2315,11 +2554,14 @@
                         phone: "(555) 123-4567"
                     }
                 },
-                passwordHint: await encrypt("Password is: demo", key),
-                privateInfo: {
+                profile: {
                     ssn: "XXX-XX-XXXX",
-                    notes: "This is demo data. Password is: demo",
-                    encryptedWith: await sha256Hash(key + "demo")
+                    notes: "This is demo data. PIN is: 1234",
+                    pinHash: await sha256Hash(key + "1234")
+                },
+                ehr: {
+                    data: { example: "Demo health record" },
+                    passwordHash: await sha256Hash(key + "demo")
                 }
             };
 
