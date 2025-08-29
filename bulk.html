@@ -31,26 +31,23 @@
     .logo img {
       height: 28px;
     }
-    .container {
-      max-width: 800px;
-      margin: 100px auto 0;
-      background: white;
-      padding: 40px;
-      border-radius: 8px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    input[type="file"] {
-      margin: 20px 0;
-    }
-    button {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
+      .container {
+        max-width: 800px;
+        margin: 100px auto 0;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
   </style>
 </head>
 <body>
@@ -60,17 +57,7 @@
   </div>
   <div class="container">
     <h1>Bulk QR Generation</h1>
-    <p>Select a CSV file to begin generating QR codes.</p>
-    <input type="file" id="bulk-file" accept=".csv">
-    <div id="file-info"></div>
+    <p>This feature is under construction.</p>
   </div>
-  <script>
-    const fileInput = document.getElementById('bulk-file');
-    const info = document.getElementById('file-info');
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files[0];
-      info.textContent = file ? `Selected: ${file.name}` : '';
-    });
-  </script>
 </body>
 </html>
